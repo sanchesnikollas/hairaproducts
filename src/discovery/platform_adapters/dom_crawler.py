@@ -20,10 +20,11 @@ except ImportError:
 class DOMCrawlerAdapter(BaseAdapter):
     name = "dom_crawler"
 
-    def __init__(self, browser=None):
+    def __init__(self, browser=None, max_depth: int = 2):
         self._browser = browser
+        self._max_depth = max_depth
 
-    def _extract_links(self, html: str, base_url: str, allowed_domains: list[str]) -> list[str]:
+    def _extract_links_from_html(self, html: str, base_url: str, allowed_domains: list[str]) -> list[str]:
         if BeautifulSoup is None:
             return []
         soup = BeautifulSoup(html, "lxml")
@@ -35,8 +36,17 @@ class DOMCrawlerAdapter(BaseAdapter):
             host = parsed.hostname or ""
             if any(host == d or host.endswith(f".{d}") for d in allowed_domains):
                 clean_url = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+                if parsed.query:
+                    clean_url += f"?{parsed.query}"
                 links.add(clean_url)
         return list(links)
+
+    def _extract_links_via_browser(self, url: str, allowed_domains: list[str]) -> list[str]:
+        """Use browser's get_links if available, else fetch HTML and parse."""
+        if hasattr(self._browser, 'get_links'):
+            return self._browser.get_links(url, allowed_domains)
+        html = self._browser.fetch_page(url)
+        return self._extract_links_from_html(html, url, allowed_domains)
 
     def discover(self, config: dict) -> list[DiscoveredURL]:
         entrypoints = config.get("entrypoints", [])
@@ -44,18 +54,35 @@ class DOMCrawlerAdapter(BaseAdapter):
         max_pages = config.get("max_pages", 500)
         product_url_pattern = config.get("product_url_pattern")
 
-        all_urls: set[str] = set()
-        for ep_url in entrypoints:
-            if self._browser:
-                try:
-                    html = self._browser.fetch_page(ep_url)
-                    links = self._extract_links(html, ep_url, allowed_domains)
-                    all_urls.update(links)
-                    logger.info(f"Crawled {len(links)} links from {ep_url}")
-                except Exception as e:
-                    logger.warning(f"Failed to crawl {ep_url}: {e}")
-            else:
+        if not self._browser:
+            for ep_url in entrypoints:
                 logger.warning(f"No browser configured, skipping DOM crawl of {ep_url}")
+            return []
+
+        all_urls: set[str] = set()
+        visited: set[str] = set()
+        to_crawl: list[tuple[str, int]] = [(ep, 0) for ep in entrypoints]
+
+        while to_crawl and len(all_urls) < max_pages:
+            url, depth = to_crawl.pop(0)
+            if url in visited:
+                continue
+            visited.add(url)
+
+            try:
+                links = self._extract_links_via_browser(url, allowed_domains)
+                logger.info(f"Crawled {len(links)} links from {url} (depth={depth})")
+                all_urls.update(links)
+
+                # Queue category pages for deeper crawl
+                if depth < self._max_depth:
+                    for link in links:
+                        if link not in visited:
+                            link_type = classify_url(link, product_url_pattern)
+                            if link_type == URLType.CATEGORY:
+                                to_crawl.append((link, depth + 1))
+            except Exception as e:
+                logger.warning(f"Failed to crawl {url}: {e}")
 
         discovered: list[DiscoveredURL] = []
         for url in list(all_urls)[:max_pages]:

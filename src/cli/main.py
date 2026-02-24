@@ -264,11 +264,11 @@ def audit(brand: str):
     click.echo(f"  Total products in DB: {len(products)}")
 
     if coverage:
-        click.echo(f"  Coverage status: {coverage.get('status', 'unknown')}")
-        click.echo(f"  Discovered: {coverage.get('discovered_total', 0)}")
-        click.echo(f"  Extracted: {coverage.get('extracted_total', 0)}")
-        click.echo(f"  Verified INCI: {coverage.get('verified_inci_total', 0)}")
-        rate = coverage.get('verified_inci_rate', 0)
+        click.echo(f"  Coverage status: {coverage.status or 'unknown'}")
+        click.echo(f"  Discovered: {coverage.discovered_total or 0}")
+        click.echo(f"  Extracted: {coverage.extracted_total or 0}")
+        click.echo(f"  Verified INCI: {coverage.verified_inci_total or 0}")
+        rate = coverage.verified_inci_rate or 0
         click.echo(f"  Verification rate: {rate:.1%}")
 
     # Status breakdown

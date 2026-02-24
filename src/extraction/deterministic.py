@@ -38,6 +38,58 @@ def extract_jsonld(html: str) -> dict | None:
     return None
 
 
+INCI_TAB_LABELS = [
+    "composição", "composicao", "ingredientes", "ingredients",
+    "inci", "composição do produto", "composição completa",
+]
+
+# UI text that leaks into INCI content from tab/filter buttons
+TAB_NOISE_PREFIXES = [
+    "todos", "all", "ver todos", "mostrar todos", "ver mais",
+]
+
+
+def _clean_tab_content(text: str) -> str:
+    """Remove UI noise from tab content (filter buttons, etc.)."""
+    for prefix in TAB_NOISE_PREFIXES:
+        if text.lower().startswith(prefix):
+            text = text[len(prefix):].lstrip()
+    return text
+
+
+def _extract_inci_by_tab_labels(soup) -> tuple[str | None, str | None]:
+    """Find INCI content in collapsible tabs/accordions by label text."""
+    # Strategy 1: Button/heading with label, content in next sibling
+    for el in soup.find_all(["button", "h2", "h3", "h4", "a", "span", "div"]):
+        text = el.get_text(strip=True).lower()
+        if any(label == text or text.startswith(label) for label in INCI_TAB_LABELS):
+            # Check next sibling
+            sibling = el.find_next_sibling()
+            if sibling:
+                content = _clean_tab_content(sibling.get_text(strip=True))
+                if content and len(content) > 30 and "," in content:
+                    return content, f"tab-label:{text}"
+            # Check parent's next sibling
+            if el.parent:
+                parent_sibling = el.parent.find_next_sibling()
+                if parent_sibling:
+                    content = _clean_tab_content(parent_sibling.get_text(strip=True))
+                    if content and len(content) > 30 and "," in content:
+                        return content, f"tab-label-parent:{text}"
+
+    # Strategy 2: .collapse__content or .tab-content near composição text
+    for cls in ["collapse__content", "tab-content", "tab-pane", "accordion-content"]:
+        for el in soup.select(f".{cls}"):
+            # Check if a previous sibling or parent has composição label
+            prev = el.find_previous_sibling()
+            if prev and any(label in prev.get_text().lower() for label in INCI_TAB_LABELS):
+                content = _clean_tab_content(el.get_text(strip=True))
+                if content and len(content) > 30 and "," in content:
+                    return content, f".{cls}"
+
+    return None, None
+
+
 def extract_by_selectors(
     html: str,
     inci_selectors: list[str] | None = None,
@@ -62,6 +114,13 @@ def extract_by_selectors(
                 result["inci_raw"] = el.get_text(strip=True)
                 result["inci_selector"] = sel
                 break
+
+    # Fallback: tab-label heuristic for INCI
+    if not result["inci_raw"]:
+        inci_text, selector = _extract_inci_by_tab_labels(soup)
+        if inci_text:
+            result["inci_raw"] = inci_text
+            result["inci_selector"] = selector
 
     if image_selectors:
         for sel in image_selectors:
