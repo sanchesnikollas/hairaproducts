@@ -13,10 +13,55 @@ from src.core.models import Brand
 logger = logging.getLogger(__name__)
 
 
+def _normalize_url(url: str) -> str:
+    return url.strip().rstrip("/").lower()
+
+
 def _clean_url(url: str | None) -> str:
     if not url:
         return ""
     return url.strip()
+
+
+def _dedup_by_url(brands_by_slug: dict[str, Brand]) -> dict[str, Brand]:
+    """Merge brands that share the same URL root, preferring the one with priority."""
+    from collections import defaultdict
+
+    url_groups: dict[str, list[str]] = defaultdict(list)
+    for slug, brand in brands_by_slug.items():
+        if brand.official_url_root:
+            key = _normalize_url(brand.official_url_root)
+            if key:
+                url_groups[key].append(slug)
+
+    for url_key, slugs in url_groups.items():
+        if len(slugs) < 2:
+            continue
+        # Pick winner: prefer brand with priority, then first encountered
+        winner_slug = slugs[0]
+        for s in slugs:
+            if brands_by_slug[s].priority is not None:
+                winner_slug = s
+                break
+        winner = brands_by_slug[winner_slug]
+        for s in slugs:
+            if s == winner_slug:
+                continue
+            loser = brands_by_slug[s]
+            # Absorb entrypoints
+            for ep in loser.catalog_entrypoints:
+                if ep not in winner.catalog_entrypoints:
+                    winner.catalog_entrypoints.append(ep)
+            # Absorb country if winner lacks it
+            if not winner.country and loser.country:
+                winner.country = loser.country
+            # Absorb notes
+            if loser.notes and not winner.notes:
+                winner.notes = loser.notes
+            del brands_by_slug[s]
+            logger.debug(f"Merged duplicate brand {loser.brand_name!r} ({s}) into {winner.brand_name!r} ({winner_slug})")
+
+    return brands_by_slug
 
 
 def load_brands_from_excel(filepath: str) -> list[Brand]:
@@ -113,6 +158,10 @@ def load_brands_from_excel(filepath: str) -> list[Brand]:
                         brands_by_slug[target_slug].catalog_entrypoints.append(url)
 
     wb.close()
+
+    # 4. Dedup brands that share the same URL root but have different slugs
+    brands_by_slug = _dedup_by_url(brands_by_slug)
+
     result = list(brands_by_slug.values())
     logger.info(f"Loaded {len(result)} brands from {filepath}")
     return result

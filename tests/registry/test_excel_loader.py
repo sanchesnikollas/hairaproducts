@@ -82,6 +82,29 @@ class TestLoadBrands:
         assert len(amend_brands) == 1
         assert amend_brands[0].priority is not None  # Marcas Principais priority wins
 
+    def test_deduplicates_by_url(self, tmp_path):
+        """Brands with different names but same URL root get merged, priority wins."""
+        import openpyxl
+        wb = openpyxl.Workbook()
+        ws1 = wb.active
+        ws1.title = "Nacionais"
+        ws1.append(["Marca", "Marketplace", "Site da Marca", "Ingredientes no site"])
+        ws1.append(["Amend Cosméticos", "BnW", "https://www.amend.com.br/", "sim"])
+
+        ws2 = wb.create_sheet("Marcas Principais")
+        ws2.append(["Nome", "Site", "Caminho", "Extrair", "OBS"])
+        ws2.append(["Amend", "https://www.amend.com.br", None, None, None])
+        filepath = tmp_path / "test.xlsx"
+        wb.save(filepath)
+
+        brands = load_brands_from_excel(str(filepath))
+        amend_brands = [b for b in brands if "amend" in b.brand_slug]
+        assert len(amend_brands) == 1
+        assert amend_brands[0].priority is not None  # Marcas Principais entry wins
+        assert amend_brands[0].brand_name == "Amend"
+        # Notes absorbed from the Nacionais entry
+        assert amend_brands[0].notes is not None
+
     def test_export_to_json(self, tmp_path):
         import openpyxl
         wb = openpyxl.Workbook()
