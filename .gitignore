@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+haira.db
+*.egg-info/
+dist/
+.venv/
+node_modules/
+.pytest_cache/
+.ruff_cache/
