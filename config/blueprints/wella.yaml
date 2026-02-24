@@ -1,0 +1,41 @@
+brand_slug: wella
+brand_name: Wella Professionals
+platform: vtex
+domain: loja.wella.com.br
+allowed_domains:
+- loja.wella.com.br
+entrypoints:
+- https://loja.wella.com.br/cabelos/shampoo
+- https://loja.wella.com.br/cabelos/condicionador
+- https://loja.wella.com.br/cabelos/tratamento
+- https://loja.wella.com.br/cabelos/finalizador-e-modelador
+- https://loja.wella.com.br/cabelos/coloracao
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://loja.wella.com.br/sitemap.xml
+  product_url_pattern: null
+  max_pages: 500
+  pagination:
+    type: scroll
+    max_pages: 10
+extraction:
+  inci_selectors:
+  - .vtex-store-components-3-x-productDescriptionText p
+  - .vtex-tab-layout-0-x-contentContainer p
+  - '#tab-ingredientes p'
+  - '#tab-composicao p'
+  name_selectors:
+  - .vtex-store-components-3-x-productNameContainer
+  - h1.product-name
+  - h1
+  - .product-title
+  - .product-name
+  image_selectors:
+  - .vtex-store-components-3-x-productImage img
+  - .product-image img
+  - img.product-img
+  - .gallery img
+  wait_for_selector: null
+  use_llm_fallback: true
+version: 1
