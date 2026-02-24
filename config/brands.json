@@ -1,0 +1,7032 @@
+[
+  {
+    "brand_name": "1Ka Hair",
+    "brand_slug": "1ka-hair",
+    "official_url_root": "https://www.stilohair.com.br/marca/1ka-hair.html",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "A-line",
+    "brand_slug": "a-line",
+    "official_url_root": "https://alinebrasilcosmetics.com.br/loja/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "Abela Cosmetics",
+    "brand_slug": "abela-cosmetics",
+    "official_url_root": "https://www.lojaabelacosmetics.com/produtos/?mpage=3",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=sim"
+  },
+  {
+    "brand_name": "Abelha Rainha",
+    "brand_slug": "abelha-rainha",
+    "official_url_root": "https://www.abelharainha.com.br/abelha-rainha/cabelos",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "Acquaflora",
+    "brand_slug": "acquaflora",
+    "official_url_root": "https://www.acquafloracosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": 19,
+    "catalog_entrypoints": [
+      "https://www.acquafloracosmeticos.com.br/linhas/",
+      "https://www.acquafloracosmeticos.com.br/coloracao/"
+    ],
+    "status": "active",
+    "notes": "tem categorias por tipo de cabelo,  \"tratamento\", \"vegano\", etc"
+  },
+  {
+    "brand_name": "AcquaRara",
+    "brand_slug": "acquarara",
+    "official_url_root": "https://www.acquafloracosmeticos.com.br/?srsltid=AfmBOoql59WTUVLiRfRUuNp-EORBnWr7SK62qXKQZ8oPQ3MlARHtGuPP",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "Adlux Cosméticos",
+    "brand_slug": "adlux-cosmeticos",
+    "official_url_root": "https://adluxmg.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "Agilise Cosméticos",
+    "brand_slug": "agilise-cosmeticos",
+    "official_url_root": "https://agilisecosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=sim"
+  },
+  {
+    "brand_name": "All Nature",
+    "brand_slug": "all-nature",
+    "official_url_root": "https://www.allnature.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "Alpha Line",
+    "brand_slug": "alpha-line",
+    "official_url_root": "https://alphalinecosmeticos.com.br/fale-conosco/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "Alphahall Cosmétiques",
+    "brand_slug": "alphahall-cosmetiques",
+    "official_url_root": "https://www.alphahall.com.br/loja/busca.php?loja=1193840&palavra_busca=",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=sim"
+  },
+  {
+    "brand_name": "Alva",
+    "brand_slug": "alva",
+    "official_url_root": "https://alvapersonalcare.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=sim"
+  },
+  {
+    "brand_name": "Amahka Paris",
+    "brand_slug": "amahka-paris",
+    "official_url_root": "https://www.amakhaparis.com.br/produtos-para-cabelo",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "Amazônico Care",
+    "brand_slug": "amazonico-care",
+    "official_url_root": "https://amazonicocare.com.br/collections/all",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=sim"
+  },
+  {
+    "brand_name": "American Desire",
+    "brand_slug": "american-desire",
+    "official_url_root": "https://www.americandesire.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=sim"
+  },
+  {
+    "brand_name": "Aneethun",
+    "brand_slug": "aneethun",
+    "official_url_root": "https://www.aneethun.com/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "Anuar Cosméticos",
+    "brand_slug": "anuar-cosmeticos",
+    "official_url_root": "https://anuar.com.br/loja/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "Any Liss",
+    "brand_slug": "any-liss",
+    "official_url_root": "https://anyliss.com.br/ > site desativado e sem novo site",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "Apice Cosméticos",
+    "brand_slug": "apice-cosmeticos",
+    "official_url_root": "https://www.apicecosmeticos.com.br/?utm_source=google&utm_medium=cpc&utm_campaign=pesquisa-institucional&utm_content=161587825678&utm_term=apice%20cosm%C3%A9ticos&tw_source=google&tw_adid=749538315790&tw_campaign=11363474127&gad_source=1&gad_campaignid=11363474127&gbraid=0AAAAACxURSkGY2nCviXVppDC3JtMtwHIG&gclid=CjwKCAiA2svIBhB-EiwARWDPjlHOGaBuSnnRwo7jiSgwm_MtPPZx8esEQG3fkMHbevm6HDLfXbwy7RoCOmsQAvD_BwE#",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=sim"
+  },
+  {
+    "brand_name": "Aramath Cosméticos",
+    "brand_slug": "aramath-cosmeticos",
+    "official_url_root": "https://aramath.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "Aromia Cosméticos",
+    "brand_slug": "aromia-cosmeticos",
+    "official_url_root": "https://aromia.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "Arvensis Cosméticos Naturais",
+    "brand_slug": "arvensis-cosmeticos-naturais",
+    "official_url_root": "https://arvensiscosmeticos.com.br/collections/produtos",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "Ativare",
+    "brand_slug": "ativare",
+    "official_url_root": "https://www.prolabcosmetics.com.br/ativare",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "Ativo Natural",
+    "brand_slug": "ativo-natural",
+    "official_url_root": "https://ativonatural.com.br/c-cosmeticos",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "Azenka",
+    "brand_slug": "azenka",
+    "official_url_root": "https://www.azenka.com.br/cosmeticos/cabelo",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "B. Hulmann",
+    "brand_slug": "b-hulmann",
+    "official_url_root": "https://bhulmann.com.br/collections/all",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=sim"
+  },
+  {
+    "brand_name": "B.O.B. Bars",
+    "brand_slug": "b-o-b-bars",
+    "official_url_root": "https://www.usebob.com.br/collections/cabelo",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=sim"
+  },
+  {
+    "brand_name": "B.URB",
+    "brand_slug": "b-urb",
+    "official_url_root": "https://www.newoldman.com.br/cabelo-masculino",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=sim"
+  },
+  {
+    "brand_name": "Balai",
+    "brand_slug": "balai",
+    "official_url_root": "https://mundobalai.com.br/collections/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=sim"
+  },
+  {
+    "brand_name": "Barba De Macho",
+    "brand_slug": "barba-de-macho",
+    "official_url_root": "https://barbademacho.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "Barba de Respeito",
+    "brand_slug": "barba-de-respeito",
+    "official_url_root": "https://barbaderespeito.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Barba de Urso",
+    "brand_slug": "barba-de-urso",
+    "official_url_root": "https://barbadeurso.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Barba Robusta",
+    "brand_slug": "barba-robusta",
+    "official_url_root": "https://www.barbarobusta.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Barba Urbana",
+    "brand_slug": "barba-urbana",
+    "official_url_root": "https://www.barbaurbana.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "BarroMinas",
+    "brand_slug": "barrominas",
+    "official_url_root": "https://lojabarrominas.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Baume",
+    "brand_slug": "baume",
+    "official_url_root": "https://baume.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Be Belle",
+    "brand_slug": "be-belle",
+    "official_url_root": "https://www.bebelle.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Beauty Secret",
+    "brand_slug": "beauty-secret",
+    "official_url_root": "https://www.beautysecret.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "BeautyColor",
+    "brand_slug": "beautycolor",
+    "official_url_root": "https://beautycolorcompany.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Bebê Natureza",
+    "brand_slug": "bebe-natureza",
+    "official_url_root": "https://www.bebenatureza.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Bedalm Pharma do Brasil",
+    "brand_slug": "bedalm-pharma-do-brasil",
+    "official_url_root": "https://www.bedalm.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Begônia Cosméticos",
+    "brand_slug": "begonia-cosmeticos",
+    "official_url_root": "https://begoniacosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Belcazzi Profissional",
+    "brand_slug": "belcazzi-profissional",
+    "official_url_root": "https://www.belcazzi.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Beleza Express",
+    "brand_slug": "beleza-express",
+    "official_url_root": "https://belezaexpress.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Beleza Natural",
+    "brand_slug": "beleza-natural",
+    "official_url_root": "https://www.bncachos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=sim"
+  },
+  {
+    "brand_name": "Beleza Ruiva",
+    "brand_slug": "beleza-ruiva",
+    "official_url_root": "https://belezaruiva.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Belkit",
+    "brand_slug": "belkit",
+    "official_url_root": "https://belkit.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Belletonn",
+    "brand_slug": "belletonn",
+    "official_url_root": "https://www.belletonn.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Belliz",
+    "brand_slug": "belliz",
+    "official_url_root": "https://www.belliz.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Belliz Company",
+    "brand_slug": "belliz-company",
+    "official_url_root": "https://www.bellizcompany.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Belofio Professional",
+    "brand_slug": "belofio-professional",
+    "official_url_root": "https://belofio.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Bemgloria",
+    "brand_slug": "bemgloria",
+    "official_url_root": "https://bemgloria.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Bendita Cânfora",
+    "brand_slug": "bendita-canfora",
+    "official_url_root": "https://benditacanfora.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Beto Bita",
+    "brand_slug": "beto-bita",
+    "official_url_root": "https://www.betobita.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Beudose",
+    "brand_slug": "beudose",
+    "official_url_root": "https://beudose.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Bio Extratus",
+    "brand_slug": "bio-extratus",
+    "official_url_root": "https://www.bioextratus.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": "inci_on_site=não"
+  },
+  {
+    "brand_name": "Bio Instinto",
+    "brand_slug": "bio-instinto",
+    "official_url_root": "https://www.bioinstinto.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Biocale",
+    "brand_slug": "biocale",
+    "official_url_root": "https://biocale.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Biofios Profissional",
+    "brand_slug": "biofios-profissional",
+    "official_url_root": "https://www.biofios.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Biotipo Brazil",
+    "brand_slug": "biotipo-brazil",
+    "official_url_root": "https://www.biotipobrazil.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Black Beauty",
+    "brand_slug": "black-beauty",
+    "official_url_root": "https://www.blackbeautyoficial.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Blueken Professional",
+    "brand_slug": "blueken-professional",
+    "official_url_root": "https://loja.blueken.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Blu Magic",
+    "brand_slug": "blu-magic",
+    "official_url_root": "https://blumagic.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Bomba",
+    "brand_slug": "bomba",
+    "official_url_root": "Não foi encontrado um site oficial de \"Bomba Cosméticos\", apenas sobre bombas industriais.",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Bonita por Natureza",
+    "brand_slug": "bonita-por-natureza",
+    "official_url_root": "https://bonitapornatureza.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Borabella",
+    "brand_slug": "borabella",
+    "official_url_root": "https://borabella.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Bothanico Hair",
+    "brand_slug": "bothanico-hair",
+    "official_url_root": "https://www.bothanicocosmeticos.com.br/produtos",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Braé",
+    "brand_slug": "brae",
+    "official_url_root": "https://www.brae.com.br/",
+    "country": "Brasil",
+    "priority": 18,
+    "catalog_entrypoints": [
+      "https://www.brae.com.br/produtos"
+    ],
+    "status": "active",
+    "notes": "tem categorias por tipo de cabelo e indicação"
+  },
+  {
+    "brand_name": "Braliz",
+    "brand_slug": "braliz",
+    "official_url_root": "https://braliz.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Bravet",
+    "brand_slug": "bravet",
+    "official_url_root": "https://www.bravet.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Bravir",
+    "brand_slug": "bravir",
+    "official_url_root": "https://bravir.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Breany Liss",
+    "brand_slug": "breany-liss",
+    "official_url_root": "https://breanyliss.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Br&Co",
+    "brand_slug": "br-co",
+    "official_url_root": "https://www.brandaocompany.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Brscience Profissional",
+    "brand_slug": "brscience-profissional",
+    "official_url_root": "https://brscience.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Butterfly",
+    "brand_slug": "butterfly",
+    "official_url_root": "https://www.butterflycosmeticosemaquiagem.com/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "C/ALMA",
+    "brand_slug": "c-alma",
+    "official_url_root": "https://calmabeleza.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Cadiveu Professional",
+    "brand_slug": "cadiveu-professional",
+    "official_url_root": "https://cadiveu.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Capicilin",
+    "brand_slug": "capicilin",
+    "official_url_root": "https://capicilin.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Care for You",
+    "brand_slug": "care-for-you",
+    "official_url_root": "https://careforyoucosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Casa da Índia",
+    "brand_slug": "casa-da-india",
+    "official_url_root": "https://casadaindia.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Cavalera",
+    "brand_slug": "cavalera",
+    "official_url_root": "https://www.cavalera.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Charmelle",
+    "brand_slug": "charmelle",
+    "official_url_root": "https://www.requintehaircosmeticos.com.br/marca/charmelle-cosmeticos.html",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Charming",
+    "brand_slug": "charming",
+    "official_url_root": "https://www.charming.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Che Figo",
+    "brand_slug": "che-figo",
+    "official_url_root": "https://chefigo.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Chons",
+    "brand_slug": "chons",
+    "official_url_root": "https://chons.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Christine Adans",
+    "brand_slug": "christine-adans",
+    "official_url_root": "https://www.christineadans.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Cia da Barba",
+    "brand_slug": "cia-da-barba",
+    "official_url_root": "https://ciadabarba.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "C.Kamura",
+    "brand_slug": "c-kamura",
+    "official_url_root": "https://ckamura.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Classe A",
+    "brand_slug": "classe-a",
+    "official_url_root": "https://www.classeacosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Clear",
+    "brand_slug": "clear",
+    "official_url_root": "https://www.clearhaircare.com/br/home.html",
+    "country": "Brasil",
+    "priority": 23,
+    "catalog_entrypoints": [
+      "https://www.clearhaircare.com/br/produtos.html"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Cless",
+    "brand_slug": "cless",
+    "official_url_root": "https://cless.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Clorofitum",
+    "brand_slug": "clorofitum",
+    "official_url_root": "https://clorofitum.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Coiffer",
+    "brand_slug": "coiffer",
+    "official_url_root": "https://coiffercosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Color Affair",
+    "brand_slug": "color-affair",
+    "official_url_root": "https://coloraffair.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Color Pro",
+    "brand_slug": "color-pro",
+    "official_url_root": "https://colorprocosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Corpo Dourado",
+    "brand_slug": "corpo-dourado",
+    "official_url_root": "https://www.corpoclin.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Cosmeceuta",
+    "brand_slug": "cosmeceuta",
+    "official_url_root": "https://cosmeceuta.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Cosmobeauty",
+    "brand_slug": "cosmobeauty",
+    "official_url_root": "https://www.cosmobeauty.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Cris Dios Organics",
+    "brand_slug": "cris-dios-organics",
+    "official_url_root": "https://crisdiosorganics.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Crown'us Professional",
+    "brand_slug": "crown-us-professional",
+    "official_url_root": "https://crownus.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Curly Care",
+    "brand_slug": "curly-care",
+    "official_url_root": "https://curlycare.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Daarê",
+    "brand_slug": "daare",
+    "official_url_root": "https://daarecosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "DaBelle Hair",
+    "brand_slug": "dabelle-hair",
+    "official_url_root": "https://www.dabelle.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Dacca Professional",
+    "brand_slug": "dacca-professional",
+    "official_url_root": "https://daccaprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Dalsan Cosméticos",
+    "brand_slug": "dalsan-cosmeticos",
+    "official_url_root": "https://dalsan.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Dama Hair",
+    "brand_slug": "dama-hair",
+    "official_url_root": "https://damahair.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "De Benguela",
+    "brand_slug": "de-benguela",
+    "official_url_root": "https://debenguela.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "De Sirius",
+    "brand_slug": "de-sirius",
+    "official_url_root": "https://desirius.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Dermare",
+    "brand_slug": "dermare",
+    "official_url_root": "https://dermare.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Descomplica Curvas",
+    "brand_slug": "descomplica-curvas",
+    "official_url_root": "https://descomplicacurvas.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Detagold",
+    "brand_slug": "detagold",
+    "official_url_root": "https://detagold.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Detra Hair Cosmetics",
+    "brand_slug": "detra-hair-cosmetics",
+    "official_url_root": "https://detra.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Dhonna",
+    "brand_slug": "dhonna",
+    "official_url_root": "https://dhonnacosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Diamante Profissional",
+    "brand_slug": "diamante-profissional",
+    "official_url_root": "https://diamanteprofissional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Dicolore",
+    "brand_slug": "dicolore",
+    "official_url_root": "https://dicolore.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Diliza Professional",
+    "brand_slug": "diliza-professional",
+    "official_url_root": "https://diliza.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Dimension",
+    "brand_slug": "dimension",
+    "official_url_root": "https://www.dimensioncosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Divine Mèches",
+    "brand_slug": "divine-meches",
+    "official_url_root": "https://divinemeches.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Divcom",
+    "brand_slug": "divcom",
+    "official_url_root": "https://www.divcom.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "DO.HA",
+    "brand_slug": "do-ha",
+    "official_url_root": "https://doha.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Dom Pelo",
+    "brand_slug": "dom-pelo",
+    "official_url_root": "https://dompelo.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Don Alcides",
+    "brand_slug": "don-alcides",
+    "official_url_root": "https://donalcides.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Doona",
+    "brand_slug": "doona",
+    "official_url_root": "https://doona.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Doono",
+    "brand_slug": "doono",
+    "official_url_root": "https://doono.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Dr Jack",
+    "brand_slug": "dr-jack",
+    "official_url_root": "https://drjack.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Dr. Seed",
+    "brand_slug": "dr-seed",
+    "official_url_root": "https://drseed.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Duetto Professional",
+    "brand_slug": "duetto-professional",
+    "official_url_root": "https://duettocosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Dyusar",
+    "brand_slug": "dyusar",
+    "official_url_root": "https://dyusar.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Eaê Cosméticos",
+    "brand_slug": "eae-cosmeticos",
+    "official_url_root": "https://eaecompras.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Ecosix Professional",
+    "brand_slug": "ecosix-professional",
+    "official_url_root": "https://ecosix.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Ecosmetics",
+    "brand_slug": "ecosmetics",
+    "official_url_root": "https://ecosmetics.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Eico",
+    "brand_slug": "eico",
+    "official_url_root": "https://eico.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "EIZZ",
+    "brand_slug": "eizz",
+    "official_url_root": "https://eizz.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Ekilibre Amazônia",
+    "brand_slug": "ekilibre-amazonia",
+    "official_url_root": "https://ekilibre.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Ekobé",
+    "brand_slug": "ekobe",
+    "official_url_root": "https://ekobe.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Elfa 4men",
+    "brand_slug": "elfa-4men",
+    "official_url_root": "https://elfacosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Eliana Mendes",
+    "brand_slug": "eliana-mendes",
+    "official_url_root": "https://elianamendescosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Elisafer",
+    "brand_slug": "elisafer",
+    "official_url_root": "https://www.elisafer.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Emáh Hair Care",
+    "brand_slug": "emah-hair-care",
+    "official_url_root": "https://emahhaircare.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Embaixador",
+    "brand_slug": "embaixador",
+    "official_url_root": "https://embaixadorcosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Enzz Cosmetics",
+    "brand_slug": "enzz-cosmetics",
+    "official_url_root": "https://enzzcosmetics.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Eri Haircare",
+    "brand_slug": "eri-haircare",
+    "official_url_root": "https://erihaircare.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Erven Cosmetics",
+    "brand_slug": "erven-cosmetics",
+    "official_url_root": "https://ervencosmetics.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Ervik",
+    "brand_slug": "ervik",
+    "official_url_root": "https://ervikcosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Escovas Evas",
+    "brand_slug": "escovas-evas",
+    "official_url_root": "https://evas.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Essencialmente Bela",
+    "brand_slug": "essencialmente-bela",
+    "official_url_root": "https://essencialmentebela.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Essencials Profissional",
+    "brand_slug": "essencials-profissional",
+    "official_url_root": "https://essencialscosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Essendy",
+    "brand_slug": "essendy",
+    "official_url_root": "https://essendy.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Estoril Cosméticos",
+    "brand_slug": "estoril-cosmeticos",
+    "official_url_root": "https://estorilcosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Eudora",
+    "brand_slug": "eudora",
+    "official_url_root": "https://www.eudora.com.br/cabelos/",
+    "country": "Brasil",
+    "priority": 36,
+    "catalog_entrypoints": [
+      "https://www.eudora.com.br/cabelos/"
+    ],
+    "status": "active",
+    "notes": "inci_on_site=sim"
+  },
+  {
+    "brand_name": "Everlong",
+    "brand_slug": "everlong",
+    "official_url_root": "https://everlong.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Exo Hair",
+    "brand_slug": "exo-hair",
+    "official_url_root": "https://exohair.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Expresso Mata Atlântica",
+    "brand_slug": "expresso-mata-atlantica",
+    "official_url_root": "https://expressomataatlantica.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "F-Men Cosmetics",
+    "brand_slug": "f-men-cosmetics",
+    "official_url_root": "https://f-men.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Fabulosa Lizz",
+    "brand_slug": "fabulosa-lizz",
+    "official_url_root": "https://fabulosalizz.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Facinatus Cosméticos",
+    "brand_slug": "facinatus-cosmeticos",
+    "official_url_root": "https://facinatus.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Farmaervas",
+    "brand_slug": "farmaervas",
+    "official_url_root": "https://farmaervas.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Fashion Gold",
+    "brand_slug": "fashion-gold",
+    "official_url_root": "https://fashiongold.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Fast Escova",
+    "brand_slug": "fast-escova",
+    "official_url_root": "https://fastescova.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Fattore",
+    "brand_slug": "fattore",
+    "official_url_root": "https://fattorecosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Feito pra Você",
+    "brand_slug": "feito-pra-voce",
+    "official_url_root": "https://feitopravoce.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Felithi Pro",
+    "brand_slug": "felithi-pro",
+    "official_url_root": "https://felithi.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Felps Professional",
+    "brand_slug": "felps-professional",
+    "official_url_root": "https://felps.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "FGZ Professional",
+    "brand_slug": "fgz-professional",
+    "official_url_root": "https://fgzprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Fit Cosmetics",
+    "brand_slug": "fit-cosmetics",
+    "official_url_root": "https://fitcosmetics.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Flama",
+    "brand_slug": "flama",
+    "official_url_root": "https://flamacosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Flora Pura",
+    "brand_slug": "flora-pura",
+    "official_url_root": "https://florapura.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Folha Nativa Cosméticos",
+    "brand_slug": "folha-nativa-cosmeticos",
+    "official_url_root": "https://folhanativa.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "For Beauty",
+    "brand_slug": "for-beauty",
+    "official_url_root": "https://forbeautyprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Force de Frizz",
+    "brand_slug": "force-de-frizz",
+    "official_url_root": "https://forcedefrizz.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Forever Liss Professional",
+    "brand_slug": "forever-liss-professional",
+    "official_url_root": "https://foreverliss.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Formalisa",
+    "brand_slug": "formalisa",
+    "official_url_root": "https://formalisa.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Fox For Men",
+    "brand_slug": "fox-for-men",
+    "official_url_root": "https://foxformen.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Fox Professional",
+    "brand_slug": "fox-professional",
+    "official_url_root": "https://foxprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Fusion",
+    "brand_slug": "fusion",
+    "official_url_root": "https://fusioncosmetics.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "G.Hair",
+    "brand_slug": "g-hair",
+    "official_url_root": "https://ghair.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Gigita",
+    "brand_slug": "gigita",
+    "official_url_root": "https://gigita.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Girass",
+    "brand_slug": "girass",
+    "official_url_root": "https://girass.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Glatten Professional",
+    "brand_slug": "glatten-professional",
+    "official_url_root": "https://glatten.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "GO.",
+    "brand_slug": "go",
+    "official_url_root": "https://gohair.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Gota Dourada",
+    "brand_slug": "gota-dourada",
+    "official_url_root": "https://gotadourada.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Gotas Verdes",
+    "brand_slug": "gotas-verdes",
+    "official_url_root": "https://gotasverdes.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Grandha",
+    "brand_slug": "grandha",
+    "official_url_root": "https://grandha.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Grankéra",
+    "brand_slug": "grankera",
+    "official_url_root": "https://grankera.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Grecin",
+    "brand_slug": "grecin",
+    "official_url_root": "https://grecin.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Griffus",
+    "brand_slug": "griffus",
+    "official_url_root": "https://lojagriffus.com.br/",
+    "country": "Brasil",
+    "priority": 22,
+    "catalog_entrypoints": [
+      "https://lojagriffus.com.br/cabelos/"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Hábito Cosméticos",
+    "brand_slug": "habito-cosmeticos",
+    "official_url_root": "https://habitocosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Hair Extrattus",
+    "brand_slug": "hair-extrattus",
+    "official_url_root": "https://hairextrattus.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Haissa Profissional",
+    "brand_slug": "haissa-profissional",
+    "official_url_root": "https://haissa.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Hamarys Cosmetic",
+    "brand_slug": "hamarys-cosmetic",
+    "official_url_root": "https://hamaryscosmetic.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Hanna Professional",
+    "brand_slug": "hanna-professional",
+    "official_url_root": "https://hannaprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Hanova",
+    "brand_slug": "hanova",
+    "official_url_root": "https://hanova.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Haskell",
+    "brand_slug": "haskell",
+    "official_url_root": "https://haskellcosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": 25,
+    "catalog_entrypoints": [
+      "https://haskellcosmeticos.com.br/tratamentos-capilares/",
+      "https://haskellcosmeticos.com.br/coloracao/"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "HBeauty Professional",
+    "brand_slug": "hbeauty-professional",
+    "official_url_root": "https://hbeautyprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Hboni",
+    "brand_slug": "hboni",
+    "official_url_root": "https://hboni.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Hi Hair Care",
+    "brand_slug": "hi-hair-care",
+    "official_url_root": "https://hihaircare.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Hiato Fitocosméticos",
+    "brand_slug": "hiato-fitocosmeticos",
+    "official_url_root": "https://hiatofitocosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Hidralise",
+    "brand_slug": "hidralise",
+    "official_url_root": "https://hidralise.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Hidraliso",
+    "brand_slug": "hidraliso",
+    "official_url_root": "https://hidraliso.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Hidratei",
+    "brand_slug": "hidratei",
+    "official_url_root": "https://hidratei.com.br/",
+    "country": "Brasil",
+    "priority": 20,
+    "catalog_entrypoints": [
+      "https://hidratei.com.br/collections/linha-gloss-shrp",
+      "https://hidratei.com.br/collections/leave-in",
+      "https://hidratei.com.br/collections/shampoo",
+      "https://hidratei.com.br/collections/condicionador",
+      "https://hidratei.com.br/collections/mascaras-e-ampolas",
+      "https://hidratei.com.br/collections/tratamento-noturno",
+      "https://hidratei.com.br/products/locao-hidratante-corporal-200ml",
+      "https://hidratei.com.br/collections/oleo-e-serum",
+      "https://hidratei.com.br/collections/linha-kids"
+    ],
+    "status": "active",
+    "notes": "tem linha Kids"
+  },
+  {
+    "brand_name": "Hobety Profissional",
+    "brand_slug": "hobety-profissional",
+    "official_url_root": "https://hobety.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Hoka Professional",
+    "brand_slug": "hoka-professional",
+    "official_url_root": "https://hokaprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Homme Marine",
+    "brand_slug": "homme-marine",
+    "official_url_root": "https://hommemarine.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Human",
+    "brand_slug": "human",
+    "official_url_root": "https://humanhaircare.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "iLike Professional",
+    "brand_slug": "ilike-professional",
+    "official_url_root": "https://ilike.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Imabelle",
+    "brand_slug": "imabelle",
+    "official_url_root": "https://imabelle.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Imagination",
+    "brand_slug": "imagination",
+    "official_url_root": "https://imaginationcosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Imecap",
+    "brand_slug": "imecap",
+    "official_url_root": "https://farmaciamoderna.com.br/marcas/imecap/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Imunehair",
+    "brand_slug": "imunehair",
+    "official_url_root": "https://imunehair.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "In Voga",
+    "brand_slug": "in-voga",
+    "official_url_root": "https://invogaprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "InBlue Professional",
+    "brand_slug": "inblue-professional",
+    "official_url_root": "https://inblueprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Inoar",
+    "brand_slug": "inoar",
+    "official_url_root": "https://www.loja.inoar.com.br/",
+    "country": "Brasil",
+    "priority": 10,
+    "catalog_entrypoints": [
+      "https://www.loja.inoar.com.br/produtos"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Instinto Natural",
+    "brand_slug": "instinto-natural",
+    "official_url_root": "https://instintonatural.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Iórus Professional",
+    "brand_slug": "iorus-professional",
+    "official_url_root": "https://iorus.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Issue Professional",
+    "brand_slug": "issue-professional",
+    "official_url_root": "https://issueprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Itallian Hairtech",
+    "brand_slug": "itallian-hairtech",
+    "official_url_root": "https://itallianhairtech.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Iti Hair Profissional",
+    "brand_slug": "iti-hair-profissional",
+    "official_url_root": "https://itiprofissional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "IX1975",
+    "brand_slug": "ix1975",
+    "official_url_root": "https://ix1975.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Jacques Janine Professionnel",
+    "brand_slug": "jacques-janine-professionnel",
+    "official_url_root": "https://jacquesjanine.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Japinha Cosméticos",
+    "brand_slug": "japinha-cosmeticos",
+    "official_url_root": "https://japinhacosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Jyothi Cosméticos",
+    "brand_slug": "jyothi-cosmeticos",
+    "official_url_root": "https://jyothi.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "K-Bell",
+    "brand_slug": "k-bell",
+    "official_url_root": "https://www.kbell.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Kadma Kweeze",
+    "brand_slug": "kadma-kweeze",
+    "official_url_root": "https://kadmakweeze.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Kah-Noa",
+    "brand_slug": "kah-noa",
+    "official_url_root": "https://kahnoa.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Kali Cosmetics",
+    "brand_slug": "kali-cosmetics",
+    "official_url_root": "https://kalicosmetics.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Kamaleão Color",
+    "brand_slug": "kamaleao-color",
+    "official_url_root": "https://kamaleaocolor.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Karina",
+    "brand_slug": "karina",
+    "official_url_root": "https://www.karinacosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Kelma",
+    "brand_slug": "kelma",
+    "official_url_root": "https://kelma.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Kelse Pro Skin",
+    "brand_slug": "kelse-pro-skin",
+    "official_url_root": "https://kelseproskin.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Keragen",
+    "brand_slug": "keragen",
+    "official_url_root": "https://www.skafe.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Keraton",
+    "brand_slug": "keraton",
+    "official_url_root": "https://kera.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Khalili For Woman",
+    "brand_slug": "khalili-for-woman",
+    "official_url_root": "https://khaliliforwoman.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Kiria Hair Professional",
+    "brand_slug": "kiria-hair-professional",
+    "official_url_root": "https://kiriahair.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Kiron Cosméticos",
+    "brand_slug": "kiron-cosmeticos",
+    "official_url_root": "https://kironcosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "KNUT",
+    "brand_slug": "knut",
+    "official_url_root": "https://knut.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Kostume",
+    "brand_slug": "kostume",
+    "official_url_root": "https://kostume.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Kpriche Professional",
+    "brand_slug": "kpriche-professional",
+    "official_url_root": "https://kpriche.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "K.Pro",
+    "brand_slug": "k-pro",
+    "official_url_root": "https://kpro.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "L&A",
+    "brand_slug": "l-a",
+    "official_url_root": "https://leacosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "La Cosmeticos",
+    "brand_slug": "la-cosmeticos",
+    "official_url_root": "https://lacosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "La Malagueta Cosméticos",
+    "brand_slug": "la-malagueta-cosmeticos",
+    "official_url_root": "https://lamalagueta.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Laby",
+    "brand_slug": "laby",
+    "official_url_root": "https://laby.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Lacan",
+    "brand_slug": "lacan",
+    "official_url_root": "https://lacan.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Lagares Profissional",
+    "brand_slug": "lagares-profissional",
+    "official_url_root": "https://lagaresprofissional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Lakkoa",
+    "brand_slug": "lakkoa",
+    "official_url_root": "https://lakkoa.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "La’Mine",
+    "brand_slug": "lamine",
+    "official_url_root": "https://laminecosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Lana Brasiles",
+    "brand_slug": "lana-brasiles",
+    "official_url_root": "https://lanabrasiles.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "L’arrëe",
+    "brand_slug": "larree",
+    "official_url_root": "https://larree.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "L'Occitane au Brésil",
+    "brand_slug": "l-occitane-au-bresil",
+    "official_url_root": "https://www.loccitaneaubresil.com/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "LCS Hair Care",
+    "brand_slug": "lcs-hair-care",
+    "official_url_root": "https://lcshaircare.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Lé Charme's Cosméticos",
+    "brand_slug": "le-charme-s-cosmeticos",
+    "official_url_root": "https://lecharmes.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Le Cliqué",
+    "brand_slug": "le-clique",
+    "official_url_root": "https://leclique.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Le Prö Cosmetics",
+    "brand_slug": "le-pro-cosmetics",
+    "official_url_root": "https://leprocosmetics.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Leader Cam",
+    "brand_slug": "leader-cam",
+    "official_url_root": "https://leadercam.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Leel's",
+    "brand_slug": "leel-s",
+    "official_url_root": "https://leels.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Left Cosméticos",
+    "brand_slug": "left-cosmeticos",
+    "official_url_root": "https://leftcosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "LG Terapia Capilar",
+    "brand_slug": "lg-terapia-capilar",
+    "official_url_root": "https://lgterapiacapilar.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Light Hair Professional",
+    "brand_slug": "light-hair-professional",
+    "official_url_root": "https://lighthair.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Limmê Cosméticos",
+    "brand_slug": "limme-cosmeticos",
+    "official_url_root": "https://limmecosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Lion",
+    "brand_slug": "lion",
+    "official_url_root": "https://lion.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Liso de Dália",
+    "brand_slug": "liso-de-dalia",
+    "official_url_root": "https://lisodedalia.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Live Aloe",
+    "brand_slug": "live-aloe",
+    "official_url_root": "https://livealoe.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Living Proof",
+    "brand_slug": "living-proof",
+    "official_url_root": "https://livingproof.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Lizz Professional",
+    "brand_slug": "lizz-professional",
+    "official_url_root": "https://lizz.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "LOF Professional",
+    "brand_slug": "lof-professional",
+    "official_url_root": "https://lofprofissional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Lokenzzi",
+    "brand_slug": "lokenzzi",
+    "official_url_root": "https://lokenzzi.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Lola From Rio",
+    "brand_slug": "lola-from-rio",
+    "official_url_root": "https://www.lolacosmetics.com.br/cabelos",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "London Cosméticos",
+    "brand_slug": "london-cosmeticos",
+    "official_url_root": "https://londoncosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "LOÓREN",
+    "brand_slug": "looren",
+    "official_url_root": "https://loorencosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "L'ovenze Professional",
+    "brand_slug": "l-ovenze-professional",
+    "official_url_root": "https://lovenze.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Lowell",
+    "brand_slug": "lowell",
+    "official_url_root": "https://lowell.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Lucy's",
+    "brand_slug": "lucy-s",
+    "official_url_root": "https://lucys.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Luminosittà Professional",
+    "brand_slug": "luminositta-professional",
+    "official_url_root": "https://luminositta.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Lunna Shop",
+    "brand_slug": "lunna-shop",
+    "official_url_root": "https://lunnashop.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "M.lore Cosmetics",
+    "brand_slug": "m-lore-cosmetics",
+    "official_url_root": "https://mlorecosmetics.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "MAB Marco Antônio de Biaggi",
+    "brand_slug": "mab-marco-antonio-de-biaggi",
+    "official_url_root": "https://mab.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Macpaul Professional",
+    "brand_slug": "macpaul-professional",
+    "official_url_root": "https://macpaul.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Madamelis Profissional",
+    "brand_slug": "madamelis-profissional",
+    "official_url_root": "https://madamelis.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Magic Beauty",
+    "brand_slug": "magic-beauty",
+    "official_url_root": "https://magicbeauty.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Magic Color",
+    "brand_slug": "magic-color",
+    "official_url_root": "https://magiccolor.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Magic Science",
+    "brand_slug": "magic-science",
+    "official_url_root": "https://magicscience.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mahair Cosmetics",
+    "brand_slug": "mahair-cosmetics",
+    "official_url_root": "https://mahair.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mahogany",
+    "brand_slug": "mahogany",
+    "official_url_root": "https://mahogany.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mairibel",
+    "brand_slug": "mairibel",
+    "official_url_root": "https://mairibelcosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Malina Beauty",
+    "brand_slug": "malina-beauty",
+    "official_url_root": "https://malinabeauty.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Marco Boni",
+    "brand_slug": "marco-boni",
+    "official_url_root": "https://marcoboni.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mari Morena",
+    "brand_slug": "mari-morena",
+    "official_url_root": "https://marimorena.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Maria Escandalosa",
+    "brand_slug": "maria-escandalosa",
+    "official_url_root": "https://mariaescandalosa.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mariá Head & Hair Spa",
+    "brand_slug": "maria-head-hair-spa",
+    "official_url_root": "https://mariaheadandhairspa.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mary Life",
+    "brand_slug": "mary-life",
+    "official_url_root": "https://marylife.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Match.",
+    "brand_slug": "match",
+    "official_url_root": "https://match.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Maxilluring",
+    "brand_slug": "maxilluring",
+    "official_url_root": "https://maxilluring.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Maxton",
+    "brand_slug": "maxton",
+    "official_url_root": "https://maxton.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Maycrene",
+    "brand_slug": "maycrene",
+    "official_url_root": "https://maycrene.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mazavie Cosmetics",
+    "brand_slug": "mazavie-cosmetics",
+    "official_url_root": "https://mazavie.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Med For You Professional",
+    "brand_slug": "med-for-you-professional",
+    "official_url_root": "https://medforyou.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Medicasp",
+    "brand_slug": "medicasp",
+    "official_url_root": "https://medicasp.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mega Bell",
+    "brand_slug": "mega-bell",
+    "official_url_root": "https://megabell.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mega Profissional",
+    "brand_slug": "mega-profissional",
+    "official_url_root": "https://megaprofissional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Meidu",
+    "brand_slug": "meidu",
+    "official_url_root": "https://meidu.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mel Black",
+    "brand_slug": "mel-black",
+    "official_url_root": "https://melblack.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Menina e Mulher Cosméticos",
+    "brand_slug": "menina-e-mulher-cosmeticos",
+    "official_url_root": "https://meninaemulhercosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Meráki",
+    "brand_slug": "meraki",
+    "official_url_root": "https://meraki.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mestre dos Cachos",
+    "brand_slug": "mestre-dos-cachos",
+    "official_url_root": "https://mestredoscachos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Meu Q",
+    "brand_slug": "meu-q",
+    "official_url_root": "https://meuq.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Midori Profissional",
+    "brand_slug": "midori-profissional",
+    "official_url_root": "https://midoricosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mio Capelli",
+    "brand_slug": "mio-capelli",
+    "official_url_root": "https://miocapelli.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mirum Kosmétikos",
+    "brand_slug": "mirum-kosmetikos",
+    "official_url_root": "https://mirum.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mojo",
+    "brand_slug": "mojo",
+    "official_url_root": "https://mojo.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Monohair Professional",
+    "brand_slug": "monohair-professional",
+    "official_url_root": "https://monohair.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mondial",
+    "brand_slug": "mondial",
+    "official_url_root": "https://mondial.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "MQ Beauty",
+    "brand_slug": "mq-beauty",
+    "official_url_root": "https://mqbeauty.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "MQ Professional",
+    "brand_slug": "mq-professional",
+    "official_url_root": "https://mqprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Msa Cosmeticos",
+    "brand_slug": "msa-cosmeticos",
+    "official_url_root": "https://msacosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Muriel",
+    "brand_slug": "muriel",
+    "official_url_root": "https://muriel.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mutari",
+    "brand_slug": "mutari",
+    "official_url_root": "https://mutari.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "My Brush",
+    "brand_slug": "my-brush",
+    "official_url_root": "https://mybrush.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "MyHealth",
+    "brand_slug": "myhealth",
+    "official_url_root": "https://myhealth.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Myphios Professional",
+    "brand_slug": "myphios-professional",
+    "official_url_root": "https://myphios.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Naelly ST Professional",
+    "brand_slug": "naelly-st-professional",
+    "official_url_root": "https://naellyst.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Nando Vasconcelos",
+    "brand_slug": "nando-vasconcelos",
+    "official_url_root": "https://nandovasconcelos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "NATHYDRAS",
+    "brand_slug": "nathydras",
+    "official_url_root": "https://nathydras.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Natura",
+    "brand_slug": "natura",
+    "official_url_root": "https://www.natura.com.br/c/cabelos",
+    "country": "Brasil",
+    "priority": 26,
+    "catalog_entrypoints": [
+      "https://www.natura.com.br/c/cabelos"
+    ],
+    "status": "active",
+    "notes": "consegui algs ingredientes no INCI beauty"
+  },
+  {
+    "brand_name": "Natucor",
+    "brand_slug": "natucor",
+    "official_url_root": "https://embelleze.com/marcas/natucor/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "NatuHair",
+    "brand_slug": "natuhair",
+    "official_url_root": "https://natuhair.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "NatuMaxx",
+    "brand_slug": "natumaxx",
+    "official_url_root": "https://natumaxx.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Naturiun",
+    "brand_slug": "naturiun",
+    "official_url_root": "https://naturiun.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Natury's",
+    "brand_slug": "natury-s",
+    "official_url_root": "https://naturys.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Neez",
+    "brand_slug": "neez",
+    "official_url_root": "https://neezprofissional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "New Old Man",
+    "brand_slug": "new-old-man",
+    "official_url_root": "https://newoldman.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "New Hair",
+    "brand_slug": "new-hair",
+    "official_url_root": "https://newhair.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Nick & Vick",
+    "brand_slug": "nick-vick",
+    "official_url_root": "https://nickvick.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Niely",
+    "brand_slug": "niely",
+    "official_url_root": "https://niely.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Nivodare Professional",
+    "brand_slug": "nivodare-professional",
+    "official_url_root": "https://nivodare.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Nordic Smells",
+    "brand_slug": "nordic-smells",
+    "official_url_root": "https://nordicsmells.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Nouê",
+    "brand_slug": "noue",
+    "official_url_root": "https://noue.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Novex",
+    "brand_slug": "novex",
+    "official_url_root": "https://embelleze.com/marcas/novex/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Nuance Professional",
+    "brand_slug": "nuance-professional",
+    "official_url_root": "https://nuanceprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Nuno Cosméticos Naturais",
+    "brand_slug": "nuno-cosmeticos-naturais",
+    "official_url_root": "https://nuno.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Nupill",
+    "brand_slug": "nupill",
+    "official_url_root": "https://nupill.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Nutrat",
+    "brand_slug": "nutrat",
+    "official_url_root": "https://nutrat.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Nyaliss Beauty",
+    "brand_slug": "nyaliss-beauty",
+    "official_url_root": "https://nyaliss.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Nyata Cosméticos",
+    "brand_slug": "nyata-cosmeticos",
+    "official_url_root": "https://nyatacosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "O Boticário",
+    "brand_slug": "o-boticario",
+    "official_url_root": "https://www.boticario.com.br/cabelos/",
+    "country": "Brasil",
+    "priority": 27,
+    "catalog_entrypoints": [
+      "https://www.boticario.com.br/cabelos/"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "O Lobo do Mar",
+    "brand_slug": "o-lobo-do-mar",
+    "official_url_root": "https://olobodomar.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Obliphica Cosméticos",
+    "brand_slug": "obliphica-cosmeticos",
+    "official_url_root": "https://obliphicacosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Oe Nani",
+    "brand_slug": "oe-nani",
+    "official_url_root": "https://oenani.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Oeje Brazil",
+    "brand_slug": "oeje-brazil",
+    "official_url_root": "https://oeje.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Okyo",
+    "brand_slug": "okyo",
+    "official_url_root": "https://okyo.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Oncosmetic",
+    "brand_slug": "oncosmetic",
+    "official_url_root": "https://oncosmetic.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Onixx Brasil",
+    "brand_slug": "onixx-brasil",
+    "official_url_root": "https://onixxbrasil.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Oriente Life",
+    "brand_slug": "oriente-life",
+    "official_url_root": "https://orientelife.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Ouribel Cosméticos",
+    "brand_slug": "ouribel-cosmeticos",
+    "official_url_root": "https://ouribel.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "OX Cosméticos",
+    "brand_slug": "ox-cosmeticos",
+    "official_url_root": "https://oxcosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Oxê Cosmetics",
+    "brand_slug": "oxe-cosmetics",
+    "official_url_root": "https://oxecosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Paiolla Professional",
+    "brand_slug": "paiolla-professional",
+    "official_url_root": "https://paiolla.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Pantene",
+    "brand_slug": "pantene",
+    "official_url_root": "https://pantene.com.br/pt-br",
+    "country": "Brasil",
+    "priority": 11,
+    "catalog_entrypoints": [
+      "https://pantene.com.br/pt-br/produtos"
+    ],
+    "status": "active",
+    "notes": "informações em imagens e não texto"
+  },
+  {
+    "brand_name": "Papel para Mechas",
+    "brand_slug": "papel-para-mechas",
+    "official_url_root": "https://papelparamachas.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Paresí Nature",
+    "brand_slug": "paresi-nature",
+    "official_url_root": "https://paresinature.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Patrono",
+    "brand_slug": "patrono",
+    "official_url_root": "https://patrono.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Pétre Cosmetics",
+    "brand_slug": "petre-cosmetics",
+    "official_url_root": "https://petrecosmetics.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "pHAMDÁ Professional",
+    "brand_slug": "phamda-professional",
+    "official_url_root": "https://phamda.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Pharma",
+    "brand_slug": "pharma",
+    "official_url_root": "https://pharma.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Pharmacy Botanicals",
+    "brand_slug": "pharmacy-botanicals",
+    "official_url_root": "https://pharmacybotanicals.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Philco",
+    "brand_slug": "philco",
+    "official_url_root": "https://philco.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Philips Walita",
+    "brand_slug": "philips-walita",
+    "official_url_root": "https://philips.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "PHK Professional Hair",
+    "brand_slug": "phk-professional-hair",
+    "official_url_root": "https://phkcosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Physalis",
+    "brand_slug": "physalis",
+    "official_url_root": "https://www.physalisbrasil.com.br/produto/listar/cabelos",
+    "country": "Brasil",
+    "priority": 30,
+    "catalog_entrypoints": [
+      "https://www.physalisbrasil.com.br/produto/listar/cabelos"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Phytobelle",
+    "brand_slug": "phytobelle",
+    "official_url_root": "https://phytobelle.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Phytoca",
+    "brand_slug": "phytoca",
+    "official_url_root": "https://phytoca.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Phytogen",
+    "brand_slug": "phytogen",
+    "official_url_root": "https://phytogen.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Phytoervas",
+    "brand_slug": "phytoervas",
+    "official_url_root": "https://phytoervas.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Plancton",
+    "brand_slug": "plancton",
+    "official_url_root": "https://planctonprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "P'lattélli Profissional",
+    "brand_slug": "p-lattelli-profissional",
+    "official_url_root": "https://plattelli.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Pokoloka",
+    "brand_slug": "pokoloka",
+    "official_url_root": "https://pokoloka.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Portier",
+    "brand_slug": "portier",
+    "official_url_root": "https://portier.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Premier Hair",
+    "brand_slug": "premier-hair",
+    "official_url_root": "https://premierhair.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Principia",
+    "brand_slug": "principia",
+    "official_url_root": "https://principia.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Pro Cachos",
+    "brand_slug": "pro-cachos",
+    "official_url_root": "https://procachos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "ProArt",
+    "brand_slug": "proart",
+    "official_url_root": "https://proart.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "PROBELLE",
+    "brand_slug": "probelle",
+    "official_url_root": "https://probelle.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Professional Paris Cosmetics",
+    "brand_slug": "professional-paris-cosmetics",
+    "official_url_root": "https://professionalparis.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Prohair Cosméticos Profissionais",
+    "brand_slug": "prohair-cosmeticos-profissionais",
+    "official_url_root": "https://prohaircosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Prohall Cosmetic",
+    "brand_slug": "prohall-cosmetic",
+    "official_url_root": "https://prohallcosmetic.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "QOD",
+    "brand_slug": "qod",
+    "official_url_root": "https://qodcity.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Quantic Flora",
+    "brand_slug": "quantic-flora",
+    "official_url_root": "https://quanticflora.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Raavi",
+    "brand_slug": "raavi",
+    "official_url_root": "https://raavi.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Rainha dos Cachos",
+    "brand_slug": "rainha-dos-cachos",
+    "official_url_root": "https://rainhadoscachos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Raiz Latina",
+    "brand_slug": "raiz-latina",
+    "official_url_root": "https://raizlatina.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Rare Way Cosméticos",
+    "brand_slug": "rare-way-cosmeticos",
+    "official_url_root": "https://rarewaycosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Rauk",
+    "brand_slug": "rauk",
+    "official_url_root": "https://rauk.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "RAVV",
+    "brand_slug": "ravv",
+    "official_url_root": "https://ravv.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Rebeel Professional",
+    "brand_slug": "rebeel-professional",
+    "official_url_root": "https://rebeel.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Red Iron",
+    "brand_slug": "red-iron",
+    "official_url_root": "https://rediron.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Redken",
+    "brand_slug": "redken",
+    "official_url_root": "https://www.redken.com.br/produtos",
+    "country": "Brasil",
+    "priority": 2,
+    "catalog_entrypoints": [
+      "https://www.redken.com.br/produtos"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Retrô Cosméticos",
+    "brand_slug": "retro-cosmeticos",
+    "official_url_root": "https://retrocosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "RG Professional",
+    "brand_slug": "rg-professional",
+    "official_url_root": "https://rgprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Richée Professional",
+    "brand_slug": "richee-professional",
+    "official_url_root": "https://richee.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Riè Salon-Pro",
+    "brand_slug": "rie-salon-pro",
+    "official_url_root": "https://riesalonpro.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Rienza",
+    "brand_slug": "rienza",
+    "official_url_root": "https://rienza.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Rigolim Hair & Co",
+    "brand_slug": "rigolim-hair-co",
+    "official_url_root": "https://rigolim.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Risa Professional",
+    "brand_slug": "risa-professional",
+    "official_url_root": "https://risaprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Rivenna Professional",
+    "brand_slug": "rivenna-professional",
+    "official_url_root": "https://rivenna.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Robson Peluquero",
+    "brand_slug": "robson-peluquero",
+    "official_url_root": "https://robsonpeluquero.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Roger",
+    "brand_slug": "roger",
+    "official_url_root": "https://roger.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Ros",
+    "brand_slug": "ros",
+    "official_url_root": "https://ros.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Rosa Amazônica",
+    "brand_slug": "rosa-amazonica",
+    "official_url_root": "https://rosaamazonica.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Roswell Club",
+    "brand_slug": "roswell-club",
+    "official_url_root": "https://roswellclub.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Route 66",
+    "brand_slug": "route-66",
+    "official_url_root": "https://route66cosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Royal.d",
+    "brand_slug": "royal-d",
+    "official_url_root": "https://royaldcosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Royal Professional",
+    "brand_slug": "royal-professional",
+    "official_url_root": "https://royalprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Roza Raiz Cosméticos",
+    "brand_slug": "roza-raiz-cosmeticos",
+    "official_url_root": "https://rozaraiz.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Rubelita Professional",
+    "brand_slug": "rubelita-professional",
+    "official_url_root": "https://rubelitaprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Ruggero Cosméticos",
+    "brand_slug": "ruggero-cosmeticos",
+    "official_url_root": "https://ruggerocosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Salles Profissional",
+    "brand_slug": "salles-profissional",
+    "official_url_root": "https://sallesprofissional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Sallore",
+    "brand_slug": "sallore",
+    "official_url_root": "https://sallore.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Salon Line",
+    "brand_slug": "salon-line",
+    "official_url_root": "https://salonline.com.br/",
+    "country": "Brasil",
+    "priority": 40,
+    "catalog_entrypoints": [
+      "https://salonline.com.br/"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Salunat",
+    "brand_slug": "salunat",
+    "official_url_root": "https://salunat.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Salvatore Cosméticos - Hair Pro",
+    "brand_slug": "salvatore-cosmeticos-hair-pro",
+    "official_url_root": "https://salvatore.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Sanliss Profissional",
+    "brand_slug": "sanliss-profissional",
+    "official_url_root": "https://sanliss.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Seda",
+    "brand_slug": "seda",
+    "official_url_root": "https://www.seda.com.br/home.html",
+    "country": "Brasil",
+    "priority": 21,
+    "catalog_entrypoints": [
+      "https://www.seda.com.br/hair-products/shampoo.html",
+      "https://www.seda.com.br/hair-products/condicionador.html",
+      "https://www.seda.com.br/hair-products/super-condicionadores.html",
+      "https://www.seda.com.br/hair-products/mascaras-de-tratamento.html",
+      "https://www.seda.com.br/hair-products/cremes-para-pentear-e-finalizadores.html"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Segredo Dela",
+    "brand_slug": "segredo-dela",
+    "official_url_root": "https://segredodela.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Senapack",
+    "brand_slug": "senapack",
+    "official_url_root": "https://senapack.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Sense Brasil",
+    "brand_slug": "sense-brasil",
+    "official_url_root": "https://sensebrasil.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Shine Blue",
+    "brand_slug": "shine-blue",
+    "official_url_root": "https://shineblue.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Sillage",
+    "brand_slug": "sillage",
+    "official_url_root": "https://sillage.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Silone Hair",
+    "brand_slug": "silone-hair",
+    "official_url_root": "https://silonehair.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Simbioze Amazônica",
+    "brand_slug": "simbioze-amazonica",
+    "official_url_root": "https://simbiozeamazonica.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Simple B",
+    "brand_slug": "simple-b",
+    "official_url_root": "https://simpleb.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Skala",
+    "brand_slug": "skala",
+    "official_url_root": "https://skala.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Slide Cosméticos",
+    "brand_slug": "slide-cosmeticos",
+    "official_url_root": "https://slidecosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Sobelle",
+    "brand_slug": "sobelle",
+    "official_url_root": "https://sobelle.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Sobrebarba",
+    "brand_slug": "sobrebarba",
+    "official_url_root": "https://sobrebarba.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Soft Color",
+    "brand_slug": "soft-color",
+    "official_url_root": "https://wella.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Soft Hair",
+    "brand_slug": "soft-hair",
+    "official_url_root": "https://softhair.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Sóllido",
+    "brand_slug": "sollido",
+    "official_url_root": "https://sollido.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Sorali Cosmetics",
+    "brand_slug": "sorali-cosmetics",
+    "official_url_root": "https://soralicosmetics.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "S.O.S Beleza Brasileira",
+    "brand_slug": "s-o-s-beleza-brasileira",
+    "official_url_root": "https://sosbelezabrasileira.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Sos Frizz",
+    "brand_slug": "sos-frizz",
+    "official_url_root": "https://sosfrizz.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Soul Care",
+    "brand_slug": "soul-care",
+    "official_url_root": "https://soulcarecosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Soul Cosméticos",
+    "brand_slug": "soul-cosmeticos",
+    "official_url_root": "https://soulcosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Soul Power",
+    "brand_slug": "soul-power",
+    "official_url_root": "https://soulpowerbrasil.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Soulta",
+    "brand_slug": "soulta",
+    "official_url_root": "https://soulta.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Soupleliss Professional",
+    "brand_slug": "soupleliss-professional",
+    "official_url_root": "https://soupleliss.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "SouthLiss Cosméticos",
+    "brand_slug": "southliss-cosmeticos",
+    "official_url_root": "https://southliss.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Spa Cosmetics",
+    "brand_slug": "spa-cosmetics",
+    "official_url_root": "https://spacosmetics.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Stellar Beauty",
+    "brand_slug": "stellar-beauty",
+    "official_url_root": "https://stellarbeauty.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Stijl",
+    "brand_slug": "stijl",
+    "official_url_root": "https://stijl.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Strass",
+    "brand_slug": "strass",
+    "official_url_root": "https://strass.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Strattus",
+    "brand_slug": "strattus",
+    "official_url_root": "https://strattus.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Strong Barber",
+    "brand_slug": "strong-barber",
+    "official_url_root": "https://strongbarber.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Stuff Anti Frizz",
+    "brand_slug": "stuff-anti-frizz",
+    "official_url_root": "https://stuffantifrizz.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Supérbia",
+    "brand_slug": "superbia",
+    "official_url_root": "https://superbia.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Taiff",
+    "brand_slug": "taiff",
+    "official_url_root": "https://taiff.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Teimoso",
+    "brand_slug": "teimoso",
+    "official_url_root": "https://teimoso.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Tekmi Cosméticos",
+    "brand_slug": "tekmi-cosmeticos",
+    "official_url_root": "https://tekmi.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Terumy Acessórios",
+    "brand_slug": "terumy-acessorios",
+    "official_url_root": "https://terumy.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Three Therapy",
+    "brand_slug": "three-therapy",
+    "official_url_root": "https://threetherapy.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Tío Nacho",
+    "brand_slug": "tio-nacho",
+    "official_url_root": "https://tionacho.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Toplife Profissional",
+    "brand_slug": "toplife-profissional",
+    "official_url_root": "https://toplifeprofissional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Total Lissy",
+    "brand_slug": "total-lissy",
+    "official_url_root": "https://totallissy.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Trá Lá Lá",
+    "brand_slug": "tra-la-la",
+    "official_url_root": "https://tralalacosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "TreeLiss Profissional",
+    "brand_slug": "treeliss-profissional",
+    "official_url_root": "https://treeliss.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Tri-Baum",
+    "brand_slug": "tri-baum",
+    "official_url_root": "https://tri-baum.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Tridium Cosméticos",
+    "brand_slug": "tridium-cosmeticos",
+    "official_url_root": "https://tridiumcosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Triskle",
+    "brand_slug": "triskle",
+    "official_url_root": "https://trisklecosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Tróia Hair Cosmetics",
+    "brand_slug": "troia-hair-cosmetics",
+    "official_url_root": "https://troiahair.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "TRUSS",
+    "brand_slug": "truss",
+    "official_url_root": "https://www.trussprofessional.com.br",
+    "country": "Brasil",
+    "priority": 9,
+    "catalog_entrypoints": [
+      "https://www.loja.inoar.com.br/produtos",
+      "https://www.trussprofessional.com.br/cabelos/tratamento/",
+      "https://www.trussprofessional.com.br/cabelos/finalizador/"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Tyrrel",
+    "brand_slug": "tyrrel",
+    "official_url_root": "https://tyrrelprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Tzaha Professional Hair Excelence",
+    "brand_slug": "tzaha-professional-hair-excelence",
+    "official_url_root": "https://tzaha.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Uhse",
+    "brand_slug": "uhse",
+    "official_url_root": "https://uhse.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Up2You",
+    "brand_slug": "up2you",
+    "official_url_root": "https://up2you.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Vancouver",
+    "brand_slug": "vancouver",
+    "official_url_root": "https://vancouvercosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Vê de Verdade",
+    "brand_slug": "ve-de-verdade",
+    "official_url_root": "https://vedeverdade.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Vedis",
+    "brand_slug": "vedis",
+    "official_url_root": "https://vedis.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Veggue Profissional",
+    "brand_slug": "veggue-profissional",
+    "official_url_root": "https://veggue.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Veinira",
+    "brand_slug": "veinira",
+    "official_url_root": "https://veinira.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Venceslaufarma",
+    "brand_slug": "venceslaufarma",
+    "official_url_root": "https://venceslaufarma.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Venille Professional",
+    "brand_slug": "venille-professional",
+    "official_url_root": "https://venille.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Verde Brasil Cosméticos",
+    "brand_slug": "verde-brasil-cosmeticos",
+    "official_url_root": "https://verdebrasilcosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Verdena",
+    "brand_slug": "verdena",
+    "official_url_root": "https://verdena.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Vertix",
+    "brand_slug": "vertix",
+    "official_url_root": "https://vertix.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Via Aroma",
+    "brand_slug": "via-aroma",
+    "official_url_root": "https://viaaroma.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Vicka Care",
+    "brand_slug": "vicka-care",
+    "official_url_root": "https://vickacare.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Victoria Hair",
+    "brand_slug": "victoria-hair",
+    "official_url_root": "https://victoriahair.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Victorine Profissional",
+    "brand_slug": "victorine-profissional",
+    "official_url_root": "https://victorineprofissional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Virá Cosméticos",
+    "brand_slug": "vira-cosmeticos",
+    "official_url_root": "https://viracosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Vita Seiva",
+    "brand_slug": "vita-seiva",
+    "official_url_root": "https://vitaseiva.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Vitaderm",
+    "brand_slug": "vitaderm",
+    "official_url_root": "https://vitaderm.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Vitalab",
+    "brand_slug": "vitalab",
+    "official_url_root": "https://vitalab.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Vital X Repair Professional",
+    "brand_slug": "vital-x-repair-professional",
+    "official_url_root": "https://vitalx.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Vizcaya",
+    "brand_slug": "vizcaya",
+    "official_url_root": "https://vizcaya.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Vizeme Cosméticos",
+    "brand_slug": "vizeme-cosmeticos",
+    "official_url_root": "https://vizeme.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Vizet",
+    "brand_slug": "vizet",
+    "official_url_root": "https://vizet.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Voga",
+    "brand_slug": "voga",
+    "official_url_root": "https://voga.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "WBeauty Cosméticos",
+    "brand_slug": "wbeauty-cosmeticos",
+    "official_url_root": "https://wbeautycosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Wellux Professional",
+    "brand_slug": "wellux-professional",
+    "official_url_root": "https://wellux.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Wess Professional",
+    "brand_slug": "wess-professional",
+    "official_url_root": "https://wessprofessional.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Widi Care",
+    "brand_slug": "widi-care",
+    "official_url_root": "https://lojawidicare.com.br/",
+    "country": "Brasil",
+    "priority": 15,
+    "catalog_entrypoints": [
+      "https://lojawidicare.com.br/shampoo/",
+      "https://lojawidicare.com.br/condicionador/",
+      "https://lojawidicare.com.br/creme-de-pentear/",
+      "https://lojawidicare.com.br/finalizador/",
+      "https://lojawidicare.com.br/mascara-de-tratamento/",
+      "https://lojawidicare.com.br/tratamento-capilar/"
+    ],
+    "status": "active",
+    "notes": "tem categorias por tipo de cabelo e indicação"
+  },
+  {
+    "brand_name": "World Queen",
+    "brand_slug": "world-queen",
+    "official_url_root": "https://worldqueen.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Yabae",
+    "brand_slug": "yabae",
+    "official_url_root": "https://yabae.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Yamá",
+    "brand_slug": "yama",
+    "official_url_root": "https://yama.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Yamy!",
+    "brand_slug": "yamy",
+    "official_url_root": "https://yamycosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Yantra Cosmeticos",
+    "brand_slug": "yantra-cosmeticos",
+    "official_url_root": "https://yantracosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Yasmin Beauty",
+    "brand_slug": "yasmin-beauty",
+    "official_url_root": "https://yasminbeauty.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "YBERA PARIS",
+    "brand_slug": "ybera-paris",
+    "official_url_root": "https://ybera.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Yenzah",
+    "brand_slug": "yenzah",
+    "official_url_root": "https://yenzah.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Ykas",
+    "brand_slug": "ykas",
+    "official_url_root": "https://ykas.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "You Man Grooming",
+    "brand_slug": "you-man-grooming",
+    "official_url_root": "https://youmangrooming.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "YTREND",
+    "brand_slug": "ytrend",
+    "official_url_root": "https://ytrend.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Zaila Professional",
+    "brand_slug": "zaila-professional",
+    "official_url_root": "https://zaila.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Zap Cosméticos",
+    "brand_slug": "zap-cosmeticos",
+    "official_url_root": "https://zapcosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Ziel Natural Cosmetics",
+    "brand_slug": "ziel-natural-cosmetics",
+    "official_url_root": "https://zielcosmeticos.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Zoca",
+    "brand_slug": "zoca",
+    "official_url_root": "https://zoca.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Zuher Cosméticos",
+    "brand_slug": "zuher-cosmeticos",
+    "official_url_root": "https://zuher.com.br/",
+    "country": "Brasil",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "50 Megumi",
+    "brand_slug": "50-megumi",
+    "official_url_root": "",
+    "country": "Japão",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Acca Kappa",
+    "brand_slug": "acca-kappa",
+    "official_url_root": "",
+    "country": "Itália",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Aesop",
+    "brand_slug": "aesop",
+    "official_url_root": "",
+    "country": "Austrália",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Agadir Argan Oil",
+    "brand_slug": "agadir-argan-oil",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Ahava",
+    "brand_slug": "ahava",
+    "official_url_root": "",
+    "country": "Israel",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "AlfaParf",
+    "brand_slug": "alfaparf",
+    "official_url_root": "",
+    "country": "Itália",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "American Crew",
+    "brand_slug": "american-crew",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Apivita",
+    "brand_slug": "apivita",
+    "official_url_root": "",
+    "country": "Grécia",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Aromatherapy Associates",
+    "brand_slug": "aromatherapy-associates",
+    "official_url_root": "",
+    "country": "Reino Unido",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Aussie",
+    "brand_slug": "aussie",
+    "official_url_root": "https://aussie.com.br/pt-br/produtos/",
+    "country": "Austrália (subsidiária da P&G, EUA)",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Aveda",
+    "brand_slug": "aveda",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Avlon",
+    "brand_slug": "avlon",
+    "official_url_root": "https://avlon.com.br/pages/produtos",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Avon",
+    "brand_slug": "avon",
+    "official_url_root": "https://www.avon.com.br/c/cabelos",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Batiste",
+    "brand_slug": "batiste",
+    "official_url_root": "https://batistehair.com.br/collections/all",
+    "country": "Reino Unido",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Baxter of California",
+    "brand_slug": "baxter-of-california",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Beauty World",
+    "brand_slug": "beauty-world",
+    "official_url_root": "",
+    "country": "Hong Kong",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Better Not Younger",
+    "brand_slug": "better-not-younger",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Billy Jealousy",
+    "brand_slug": "billy-jealousy",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Bioderma",
+    "brand_slug": "bioderma",
+    "official_url_root": "https://www.biodermabrasil.com/",
+    "country": "França",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "BioSilk",
+    "brand_slug": "biosilk",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Björk & Berries",
+    "brand_slug": "bjork-berries",
+    "official_url_root": "",
+    "country": "Suécia",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "BOE / Boé Cosmetics",
+    "brand_slug": "boe-boe-cosmetics",
+    "official_url_root": "https://boecosmetics.com/",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "BONDI WASH",
+    "brand_slug": "bondi-wash",
+    "official_url_root": "",
+    "country": "Austrália",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Bosley",
+    "brand_slug": "bosley",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Bumble and Bumble",
+    "brand_slug": "bumble-and-bumble",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Carol’s Daughter",
+    "brand_slug": "carols-daughter",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "CHI (Farouk Systems)",
+    "brand_slug": "chi-farouk-systems",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Christophe Robin",
+    "brand_slug": "christophe-robin",
+    "official_url_root": "",
+    "country": "França",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Color WOW",
+    "brand_slug": "color-wow",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "CosMedix",
+    "brand_slug": "cosmedix",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Davines",
+    "brand_slug": "davines",
+    "official_url_root": "",
+    "country": "Itália",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Design.ME",
+    "brand_slug": "design-me",
+    "official_url_root": "",
+    "country": "Canadá",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "DevaCurl",
+    "brand_slug": "devacurl",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Diego Dalla Palma Milano",
+    "brand_slug": "diego-dalla-palma-milano",
+    "official_url_root": "",
+    "country": "Itália",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Dove",
+    "brand_slug": "dove",
+    "official_url_root": "https://www.dove.com/br/home.html",
+    "country": "Reino Unido/Holanda (Unilever)",
+    "priority": 13,
+    "catalog_entrypoints": [
+      "https://www.dove.com/br/cuidado-para-os-cabelos.html"
+    ],
+    "status": "active",
+    "notes": "Unilever / tem categoria por tipo de cabelo e  principio ativo ppal"
+  },
+  {
+    "brand_name": "Dr ZERO",
+    "brand_slug": "dr-zero",
+    "official_url_root": "",
+    "country": "Japão",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Dr. Barbara Sturm",
+    "brand_slug": "dr-barbara-sturm",
+    "official_url_root": "",
+    "country": "Alemanha",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Dr. Hauschka",
+    "brand_slug": "dr-hauschka",
+    "official_url_root": "",
+    "country": "Alemanha",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Ducray",
+    "brand_slug": "ducray",
+    "official_url_root": "https://www.ducray.com/pt-br",
+    "country": "França",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Eleven Australia",
+    "brand_slug": "eleven-australia",
+    "official_url_root": "",
+    "country": "Austrália",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Ellips",
+    "brand_slug": "ellips",
+    "official_url_root": "",
+    "country": "Indonésia",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Elseve",
+    "brand_slug": "elseve",
+    "official_url_root": "https://www.loreal-paris.com.br/cabelo/cuidados-com-o-cabelo",
+    "country": "França",
+    "priority": 6,
+    "catalog_entrypoints": [
+      "https://www.loreal-paris.com.br/cabelo/cuidados-com-o-cabelo"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Elvis + Elvin",
+    "brand_slug": "elvis-elvin",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Evo",
+    "brand_slug": "evo",
+    "official_url_root": "",
+    "country": "Austrália",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Fanola",
+    "brand_slug": "fanola",
+    "official_url_root": "",
+    "country": "Itália",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Fatboy",
+    "brand_slug": "fatboy",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Floland",
+    "brand_slug": "floland",
+    "official_url_root": "",
+    "country": "Coreia do Sul",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Fudge",
+    "brand_slug": "fudge",
+    "official_url_root": "",
+    "country": "Reino Unido",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Garnier",
+    "brand_slug": "garnier",
+    "official_url_root": "https://www.garnier.com/",
+    "country": "França",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "GHD",
+    "brand_slug": "ghd",
+    "official_url_root": "",
+    "country": "Reino Unido",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Goldwell",
+    "brand_slug": "goldwell",
+    "official_url_root": "",
+    "country": "Alemanha",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Grown Alchemist",
+    "brand_slug": "grown-alchemist",
+    "official_url_root": "",
+    "country": "Austrália",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Guerlain",
+    "brand_slug": "guerlain",
+    "official_url_root": "",
+    "country": "França",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Head & Shoulders",
+    "brand_slug": "head-shoulders",
+    "official_url_root": "https://headandshoulders.com/",
+    "country": "Estados Unidos (Procter & Gamble)",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Herbal Essences",
+    "brand_slug": "herbal-essences",
+    "official_url_root": "https://herbalessences.com/",
+    "country": "Estados Unidos (P&G)",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Hiritu",
+    "brand_slug": "hiritu",
+    "official_url_root": "",
+    "country": "Japão",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Huggies",
+    "brand_slug": "huggies",
+    "official_url_root": "https://www.huggies.com.br/",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Itely Hairfashion",
+    "brand_slug": "itely-hairfashion",
+    "official_url_root": "https://www.itelyhairfashion.nl/",
+    "country": "Itália",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "IGK",
+    "brand_slug": "igk",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "It’s A 10",
+    "brand_slug": "its-a-10",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "J Beverly Hills",
+    "brand_slug": "j-beverly-hills",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "John Masters Organics",
+    "brand_slug": "john-masters-organics",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Joico",
+    "brand_slug": "joico",
+    "official_url_root": "https://www.joico.com.br/",
+    "country": "Estados Unidos",
+    "priority": 16,
+    "catalog_entrypoints": [
+      "https://www.joico.com.br/shampoo",
+      "https://www.joico.com.br/condicionador",
+      "https://www.joico.com.br/tratamento",
+      "https://www.joico.com.br/finalizador"
+    ],
+    "status": "active",
+    "notes": "tem categorias por tipo de cabelo e resultados"
+  },
+  {
+    "brand_name": "John Frieda",
+    "brand_slug": "john-frieda",
+    "official_url_root": "https://www.johnfrieda.com/",
+    "country": "Reino Unido",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "K18",
+    "brand_slug": "k18",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Keranique",
+    "brand_slug": "keranique",
+    "official_url_root": "https://keranique.com/",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Keratherapy",
+    "brand_slug": "keratherapy",
+    "official_url_root": "https://keratherapy.com/",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Kérastase",
+    "brand_slug": "kerastase",
+    "official_url_root": "https://www.kerastase.com.br/colecoes-linhas/?insertMode=true&start=0&sz=24",
+    "country": "França",
+    "priority": 3,
+    "catalog_entrypoints": [
+      "https://www.kerastase.com.br/colecoes-linhas/?insertMode=true&start=0&sz=24"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Keratin Complex",
+    "brand_slug": "keratin-complex",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Keune",
+    "brand_slug": "keune",
+    "official_url_root": "https://www.keune.com.br/",
+    "country": "Holanda",
+    "priority": 17,
+    "catalog_entrypoints": [
+      "https://www.keune.com.br/nossas-marcas-keune",
+      "https://www.keune.com.br/linha-so-pure",
+      "https://www.keune.com.br/linha-1922",
+      "https://www.keune.com.br/linha-coloracao"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Kevin.Murphy",
+    "brand_slug": "kevin-murphy",
+    "official_url_root": "",
+    "country": "Austrália",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Kiehl’s",
+    "brand_slug": "kiehls",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Klorane",
+    "brand_slug": "klorane",
+    "official_url_root": "",
+    "country": "França",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "KMS California",
+    "brand_slug": "kms-california",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "L’Occitane",
+    "brand_slug": "loccitane",
+    "official_url_root": "",
+    "country": "França",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "La Roche-Posay",
+    "brand_slug": "la-roche-posay",
+    "official_url_root": "https://www.laroche-posay.com.br/kerium",
+    "country": "França",
+    "priority": 5,
+    "catalog_entrypoints": [
+      "https://www.laroche-posay.com.br/kerium"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Lanza",
+    "brand_slug": "lanza",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Lavera",
+    "brand_slug": "lavera",
+    "official_url_root": "",
+    "country": "Alemanha",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Layrite",
+    "brand_slug": "layrite",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Le Labo",
+    "brand_slug": "le-labo",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Leonor Greyl",
+    "brand_slug": "leonor-greyl",
+    "official_url_root": "",
+    "country": "França",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Lucido-L",
+    "brand_slug": "lucido-l",
+    "official_url_root": "",
+    "country": "Japão",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Lucky Trendy",
+    "brand_slug": "lucky-trendy",
+    "official_url_root": "",
+    "country": "Japão",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Macadamia Natural Oil",
+    "brand_slug": "macadamia-natural-oil",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mario Badescu",
+    "brand_slug": "mario-badescu",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "MartiDerm",
+    "brand_slug": "martiderm",
+    "official_url_root": "",
+    "country": "Espanha",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Masil",
+    "brand_slug": "masil",
+    "official_url_root": "",
+    "country": "Coreia do Sul",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Matrix",
+    "brand_slug": "matrix",
+    "official_url_root": "https://www.matrix.com/professional",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Maui Moisture",
+    "brand_slug": "maui-moisture",
+    "official_url_root": "https://www.mauimoisture.com/",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Melvita",
+    "brand_slug": "melvita",
+    "official_url_root": "",
+    "country": "França",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Milbon",
+    "brand_slug": "milbon",
+    "official_url_root": "",
+    "country": "Japão",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "milk_shake",
+    "brand_slug": "milk-shake",
+    "official_url_root": "",
+    "country": "Itália",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mise en Scène",
+    "brand_slug": "mise-en-scene",
+    "official_url_root": "",
+    "country": "Coreia do Sul",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mixim Potion",
+    "brand_slug": "mixim-potion",
+    "official_url_root": "",
+    "country": "Japão",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Moist Diane",
+    "brand_slug": "moist-diane",
+    "official_url_root": "",
+    "country": "Japão",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Molton Brown",
+    "brand_slug": "molton-brown",
+    "official_url_root": "",
+    "country": "Reino Unido",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Moroccanoil",
+    "brand_slug": "moroccanoil",
+    "official_url_root": "",
+    "country": "Israel / Canadá",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mustela",
+    "brand_slug": "mustela",
+    "official_url_root": "https://www.mustela.com.br/collections/cabelo",
+    "country": "França",
+    "priority": 38,
+    "catalog_entrypoints": [
+      "https://www.mustela.com.br/collections/cabelo"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Natural Beauty",
+    "brand_slug": "natural-beauty",
+    "official_url_root": "",
+    "country": "Taiwan",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Neuma",
+    "brand_slug": "neuma",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Nioxin",
+    "brand_slug": "nioxin",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Noodle & Boo",
+    "brand_slug": "noodle-boo",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Not Your Mother's",
+    "brand_slug": "not-your-mother-s",
+    "official_url_root": "https://notyourmothers.com/",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "OGX (Organix)",
+    "brand_slug": "ogx-organix",
+    "official_url_root": "https://www.ogxbeauty.com/",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Olaplex",
+    "brand_slug": "olaplex",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Oribe",
+    "brand_slug": "oribe",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Original Sprout",
+    "brand_slug": "original-sprout",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Orofluido",
+    "brand_slug": "orofluido",
+    "official_url_root": "",
+    "country": "Espanha",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Ouidad",
+    "brand_slug": "ouidad",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Oway",
+    "brand_slug": "oway",
+    "official_url_root": "",
+    "country": "Itália",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Palmer’s",
+    "brand_slug": "palmers",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Palmolive",
+    "brand_slug": "palmolive",
+    "official_url_root": "https://www.palmolive.com.br/",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Paul Mitchell",
+    "brand_slug": "paul-mitchell",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Payot",
+    "brand_slug": "payot",
+    "official_url_root": "",
+    "country": "França",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Pelo Baum",
+    "brand_slug": "pelo-baum",
+    "official_url_root": "",
+    "country": "Coreia do Sul",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Peter Thomas Roth",
+    "brand_slug": "peter-thomas-roth",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Philip B",
+    "brand_slug": "philip-b",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Philip Kingsley",
+    "brand_slug": "philip-kingsley",
+    "official_url_root": "",
+    "country": "Reino Unido",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Phyto",
+    "brand_slug": "phyto",
+    "official_url_root": "",
+    "country": "França",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Phytomer",
+    "brand_slug": "phytomer",
+    "official_url_root": "",
+    "country": "França",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "POLA",
+    "brand_slug": "pola",
+    "official_url_root": "",
+    "country": "Japão",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Pravana",
+    "brand_slug": "pravana",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Pureology",
+    "brand_slug": "pureology",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "R+Co",
+    "brand_slug": "r-co",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Regenepure",
+    "brand_slug": "regenepure",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "René Furterer",
+    "brand_slug": "rene-furterer",
+    "official_url_root": "",
+    "country": "França",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Reuzel",
+    "brand_slug": "reuzel",
+    "official_url_root": "",
+    "country": "Holanda",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "RevitaLash",
+    "brand_slug": "revitalash",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Revlon Professional",
+    "brand_slug": "revlon-professional",
+    "official_url_root": "https://www.revlonprofessional.com/",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Rita Hazan",
+    "brand_slug": "rita-hazan",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Rossano Ferretti Parma",
+    "brand_slug": "rossano-ferretti-parma",
+    "official_url_root": "",
+    "country": "Itália",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Rusk",
+    "brand_slug": "rusk",
+    "official_url_root": "https://ruskhair.com/",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Sachajuan",
+    "brand_slug": "sachajuan",
+    "official_url_root": "",
+    "country": "Suécia",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Schwarzkopf Professional",
+    "brand_slug": "schwarzkopf-professional",
+    "official_url_root": "",
+    "country": "Alemanha",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Sebastian Professional",
+    "brand_slug": "sebastian-professional",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Seed Phytonutrients",
+    "brand_slug": "seed-phytonutrients",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Sexy Hair Concepts",
+    "brand_slug": "sexy-hair-concepts",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "SheaMoisture",
+    "brand_slug": "sheamoisture",
+    "official_url_root": "https://www.sheamoisture.com/",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Shiseido",
+    "brand_slug": "shiseido",
+    "official_url_root": "",
+    "country": "Japão",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Sisley",
+    "brand_slug": "sisley",
+    "official_url_root": "",
+    "country": "França",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Starlab",
+    "brand_slug": "starlab",
+    "official_url_root": "",
+    "country": "Coreia do Sul",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Storia Maro",
+    "brand_slug": "storia-maro",
+    "official_url_root": "",
+    "country": "Japão",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Stephen Knoll",
+    "brand_slug": "stephen-knoll",
+    "official_url_root": "https://stephenknoll.com/",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Tangle Teezer",
+    "brand_slug": "tangle-teezer",
+    "official_url_root": "",
+    "country": "Reino Unido",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "The Body Shop",
+    "brand_slug": "the-body-shop",
+    "official_url_root": "https://www.thebodyshop.com/",
+    "country": "Reino Unido",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "The Ordinary",
+    "brand_slug": "the-ordinary",
+    "official_url_root": "",
+    "country": "Canadá",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "The Organic Pharmacy",
+    "brand_slug": "the-organic-pharmacy",
+    "official_url_root": "",
+    "country": "Reino Unido",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "THREE",
+    "brand_slug": "three",
+    "official_url_root": "",
+    "country": "Japão",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "TIGI Bed Head / Catwalk",
+    "brand_slug": "tigi-bed-head-catwalk",
+    "official_url_root": "",
+    "country": "Reino Unido",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "TRESemmé",
+    "brand_slug": "tresemme",
+    "official_url_root": "https://www.tresemme.com/br/home.html",
+    "country": "Estados Unidos",
+    "priority": 12,
+    "catalog_entrypoints": [
+      "https://www.tresemme.com/br/produtos/shampoo.html",
+      "https://www.tresemme.com/br/produtos/condicionador.html",
+      "https://www.tresemme.com/br/produtos/creme-de-tratamento.html",
+      "https://www.tresemme.com/br/produtos/leave-in-conditioner.html"
+    ],
+    "status": "active",
+    "notes": "Unilever"
+  },
+  {
+    "brand_name": "Trevor Sorbie",
+    "brand_slug": "trevor-sorbie",
+    "official_url_root": "https://trevorsorbie.com/",
+    "country": "Reino Unido",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Tricomin Clinical",
+    "brand_slug": "tricomin-clinical",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Tsubaki",
+    "brand_slug": "tsubaki",
+    "official_url_root": "",
+    "country": "Japão",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Ulumee",
+    "brand_slug": "ulumee",
+    "official_url_root": "",
+    "country": "Coreia do Sul",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Unite",
+    "brand_slug": "unite",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Uppercut Deluxe",
+    "brand_slug": "uppercut-deluxe",
+    "official_url_root": "",
+    "country": "Austrália",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Vichy",
+    "brand_slug": "vichy",
+    "official_url_root": "https://www.vichy.com.br/todos-os-produtos/haircare",
+    "country": "França",
+    "priority": 4,
+    "catalog_entrypoints": [
+      "https://www.vichy.com.br/todos-os-produtos/haircare"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Virtue",
+    "brand_slug": "virtue",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Wella Professionals",
+    "brand_slug": "wella-professionals",
+    "official_url_root": "",
+    "country": "Alemanha",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Wen",
+    "brand_slug": "wen",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Wet Brush",
+    "brand_slug": "wet-brush",
+    "official_url_root": "",
+    "country": "Estados Unidos",
+    "priority": null,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Loreal Professionel",
+    "brand_slug": "loreal-professionel",
+    "official_url_root": "https://www.lorealprofessionnel.com.br/todos-produtos",
+    "country": "França",
+    "priority": 1,
+    "catalog_entrypoints": [
+      "https://www.lorealprofessionnel.com.br/todos-produtos"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Wella",
+    "brand_slug": "wella",
+    "official_url_root": "https://loja.wella.com.br",
+    "country": null,
+    "priority": 8,
+    "catalog_entrypoints": [
+      "https://loja.wella.com.br"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Lola",
+    "brand_slug": "lola",
+    "official_url_root": "https://www.lolacosmetics.com.br/",
+    "country": null,
+    "priority": 14,
+    "catalog_entrypoints": [
+      "https://www.lolacosmetics.com.br/cabelos/tipos-de-produto"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Head and Shoulders",
+    "brand_slug": "head-and-shoulders",
+    "official_url_root": "https://www.headandshoulders.com.br/pt-br",
+    "country": null,
+    "priority": 24,
+    "catalog_entrypoints": [
+      "https://www.headandshoulders.com.br/pt-br/produtos-para-cabelo"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Johnsons Baby",
+    "brand_slug": "johnsons-baby",
+    "official_url_root": "https://www.johnsonsbaby.com.br/produtos?categoria%2520de%2520produtos=cuidados%2520com%2520o%2520cabelo",
+    "country": null,
+    "priority": 28,
+    "catalog_entrypoints": [
+      "https://www.johnsonsbaby.com.br/produtos?categoria%2520de%2520produtos=cuidados%2520com%2520o%2520cabelo"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Kimberly-Clark (Huggies)",
+    "brand_slug": "kimberly-clark-huggies",
+    "official_url_root": "https://www.huggies.com.br/linha-banho-baby?type=Creme%20de%20Pentear%20+Shampoo",
+    "country": null,
+    "priority": 29,
+    "catalog_entrypoints": [
+      "https://www.huggies.com.br/linha-banho-baby?type=Creme%20de%20Pentear%20+Shampoo"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Unilever",
+    "brand_slug": "unilever",
+    "official_url_root": "https://shop.unileverprodutos.com/",
+    "country": null,
+    "priority": 31,
+    "catalog_entrypoints": [
+      "https://shop.unileverprodutos.com/"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Avatim",
+    "brand_slug": "avatim",
+    "official_url_root": "https://www.avatim.com.br/cabelo",
+    "country": null,
+    "priority": 32,
+    "catalog_entrypoints": [
+      "https://www.avatim.com.br/cabelo"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Granado",
+    "brand_slug": "granado",
+    "official_url_root": "https://www.granado.com.br/granado/corpo-e-banho/cabelos",
+    "country": null,
+    "priority": 33,
+    "catalog_entrypoints": [
+      "https://www.granado.com.br/granado/corpo-e-banho/cabelos"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "L'Occitane en Provance",
+    "brand_slug": "l-occitane-en-provance",
+    "official_url_root": "https://www.loccitane.com/en-us/hair-care",
+    "country": null,
+    "priority": 34,
+    "catalog_entrypoints": [
+      "https://www.loccitane.com/en-us/hair-care"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "L'Occitane au Brasil",
+    "brand_slug": "l-occitane-au-brasil",
+    "official_url_root": "https://br.loccitaneaubresil.com/pt-br/cabelos.html",
+    "country": null,
+    "priority": 35,
+    "catalog_entrypoints": [
+      "https://br.loccitaneaubresil.com/pt-br/cabelos.html"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Colgate-Palmolive",
+    "brand_slug": "colgate-palmolive",
+    "official_url_root": "https://www.palmolive.com.br/produtos/cuidado-com-cabelo",
+    "country": null,
+    "priority": 37,
+    "catalog_entrypoints": [
+      "https://www.palmolive.com.br/produtos/cuidado-com-cabelo"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Amend",
+    "brand_slug": "amend",
+    "official_url_root": "https://www.amend.com.br/",
+    "country": "Brasil",
+    "priority": 39,
+    "catalog_entrypoints": [
+      "https://www.amend.com.br/"
+    ],
+    "status": "active",
+    "notes": "inci_on_site=sim"
+  },
+  {
+    "brand_name": "Ache",
+    "brand_slug": "ache",
+    "official_url_root": "Pant Antiqueda Condicionador / Pant Antiqueda Shampoo (não encontrei site)",
+    "country": null,
+    "priority": 41,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "Mantecorp",
+    "brand_slug": "mantecorp",
+    "official_url_root": "https://www.mantecorpskincare.com.br/mantecorp---cabelos?productclusterids=184&fuzzy=0&operator=and&facets=productclusterids%2Cfuzzy%2Coperator&sort=discount_desc&page=0",
+    "country": null,
+    "priority": 42,
+    "catalog_entrypoints": [
+      "https://www.mantecorpskincare.com.br/mantecorp---cabelos?productclusterids=184&fuzzy=0&operator=and&facets=productclusterids%2Cfuzzy%2Coperator&sort=discount_desc&page=0"
+    ],
+    "status": "active",
+    "notes": null
+  },
+  {
+    "brand_name": "USK",
+    "brand_slug": "usk",
+    "official_url_root": "Neosil shampoo",
+    "country": null,
+    "priority": 43,
+    "catalog_entrypoints": [],
+    "status": "active",
+    "notes": null
+  }
+]
