@@ -1,7 +1,10 @@
 # tests/extraction/test_deterministic.py
 import pytest
 from pathlib import Path
-from src.extraction.deterministic import extract_jsonld, extract_by_selectors, extract_product_deterministic
+from src.extraction.deterministic import (
+    extract_jsonld, extract_by_selectors, extract_product_deterministic,
+    _extract_inci_by_tab_labels, _get_soup,
+)
 
 
 @pytest.fixture
@@ -47,3 +50,118 @@ class TestExtractProductDeterministic:
         assert "Aqua" in result["inci_raw"]
         assert result["image_url_main"] is not None
         assert len(result["evidence"]) > 0
+
+
+class TestInciTabLabels:
+    """Tests for _extract_inci_by_tab_labels with various real-world DOM patterns."""
+
+    def test_kerastase_style_heading_with_sibling_p(self):
+        """Kérastase: h3 heading followed by <p> with bullet-separated INCI."""
+        html = """
+        <div class="product-detail">
+          <div class="key-ingredients">
+            <h3>Key Ingredients</h3>
+            <p>ÁCIDO LÁTICO: Ingrediente ativo que ajuda a fortalecer os cabelos.</p>
+            <p>CENTELHA ASIÁTICA: Ingrediente natural para hidratação.</p>
+          </div>
+          <div class="full-ingredients">
+            <h3>Lista Completa De Ingredientes</h3>
+            <p>AQUA / WATER / EAU • SODIUM C14-16 OLEFIN SULFONATE • COCAMIDOPROPYL BETAINE • SODIUM CHLORIDE • GLYCERIN • PARFUM</p>
+          </div>
+        </div>
+        """
+        soup = _get_soup(html)
+        content, selector = _extract_inci_by_tab_labels(soup)
+        assert content is not None
+        assert "AQUA / WATER / EAU" in content
+        assert "SODIUM C14-16" in content
+        # Must NOT contain marketing text
+        assert "ÁCIDO LÁTICO" not in content
+        assert "fortalecer" not in content
+
+    def test_kerastase_style_wrapper_div_with_heading_and_p(self):
+        """Kérastase: wrapper div contains both heading and INCI <p>."""
+        html = """
+        <div class="pdp-section">
+          <div class="ingredients-section">
+            <span>Ingredientes</span>
+            <div class="marketing">
+              <p>ÁCIDO LÁTICO: Ingrediente ativo, ajuda a fortalecer os cabelos.</p>
+            </div>
+          </div>
+          <div class="full-inci-section">
+            <h3>Lista completa de ingredientes</h3>
+            <div class="inci-content">
+              <p>AQUA / WATER / EAU • SODIUM LAURETH SULFATE • COCAMIDOPROPYL BETAINE • GLYCOL DISTEARATE</p>
+            </div>
+          </div>
+        </div>
+        """
+        soup = _get_soup(html)
+        content, selector = _extract_inci_by_tab_labels(soup)
+        assert content is not None
+        assert "AQUA / WATER / EAU" in content
+        assert "ÁCIDO LÁTICO" not in content
+
+    def test_priority_prefers_specific_label(self):
+        """More specific labels win even if generic match appears first in DOM."""
+        html = """
+        <div>
+          <button>Ingredientes</button>
+          <div>ÁCIDO LÁTICO: fortalecer, CENTELHA ASIÁTICA: hidratar, VITAMINA E: proteger</div>
+          <button>Lista completa de ingredientes</button>
+          <div>AQUA, SODIUM LAURETH SULFATE, COCAMIDOPROPYL BETAINE, GLYCERIN, PARFUM, CITRIC ACID</div>
+        </div>
+        """
+        soup = _get_soup(html)
+        content, selector = _extract_inci_by_tab_labels(soup)
+        assert content is not None
+        assert "AQUA" in content
+        assert "SODIUM LAURETH SULFATE" in content
+
+    def test_heading_find_next_p(self):
+        """h3 heading where INCI <p> is nested deeper (not direct sibling)."""
+        html = """
+        <section>
+          <h3>Composição</h3>
+          <div class="inner">
+            <p>Aqua, Cetearyl Alcohol, Glycerin, Behentrimonium Chloride, Parfum, Citric Acid</p>
+          </div>
+        </section>
+        """
+        soup = _get_soup(html)
+        content, selector = _extract_inci_by_tab_labels(soup)
+        assert content is not None
+        assert "Aqua" in content
+        assert "Cetearyl Alcohol" in content
+
+    def test_collapse_content_strategy(self):
+        """Amend-style: .collapse__content next to button with label."""
+        html = """
+        <div>
+          <button class="collapse__button">Composição</button>
+          <div class="collapse__content">
+            Aqua, Sodium Laureth Sulfate, Cocamidopropyl Betaine, Glycerin, Parfum
+          </div>
+        </div>
+        """
+        soup = _get_soup(html)
+        content, selector = _extract_inci_by_tab_labels(soup)
+        assert content is not None
+        assert "Aqua" in content
+
+    def test_og_image_fallback(self):
+        """Products with og:image but no JSON-LD image get the og:image."""
+        html = """
+        <html>
+        <head>
+          <meta property="og:image" content="https://cdn.example.com/product.jpg" />
+          <script type="application/ld+json">
+          {"@context": "https://schema.org", "@type": "Product", "name": "Test Product"}
+          </script>
+        </head>
+        <body><h1>Test Product</h1></body>
+        </html>
+        """
+        result = extract_product_deterministic(html, "https://example.com/p/test")
+        assert result["image_url_main"] == "https://cdn.example.com/product.jpg"

@@ -27,8 +27,23 @@ class BrowserClient:
         if self._browser is None:
             from playwright.sync_api import sync_playwright
             self._playwright = sync_playwright().start()
-            self._browser = self._playwright.chromium.launch(headless=self._headless)
-            self._page = self._browser.new_page()
+            self._browser = self._playwright.chromium.launch(
+                headless=self._headless,
+                args=['--disable-blink-features=AutomationControlled'],
+            )
+            context = self._browser.new_context(
+                user_agent=(
+                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+                    'AppleWebKit/537.36 (KHTML, like Gecko) '
+                    'Chrome/125.0.0.0 Safari/537.36'
+                ),
+                viewport={'width': 1920, 'height': 1080},
+                locale='pt-BR',
+            )
+            self._page = context.new_page()
+            self._page.add_init_script(
+                'Object.defineProperty(navigator, "webdriver", {get: () => undefined})'
+            )
 
     def fetch_page(self, url: str, wait_for: str | None = None) -> str:
         self._ensure_browser()

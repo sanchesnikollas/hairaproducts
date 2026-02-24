@@ -39,8 +39,11 @@ def extract_jsonld(html: str) -> dict | None:
 
 
 INCI_TAB_LABELS = [
-    "composição", "composicao", "ingredientes", "ingredients",
-    "inci", "composição do produto", "composição completa",
+    # Most specific labels first (longer matches take priority)
+    "lista completa de ingredientes", "full ingredient list",
+    "composição completa", "composição do produto",
+    "composição", "composicao",
+    "ingredientes", "ingredients", "inci",
 ]
 
 # UI text that leaks into INCI content from tab/filter buttons
@@ -57,37 +60,109 @@ def _clean_tab_content(text: str) -> str:
     return text
 
 
+def _looks_like_inci(text: str) -> bool:
+    """Check if text looks like an INCI ingredient list (has separators and length)."""
+    if not text or len(text) < 30:
+        return False
+    # Must contain ingredient-like separators
+    return any(sep in text for sep in [",", "●", "•", "·"])
+
+
+def _label_priority(matched_label: str) -> int:
+    """Lower number = higher priority. More specific labels get priority."""
+    for i, label in enumerate(INCI_TAB_LABELS):
+        if label == matched_label:
+            return i
+    return len(INCI_TAB_LABELS)
+
+
 def _extract_inci_by_tab_labels(soup) -> tuple[str | None, str | None]:
     """Find INCI content in collapsible tabs/accordions by label text."""
-    # Strategy 1: Button/heading with label, content in next sibling
+    candidates: list[tuple[str, str, int]] = []  # (content, selector, priority)
+
+    # Strategy 1: Button/heading with label, content in nearby elements
     for el in soup.find_all(["button", "h2", "h3", "h4", "a", "span", "div"]):
-        text = el.get_text(strip=True).lower()
-        if any(label == text or text.startswith(label) for label in INCI_TAB_LABELS):
-            # Check next sibling
-            sibling = el.find_next_sibling()
-            if sibling:
-                content = _clean_tab_content(sibling.get_text(strip=True))
-                if content and len(content) > 30 and "," in content:
-                    return content, f"tab-label:{text}"
-            # Check parent's next sibling
-            if el.parent:
-                parent_sibling = el.parent.find_next_sibling()
-                if parent_sibling:
-                    content = _clean_tab_content(parent_sibling.get_text(strip=True))
-                    if content and len(content) > 30 and "," in content:
-                        return content, f"tab-label-parent:{text}"
+        el_text_original = el.get_text(strip=True)
+        el_text = el_text_original.lower()
+        for label in INCI_TAB_LABELS:
+            if label == el_text or el_text.startswith(label):
+                priority = _label_priority(label)
+                found = False
+
+                # Check 1: Inline content — element text extends beyond label
+                # (wrapper divs that contain both heading + INCI)
+                if len(el_text) > len(label) + 30:
+                    inline = _clean_tab_content(el_text_original[len(label):].strip())
+                    if _looks_like_inci(inline):
+                        # Prefer descendant <p> for cleaner extraction
+                        for p in el.find_all("p"):
+                            p_content = p.get_text(strip=True)
+                            if _looks_like_inci(p_content):
+                                candidates.append((p_content, f"tab-desc-p:{label}", priority))
+                                found = True
+                                break
+                        if not found:
+                            candidates.append((inline, f"tab-inline:{label}", priority))
+                            found = True
+
+                # Check 2: Next sibling element
+                if not found:
+                    sibling = el.find_next_sibling()
+                    if sibling:
+                        content = _clean_tab_content(sibling.get_text(strip=True))
+                        if _looks_like_inci(content):
+                            candidates.append((content, f"tab-label:{label}", priority))
+                            found = True
+
+                # Check 3: For headings, find next <p> anywhere in DOM
+                if not found and el.name in ("h2", "h3", "h4"):
+                    next_p = el.find_next("p")
+                    if next_p:
+                        content = next_p.get_text(strip=True)
+                        if _looks_like_inci(content):
+                            candidates.append((content, f"tab-heading-p:{label}", priority))
+                            found = True
+
+                # Check 4: Parent section — extract content after the LABEL (not el_text)
+                if not found and el.parent:
+                    parent_text = el.parent.get_text(strip=True)
+                    idx = parent_text.lower().find(label)
+                    if idx >= 0:
+                        after = _clean_tab_content(parent_text[idx + len(label):].strip())
+                        if _looks_like_inci(after):
+                            candidates.append((after, f"tab-section:{label}", priority))
+                            found = True
+
+                    # Check 5: Parent's next sibling
+                    if not found:
+                        parent_sibling = el.parent.find_next_sibling()
+                        if parent_sibling:
+                            content = _clean_tab_content(parent_sibling.get_text(strip=True))
+                            if _looks_like_inci(content):
+                                candidates.append((content, f"tab-parent-sib:{label}", priority))
+
+                break  # Only match the first (most specific) label
 
     # Strategy 2: .collapse__content or .tab-content near composição text
     for cls in ["collapse__content", "tab-content", "tab-pane", "accordion-content"]:
         for el in soup.select(f".{cls}"):
-            # Check if a previous sibling or parent has composição label
             prev = el.find_previous_sibling()
-            if prev and any(label in prev.get_text().lower() for label in INCI_TAB_LABELS):
-                content = _clean_tab_content(el.get_text(strip=True))
-                if content and len(content) > 30 and "," in content:
-                    return content, f".{cls}"
+            if prev:
+                prev_text = prev.get_text().lower()
+                for label in INCI_TAB_LABELS:
+                    if label in prev_text:
+                        content = _clean_tab_content(el.get_text(strip=True))
+                        if _looks_like_inci(content):
+                            priority = _label_priority(label)
+                            candidates.append((content, f".{cls}", priority))
+                        break
 
-    return None, None
+    if not candidates:
+        return None, None
+
+    # Return the candidate with the highest priority (lowest number)
+    candidates.sort(key=lambda x: x[2])
+    return candidates[0][0], candidates[0][1]
 
 
 def extract_by_selectors(
@@ -212,5 +287,12 @@ def extract_product_deterministic(
 
     if not result["image_url_main"] and sel_result.get("image"):
         result["image_url_main"] = sel_result["image"]
+
+    # Image fallback: og:image meta tag
+    if not result["image_url_main"]:
+        soup = _get_soup(html)
+        og_img = soup.find("meta", property="og:image")
+        if og_img and og_img.get("content"):
+            result["image_url_main"] = og_img["content"]
 
     return result
