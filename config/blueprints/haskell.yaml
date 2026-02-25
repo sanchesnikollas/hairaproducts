@@ -1,0 +1,38 @@
+brand_slug: haskell
+brand_name: Haskell
+platform: custom
+domain: haskellcosmeticos.com.br
+allowed_domains:
+- haskellcosmeticos.com.br
+entrypoints:
+- https://haskellcosmeticos.com.br/tratamentos-capilares/
+- https://haskellcosmeticos.com.br/coloracao/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://haskellcosmeticos.com.br/sitemap.xml
+  product_url_pattern: null
+  max_pages: 500
+  pagination:
+    type: scroll
+    max_pages: 10
+extraction:
+  inci_selectors:
+  - .product-ingredients p
+  - .product-ingredients
+  - '#ingredientes p'
+  - '#composicao p'
+  - '[data-tab=''ingredientes''] p'
+  - .product-description p
+  name_selectors:
+  - h1.product-name
+  - h1
+  - .product-title
+  - .product-name
+  image_selectors:
+  - .product-image img
+  - img.product-img
+  - .gallery img
+  wait_for_selector: null
+  use_llm_fallback: true
+version: 1

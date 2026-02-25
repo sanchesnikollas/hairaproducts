@@ -81,7 +81,7 @@ def _extract_inci_by_tab_labels(soup) -> tuple[str | None, str | None]:
     candidates: list[tuple[str, str, int]] = []  # (content, selector, priority)
 
     # Strategy 1: Button/heading with label, content in nearby elements
-    for el in soup.find_all(["button", "h2", "h3", "h4", "a", "span", "div"]):
+    for el in soup.find_all(["button", "h2", "h3", "h4", "a", "span", "div", "strong", "p", "b"]):
         el_text_original = el.get_text(strip=True)
         el_text = el_text_original.lower()
         for label in INCI_TAB_LABELS:
@@ -114,8 +114,8 @@ def _extract_inci_by_tab_labels(soup) -> tuple[str | None, str | None]:
                             candidates.append((content, f"tab-label:{label}", priority))
                             found = True
 
-                # Check 3: For headings, find next <p> anywhere in DOM
-                if not found and el.name in ("h2", "h3", "h4"):
+                # Check 3: For headings/labels, find next <p> anywhere in DOM
+                if not found and el.name in ("h2", "h3", "h4", "strong", "b"):
                     next_p = el.find_next("p")
                     if next_p:
                         content = next_p.get_text(strip=True)
