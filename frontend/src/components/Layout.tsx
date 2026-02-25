@@ -2,10 +2,19 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { motion } from 'motion/react';
 
 const navItems = [
-  { to: '/', label: 'Brands', icon: brandIcon },
+  { to: '/', label: 'Dashboard', icon: dashboardIcon },
+  { to: '/brands', label: 'Brands', icon: brandIcon },
   { to: '/products', label: 'Products', icon: productIcon },
   { to: '/quarantine', label: 'Quarantine', icon: quarantineIcon },
 ];
+
+function dashboardIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12h4l3-9 4 18 3-9h4" />
+    </svg>
+  );
+}
 
 function brandIcon() {
   return (
