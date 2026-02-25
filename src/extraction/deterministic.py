@@ -240,7 +240,10 @@ def extract_product_deterministic(
             img = jsonld["image"]
             if isinstance(img, list):
                 img = img[0]
-            result["image_url_main"] = img
+            if isinstance(img, dict):
+                img = img.get("url") or img.get("contentUrl") or img.get("src")
+            if isinstance(img, str):
+                result["image_url_main"] = img
             evidence_list.append(create_evidence(
                 "image_url_main", url, "json-ld @type=Product .image",
                 str(img), ExtractionMethod.JSONLD,
