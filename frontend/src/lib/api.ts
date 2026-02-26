@@ -4,7 +4,6 @@ const BASE_URL = '/api';
 
 async function fetchJSON<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE_URL}${url}`, {
-    headers: { 'Content-Type': 'application/json' },
     ...options,
   });
   if (!response.ok) {

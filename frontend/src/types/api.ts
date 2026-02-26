@@ -20,10 +20,11 @@ export interface BrandCoverage {
 export interface ProductEvidence {
   id: number;
   field_name: string;
-  value: string;
-  source: string;
-  confidence: number;
-  selector_used: string | null;
+  source_url: string | null;
+  evidence_locator: string | null;
+  raw_source_text: string | null;
+  extraction_method: string | null;
+  extracted_at: string | null;
 }
 
 export interface Product {

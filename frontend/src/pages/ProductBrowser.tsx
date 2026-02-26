@@ -51,8 +51,9 @@ export default function ProductBrowser() {
     }
     if (sealFilter) {
       result = result.filter((p) => {
-        if (!p.product_labels) return false;
-        return p.product_labels.detected.includes(sealFilter) || p.product_labels.inferred.includes(sealFilter);
+        const labels = p.product_labels;
+        if (!labels) return false;
+        return (labels.detected ?? []).includes(sealFilter) || (labels.inferred ?? []).includes(sealFilter);
       });
     }
     return result;
@@ -248,14 +249,14 @@ function ProductCard({ product, index, onClick }: { product: Product; index: num
       )}
 
       {/* Seal Badges */}
-      {product.product_labels && (product.product_labels.detected.length > 0 || product.product_labels.inferred.length > 0) && (
+      {product.product_labels && ((product.product_labels.detected?.length ?? 0) > 0 || (product.product_labels.inferred?.length ?? 0) > 0) && (
         <div className="mt-3 pt-3 border-t border-ink/5 flex flex-wrap gap-1.5">
-          {product.product_labels.detected.map(seal => (
+          {(product.product_labels.detected ?? []).map(seal => (
             <span key={seal} className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-sage-bg text-sage border border-sage/10">
               {SEAL_DISPLAY[seal] || seal}
             </span>
           ))}
-          {product.product_labels.inferred.map(seal => (
+          {(product.product_labels.inferred ?? []).map(seal => (
             <span key={seal} className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-champagne/10 text-champagne-dark border border-champagne/10">
               {SEAL_DISPLAY[seal] || seal}
             </span>
@@ -408,19 +409,19 @@ function ProductModal({ productId, onClose }: { productId: string; onClose: () =
               </div>
 
               {/* Quality Seals */}
-              {product.product_labels && (product.product_labels.detected.length > 0 || product.product_labels.inferred.length > 0) && (
+              {product.product_labels && ((product.product_labels.detected?.length ?? 0) > 0 || (product.product_labels.inferred?.length ?? 0) > 0) && (
                 <div>
                   <h3 className="text-[11px] uppercase tracking-wider text-ink-muted font-semibold mb-2">
                     Quality Seals
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    {product.product_labels.detected.map(seal => (
+                    {(product.product_labels.detected ?? []).map(seal => (
                       <span key={seal} className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-sage-bg text-sage border border-sage/15">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
                         {SEAL_DISPLAY[seal] || seal}
                       </span>
                     ))}
-                    {product.product_labels.inferred.map(seal => (
+                    {(product.product_labels.inferred ?? []).map(seal => (
                       <span key={seal} className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-champagne/10 text-champagne-dark border border-champagne/15">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l2.4 7.4h7.6l-6 4.6 2.3 7-6.3-4.6-6.3 4.6 2.3-7-6-4.6h7.6z"/></svg>
                         {SEAL_DISPLAY[seal] || seal}
@@ -490,13 +491,17 @@ function ProductModal({ productId, onClose }: { productId: string; onClose: () =
                       <div key={ev.id} className="flex items-start gap-3 p-3 bg-cream rounded-lg">
                         <div className="flex-1">
                           <span className="text-xs font-medium text-ink">{ev.field_name}</span>
-                          <p className="text-xs text-ink-muted mt-0.5 break-all">{ev.value}</p>
+                          {ev.raw_source_text && (
+                            <p className="text-xs text-ink-muted mt-0.5 break-all line-clamp-2">{ev.raw_source_text}</p>
+                          )}
                         </div>
                         <div className="text-right">
-                          <span className="text-[10px] uppercase tracking-wider text-ink-faint">{ev.source}</span>
-                          <p className="text-xs font-medium tabular-nums text-ink-light">
-                            {Math.round(ev.confidence * 100)}%
-                          </p>
+                          <span className="text-[10px] uppercase tracking-wider text-ink-faint">{ev.extraction_method ?? 'N/A'}</span>
+                          {ev.source_url && (
+                            <a href={ev.source_url} target="_blank" rel="noopener noreferrer" className="block text-[10px] text-champagne-dark hover:underline truncate max-w-[120px]">
+                              source
+                            </a>
+                          )}
                         </div>
                       </div>
                     ))}
