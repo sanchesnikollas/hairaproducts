@@ -75,6 +75,34 @@ class TestGetProducts:
         assert verified[0].product_name == "Shampoo Gold Black"
 
 
+class TestUpdateProductLabels:
+    def test_update_product_labels(self, repo, db_session):
+        extraction = _make_extraction()
+        qa = QAResult(status=QAStatus.CATALOG_ONLY, passed=True, checks_passed=["name_valid"])
+        product_id = repo.upsert_product(extraction, qa)
+        db_session.flush()
+
+        labels = {
+            "detected": ["sulfate_free", "vegan"],
+            "inferred": ["silicone_free"],
+            "confidence": 0.9,
+            "sources": ["official_text", "inci_analysis"],
+            "manually_verified": False,
+            "manually_overridden": False,
+        }
+        repo.update_product_labels(product_id, labels)
+        db_session.flush()
+
+        fetched = repo.get_product_by_id(product_id)
+        assert fetched.product_labels is not None
+        assert "sulfate_free" in fetched.product_labels["detected"]
+        assert fetched.product_labels["confidence"] == 0.9
+
+    def test_update_nonexistent_product(self, repo):
+        """Calling with invalid ID should not raise."""
+        repo.update_product_labels("nonexistent-id", {"detected": []})
+
+
 class TestBrandStats:
     def test_upsert_coverage(self, repo, db_session):
         stats = {

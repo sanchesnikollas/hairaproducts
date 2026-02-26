@@ -146,3 +146,10 @@ class ProductRepository:
 
     def get_all_brand_coverages(self) -> list[BrandCoverageORM]:
         return self._session.query(BrandCoverageORM).all()
+
+    def update_product_labels(self, product_id: str, labels: dict) -> None:
+        """Update the product_labels JSON for a product."""
+        product = self.get_product_by_id(product_id)
+        if product:
+            product.product_labels = labels
+            product.updated_at = datetime.now(timezone.utc)
