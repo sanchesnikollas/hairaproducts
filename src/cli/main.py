@@ -332,5 +332,95 @@ def report(brand: str | None, all_brands: bool):
     )
 
 
+@cli.command()
+@click.option("--brand", required=True, help="Brand slug")
+@click.option("--limit", type=int, default=0, help="Max products to process (0 = all)")
+@click.option("--dry-run", is_flag=True, help="Show results without saving to database")
+def labels(brand: str, limit: int, dry_run: bool):
+    """Detect product quality seals (labels) for a brand's products."""
+    from src.core.label_engine import LabelEngine
+    from src.storage.database import get_engine
+    from src.storage.orm_models import Base, ProductEvidenceORM
+    from src.storage.repository import ProductRepository
+    from sqlalchemy.orm import Session as SASession
+
+    engine_db = get_engine()
+    Base.metadata.create_all(engine_db)
+    label_engine = LabelEngine()
+
+    with SASession(engine_db) as session:
+        repo = ProductRepository(session)
+        products = repo.get_products(brand_slug=brand, limit=limit if limit > 0 else 10000)
+
+        if not products:
+            click.echo(f"No products found for '{brand}'. Run 'haira scrape --brand {brand}' first.")
+            return
+
+        click.echo(f"Processing {len(products)} products for {brand}...")
+        if dry_run:
+            click.echo("(DRY RUN — no changes will be saved)\n")
+
+        total = len(products)
+        with_detected = 0
+        with_inferred = 0
+        seal_counts: dict[str, int] = {}
+
+        for product in products:
+            result = label_engine.detect(
+                description=product.description,
+                product_name=product.product_name,
+                benefits_claims=product.benefits_claims,
+                usage_instructions=product.usage_instructions,
+                inci_ingredients=product.inci_ingredients,
+            )
+
+            all_seals = result.detected + result.inferred
+            if result.detected:
+                with_detected += 1
+            if result.inferred:
+                with_inferred += 1
+            for seal in all_seals:
+                seal_counts[seal] = seal_counts.get(seal, 0) + 1
+
+            if dry_run:
+                if all_seals:
+                    click.echo(f"  {product.product_name[:60]}")
+                    if result.detected:
+                        click.echo(f"    detected: {', '.join(result.detected)}")
+                    if result.inferred:
+                        click.echo(f"    inferred: {', '.join(result.inferred)}")
+                    click.echo(f"    confidence: {result.confidence}")
+            else:
+                repo.update_product_labels(product.id, result.to_dict())
+                for ev in result.evidence_entries():
+                    evidence_orm = ProductEvidenceORM(
+                        product_id=product.id,
+                        field_name=ev["field_name"],
+                        source_url=product.product_url,
+                        evidence_locator=ev["evidence_locator"],
+                        raw_source_text=ev["raw_source_text"],
+                        extraction_method=ev["extraction_method"],
+                    )
+                    session.add(evidence_orm)
+
+        if not dry_run:
+            session.commit()
+
+        click.echo(f"\n{'='*60}")
+        click.echo(f"Label Detection Report — {brand}")
+        click.echo(f"{'='*60}")
+        click.echo(f"Total products:       {total}")
+        click.echo(f"With detected seals:  {with_detected} ({with_detected/total:.0%})")
+        click.echo(f"With inferred seals:  {with_inferred} ({with_inferred/total:.0%})")
+        click.echo(f"\nSeal distribution:")
+        for seal, count in sorted(seal_counts.items(), key=lambda x: -x[1]):
+            click.echo(f"  {seal:<30} {count:>4} ({count/total:.0%})")
+
+        if not dry_run:
+            click.echo(f"\nResults saved to database.")
+        else:
+            click.echo(f"\n(DRY RUN — nothing was saved)")
+
+
 if __name__ == "__main__":
     cli()
