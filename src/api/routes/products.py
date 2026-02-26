@@ -46,6 +46,7 @@ def list_products(
             "gender_target": p.gender_target,
             "inci_ingredients": p.inci_ingredients,
             "confidence": p.confidence,
+            "product_labels": p.product_labels,
         }
         for p in products
     ]

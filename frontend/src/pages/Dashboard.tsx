@@ -28,6 +28,26 @@ const COLORS = {
   white: '#FFFFFF',
 }
 
+// ── Seal Label Display Names ──
+
+const SEAL_LABELS: Record<string, string> = {
+  sulfate_free: 'Sulfate Free',
+  paraben_free: 'Paraben Free',
+  silicone_free: 'Silicone Free',
+  fragrance_free: 'Fragrance Free',
+  vegan: 'Vegan',
+  cruelty_free: 'Cruelty Free',
+  organic: 'Organic',
+  natural: 'Natural',
+  hypoallergenic: 'Hypoallergenic',
+  dermatologically_tested: 'Derm. Tested',
+  ophthalmologically_tested: 'Ophth. Tested',
+  uv_protection: 'UV Protection',
+  thermal_protection: 'Thermal Protection',
+  low_poo: 'Low Poo',
+  no_poo: 'No Poo',
+}
+
 // ── Animated Counter ──
 
 function AnimatedNumber({ value, suffix = '', prefix = '' }: { value: number; suffix?: string; prefix?: string }) {
@@ -218,6 +238,67 @@ export default function Dashboard() {
     }))
   }, [brands])
 
+  // ── Seal Distribution ──
+
+  const sealDistributionData = useMemo(() => {
+    if (!products) return []
+    const counts: Record<string, number> = {}
+    products.forEach(p => {
+      if (!p.product_labels) return
+      const allSeals = [...(p.product_labels.detected || []), ...(p.product_labels.inferred || [])]
+      allSeals.forEach(seal => {
+        counts[seal] = (counts[seal] || 0) + 1
+      })
+    })
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([key, count]) => ({
+        name: SEAL_LABELS[key] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        count,
+      }))
+  }, [products])
+
+  // ── Seal Coverage by Brand ──
+
+  const sealCoverageData = useMemo(() => {
+    if (!products || !brands) return []
+    const brandTotals: Record<string, { withSeals: number; noSeals: number }> = {}
+    brands.forEach(b => {
+      brandTotals[b.brand_slug] = { withSeals: 0, noSeals: 0 }
+    })
+    products.forEach(p => {
+      if (!brandTotals[p.brand_slug]) {
+        brandTotals[p.brand_slug] = { withSeals: 0, noSeals: 0 }
+      }
+      const hasSeals = p.product_labels &&
+        ((p.product_labels.detected && p.product_labels.detected.length > 0) ||
+         (p.product_labels.inferred && p.product_labels.inferred.length > 0))
+      if (hasSeals) {
+        brandTotals[p.brand_slug].withSeals++
+      } else {
+        brandTotals[p.brand_slug].noSeals++
+      }
+    })
+    return Object.entries(brandTotals)
+      .sort((a, b) => b[1].withSeals - a[1].withSeals)
+      .map(([slug, data]) => ({
+        name: slug.charAt(0).toUpperCase() + slug.slice(1),
+        withSeals: data.withSeals,
+        noSeals: data.noSeals,
+      }))
+  }, [products, brands])
+
+  // ── Labeled Products Count ──
+
+  const labeledCount = useMemo(() => {
+    if (!products) return 0
+    return products.filter(p =>
+      p.product_labels &&
+      ((p.product_labels.detected && p.product_labels.detected.length > 0) ||
+       (p.product_labels.inferred && p.product_labels.inferred.length > 0))
+    ).length
+  }, [products])
+
   // ── Render ──
 
   if (loading) return <LoadingState message="Loading dashboard data..." />
@@ -237,7 +318,7 @@ export default function Dashboard() {
           Dashboard
         </h1>
         <p className="text-ink-muted text-sm mt-1">
-          Pipeline overview across {stats.brandCount} brands &middot; {stats.totalDiscovered.toLocaleString()} URLs discovered
+          Pipeline overview across {stats.brandCount} brands &middot; {stats.totalDiscovered.toLocaleString()} URLs discovered &middot; {labeledCount.toLocaleString()} labeled
         </p>
       </motion.div>
 
@@ -459,11 +540,67 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* ── Row 4: Discovery Funnel ── */}
+      {/* ── Row 4: Seal Distribution + Seal Coverage ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* Seal Distribution */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.55 }}
+          className="lg:col-span-2 bg-white rounded-2xl border border-ink/5 p-6"
+        >
+          <h2 className="font-display text-xl font-semibold text-ink mb-1">Seal Distribution</h2>
+          <p className="text-xs text-ink-muted mb-5">Quality seals detected across all products</p>
+          {sealDistributionData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={Math.max(280, sealDistributionData.length * 36)}>
+              <BarChart data={sealDistributionData} layout="vertical" margin={{ left: 20, right: 40, top: 0, bottom: 0 }}>
+                <XAxis type="number" tick={{ fontSize: 11, fill: COLORS.inkMuted }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: COLORS.ink, fontWeight: 500 }} axisLine={false} tickLine={false} width={120} />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(26,23,20,0.03)' }} />
+                <Bar dataKey="count" name="Products" fill={COLORS.sage} radius={[0, 6, 6, 0]} barSize={24} label={{ position: 'right', fontSize: 11, fill: COLORS.inkMuted, fontWeight: 500 }} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-40 text-xs text-ink-muted">No seal data available</div>
+          )}
+        </motion.div>
+
+        {/* Seal Coverage by Brand */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="bg-white rounded-2xl border border-ink/5 p-6"
+        >
+          <h2 className="font-display text-xl font-semibold text-ink mb-1">Seal Coverage by Brand</h2>
+          <p className="text-xs text-ink-muted mb-5">Products with quality seals per brand</p>
+          {sealCoverageData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={Math.max(220, sealCoverageData.length * 40)}>
+              <BarChart data={sealCoverageData} layout="vertical" margin={{ left: 20, right: 20, top: 0, bottom: 0 }}>
+                <XAxis type="number" tick={{ fontSize: 11, fill: COLORS.inkMuted }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: COLORS.ink, fontWeight: 500 }} axisLine={false} tickLine={false} width={90} />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(26,23,20,0.03)' }} />
+                <Legend
+                  iconType="circle"
+                  iconSize={8}
+                  wrapperStyle={{ fontSize: 11, paddingTop: 12 }}
+                />
+                <Bar dataKey="withSeals" name="With seals" stackId="a" fill={COLORS.sage} radius={[0, 0, 0, 0]} />
+                <Bar dataKey="noSeals" name="No seals" stackId="a" fill={COLORS.inkFaint} radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-40 text-xs text-ink-muted">No seal data available</div>
+          )}
+        </motion.div>
+      </div>
+
+      {/* ── Row 5: Discovery Funnel ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.45 }}
+        transition={{ duration: 0.5, delay: 0.65 }}
         className="bg-white rounded-2xl border border-ink/5 p-6"
       >
         <h2 className="font-display text-xl font-semibold text-ink mb-1">Discovery Funnel</h2>
@@ -495,11 +632,11 @@ export default function Dashboard() {
         </ResponsiveContainer>
       </motion.div>
 
-      {/* ── Row 5: Brand Detail Table ── */}
+      {/* ── Row 6: Brand Detail Table ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
+        transition={{ duration: 0.5, delay: 0.7 }}
         className="bg-white rounded-2xl border border-ink/5 overflow-hidden"
       >
         <div className="p-6 pb-0">
@@ -526,7 +663,7 @@ export default function Dashboard() {
                     key={b.brand_slug}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.55 + i * 0.05 }}
+                    transition={{ delay: 0.75 + i * 0.05 }}
                     className="border-b border-ink/[0.03] hover:bg-champagne/[0.03] transition-colors"
                   >
                     <td className="px-6 py-4">

@@ -37,6 +37,14 @@ export interface Product {
   inci_ingredients: string[] | null;
   confidence: number;
   verification_status: string;
+  product_labels: {
+    detected: string[];
+    inferred: string[];
+    confidence: number;
+    sources: string[];
+    manually_verified: boolean;
+    manually_overridden: boolean;
+  } | null;
   extraction_method: string | null;
   description: string | null;
   price: string | null;
