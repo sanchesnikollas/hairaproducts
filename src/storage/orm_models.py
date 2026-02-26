@@ -45,6 +45,7 @@ class ProductORM(Base):
     currency = Column(String(3), nullable=True)
     line_collection = Column(String(255), nullable=True)
     variants = Column(JSON, nullable=True)
+    product_labels = Column(JSON, nullable=True, default=None)
     confidence = Column(Float, nullable=False, default=0.0)
     extraction_method = Column(String(50), nullable=True)
     extracted_at = Column(DateTime, nullable=True)
