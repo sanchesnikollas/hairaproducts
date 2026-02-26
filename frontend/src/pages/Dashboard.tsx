@@ -35,6 +35,8 @@ const SEAL_LABELS: Record<string, string> = {
   paraben_free: 'Paraben Free',
   silicone_free: 'Silicone Free',
   fragrance_free: 'Fragrance Free',
+  petrolatum_free: 'Petrolatum Free',
+  dye_free: 'Dye Free',
   vegan: 'Vegan',
   cruelty_free: 'Cruelty Free',
   organic: 'Organic',

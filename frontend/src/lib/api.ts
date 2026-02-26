@@ -45,6 +45,12 @@ export async function getProduct(id: string): Promise<Product> {
   return fetchJSON<Product>(`/products/${id}`);
 }
 
+// ── Config ──
+
+export async function getFocusBrand(): Promise<{ focus_brand: string | null }> {
+  return fetchJSON<{ focus_brand: string | null }>('/config/focus-brand');
+}
+
 // ── Quarantine ──
 
 export async function getQuarantine(reviewStatus?: string): Promise<QuarantineItem[]> {

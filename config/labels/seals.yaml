@@ -130,8 +130,9 @@ seals:
       - "organica certificada"
       - "ecologico"
       - "producto organico"
-      - "bio"
       - "100% organico"
+      - "bio certificado"
+      - "selo bio"
 
   natural:
     keywords:
@@ -264,3 +265,40 @@ seals:
       - "no poo friendly"
       - "no poo approved"
       - "limpeza sem espuma"
+
+  petrolatum_free:
+    keywords:
+      - "sem petrolato"
+      - "sem derivados de petroleo"
+      - "livre de petrolato"
+      - "livre de derivados de petroleo"
+      - "sem oleo mineral"
+      - "livre de oleo mineral"
+      - "petrolatum free"
+      - "petrolatum-free"
+      - "mineral oil free"
+      - "mineral oil-free"
+      - "no petrolatum"
+      - "no mineral oil"
+      - "sin petrolato"
+      - "libre de petrolato"
+      - "sem vaselina"
+
+  dye_free:
+    keywords:
+      - "sem corante"
+      - "sem corantes"
+      - "livre de corantes"
+      - "livre de corante"
+      - "sem colorante"
+      - "sem colorantes"
+      - "dye free"
+      - "dye-free"
+      - "no dyes"
+      - "no artificial dyes"
+      - "no artificial colors"
+      - "colorant free"
+      - "color free"
+      - "sin colorantes"
+      - "libre de colorantes"
+      - "sem pigmentos artificiais"

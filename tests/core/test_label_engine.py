@@ -7,6 +7,7 @@ from src.core.label_engine import (
     LabelEvidence,
     load_seal_keywords,
     load_prohibited_list,
+    extract_seal_image_texts,
 )
 
 
@@ -28,11 +29,26 @@ def seals_yaml(tmp_path):
             "silicone_free": {
                 "keywords": ["silicone free", "silicone-free", "sem silicone"],
             },
+            "organic": {
+                "keywords": ["organico", "organic", "certified organic", "bio certificado"],
+            },
+            "natural": {
+                "keywords": ["natural", "100% natural", "ingredientes naturais"],
+            },
             "low_poo": {
                 "keywords": ["low poo", "low-poo"],
             },
             "no_poo": {
                 "keywords": ["no poo", "no-poo"],
+            },
+            "cruelty_free": {
+                "keywords": ["cruelty free", "cruelty-free"],
+            },
+            "petrolatum_free": {
+                "keywords": ["sem petrolato", "petrolatum free"],
+            },
+            "dye_free": {
+                "keywords": ["sem corante", "dye free"],
             },
         }
     }
@@ -151,6 +167,99 @@ class TestKeywordDetection:
 
 
 # ---------------------------------------------------------------------------
+# TestWordBoundary — prevents false positives from substring matching
+# ---------------------------------------------------------------------------
+
+class TestWordBoundary:
+    def test_bio_does_not_match_biofilm(self, engine):
+        """'bio certificado' should NOT match 'probiotic biofilm'."""
+        result = engine.detect(description="Protects against probiotic biofilm buildup")
+        assert "organic" not in result.detected
+
+    def test_bio_does_not_match_probiotic(self, engine):
+        result = engine.detect(
+            description="Contains Pro-Biofilm complex for scalp care"
+        )
+        assert "organic" not in result.detected
+
+    def test_organic_does_not_match_organically(self, engine):
+        """'organic' keyword should not match 'organically' as standalone."""
+        result = engine.detect(description="This is organically derived")
+        assert "organic" not in result.detected
+
+    def test_natural_does_not_match_naturally(self, engine):
+        """'natural' keyword should not match 'naturally'."""
+        result = engine.detect(description="Hair that moves naturally")
+        assert "natural" not in result.detected
+
+    def test_natural_matches_as_standalone_word(self, engine):
+        """'natural' should match when it's a standalone word."""
+        result = engine.detect(description="A product with natural ingredients")
+        assert "natural" in result.detected
+
+    def test_vegan_does_not_match_in_url(self, engine):
+        """'vegan' should not match inside 'veganuary' or similar."""
+        result = engine.detect(description="Join veganuary this year")
+        assert "vegan" not in result.detected
+
+    def test_vegan_matches_standalone(self, engine):
+        result = engine.detect(description="This is a vegan product")
+        assert "vegan" in result.detected
+
+    def test_sulfate_free_is_multi_word_boundary(self, engine):
+        """Multi-word 'sulfate free' with word boundaries."""
+        result = engine.detect(description="Our sulfate free formula")
+        assert "sulfate_free" in result.detected
+
+    def test_sem_sulfato_with_accented_context(self, engine):
+        """Portuguese keyword with word boundaries."""
+        result = engine.detect(description="Fórmula sem sulfato para cabelos cacheados")
+        assert "sulfate_free" in result.detected
+
+    def test_no_partial_word_match(self, engine):
+        """Ensure keywords don't match partial words."""
+        result = engine.detect(description="The organics line features supernatural cleaning")
+        # "organics" should not match "organic" (no boundary after "organic" before "s")
+        # "supernatural" should not match "natural" (no boundary before "natural")
+        assert "organic" not in result.detected
+        assert "natural" not in result.detected
+
+
+# ---------------------------------------------------------------------------
+# TestImageElementScanning
+# ---------------------------------------------------------------------------
+
+class TestImageElementScanning:
+    def test_detects_seal_from_image_alt(self, engine):
+        result = engine.detect(image_texts=["selo cruelty free certificado"])
+        assert "cruelty_free" in result.detected
+        assert "html_img_element" in result.sources
+
+    def test_detects_seal_from_image_filename(self, engine):
+        result = engine.detect(image_texts=["selo vegan certificado peta"])
+        assert "vegan" in result.detected
+
+    def test_no_false_positive_from_unrelated_image(self, engine):
+        result = engine.detect(image_texts=["product hero banner", "shampoo 300ml"])
+        assert result.detected == []
+
+    def test_image_does_not_duplicate_text_detection(self, engine):
+        """If seal already detected via text, image should not add duplicate."""
+        result = engine.detect(
+            description="This is a vegan product",
+            image_texts=["selo vegan"],
+        )
+        assert result.detected.count("vegan") == 1
+
+    def test_image_evidence_method(self, engine):
+        result = engine.detect(image_texts=["selo cruelty free"])
+        entries = result.evidence_entries()
+        assert len(entries) == 1
+        assert entries[0]["extraction_method"] == "html_img_element"
+        assert entries[0]["evidence_locator"] == "img_alt_title_filename"
+
+
+# ---------------------------------------------------------------------------
 # TestINCIInference
 # ---------------------------------------------------------------------------
 
@@ -199,6 +308,61 @@ class TestINCIInference:
             inci_ingredients=None,
         )
         assert result.inferred == []
+
+    def test_infers_sulfate_free_from_inci(self, engine):
+        """When no harsh sulfates in INCI, sulfate_free should be inferred."""
+        result = engine.detect(
+            inci_ingredients=["Aqua", "Cocamidopropyl Betaine", "Glycerin"]
+        )
+        assert "sulfate_free" in result.inferred
+
+    def test_does_not_infer_sulfate_free_with_sulfate(self, engine):
+        result = engine.detect(
+            inci_ingredients=["Aqua", "Sodium Lauryl Sulfate", "Glycerin"]
+        )
+        assert "sulfate_free" not in result.inferred
+
+    def test_infers_paraben_free_from_inci(self, engine):
+        result = engine.detect(
+            inci_ingredients=["Aqua", "Glycerin", "Cetearyl Alcohol"]
+        )
+        assert "paraben_free" in result.inferred
+
+    def test_does_not_infer_paraben_free_with_paraben(self, engine):
+        result = engine.detect(
+            inci_ingredients=["Aqua", "Glycerin", "Methylparaben", "Propylparaben"]
+        )
+        assert "paraben_free" not in result.inferred
+
+    def test_infers_petrolatum_free_from_inci(self, engine):
+        result = engine.detect(
+            inci_ingredients=["Aqua", "Glycerin", "Cetearyl Alcohol"]
+        )
+        assert "petrolatum_free" in result.inferred
+
+    def test_does_not_infer_petrolatum_free_with_mineral_oil(self, engine):
+        result = engine.detect(
+            inci_ingredients=["Aqua", "Mineral Oil", "Glycerin"]
+        )
+        assert "petrolatum_free" not in result.inferred
+
+    def test_infers_dye_free_from_inci(self, engine):
+        result = engine.detect(
+            inci_ingredients=["Aqua", "Glycerin", "Cetearyl Alcohol"]
+        )
+        assert "dye_free" in result.inferred
+
+    def test_does_not_infer_dye_free_with_ci_number(self, engine):
+        result = engine.detect(
+            inci_ingredients=["Aqua", "Glycerin", "CI 19140", "CI 77891"]
+        )
+        assert "dye_free" not in result.inferred
+
+    def test_does_not_infer_dye_free_with_fd_c(self, engine):
+        result = engine.detect(
+            inci_ingredients=["Aqua", "FD&C Yellow No. 5"]
+        )
+        assert "dye_free" not in result.inferred
 
 
 # ---------------------------------------------------------------------------
@@ -286,3 +450,69 @@ class TestLabelResult:
         assert entry["extraction_method"] == "text_keyword"
         assert entry["raw_source_text"] == "sulfate free"
         assert entry["evidence_locator"] == "description"
+
+
+# ---------------------------------------------------------------------------
+# TestExtractSealImageTexts
+# ---------------------------------------------------------------------------
+
+class TestExtractSealImageTexts:
+    def test_extracts_alt_text(self):
+        html = '<html><body><img src="/img/selo.png" alt="Cruelty Free Certified"></body></html>'
+        texts = extract_seal_image_texts(html)
+        assert "Cruelty Free Certified" in texts
+
+    def test_extracts_title_text(self):
+        html = '<html><body><img src="/img/selo.png" title="Vegan Product"></body></html>'
+        texts = extract_seal_image_texts(html)
+        assert "Vegan Product" in texts
+
+    def test_extracts_filename(self):
+        html = '<html><body><img src="/images/selo-sulfate-free.png"></body></html>'
+        texts = extract_seal_image_texts(html)
+        assert any("selo sulfate free" in t.lower() for t in texts)
+
+    def test_deduplicates(self):
+        html = '''<html><body>
+            <img src="/a.png" alt="Vegan">
+            <img src="/b.png" alt="Vegan">
+        </body></html>'''
+        texts = extract_seal_image_texts(html)
+        vegan_count = sum(1 for t in texts if t.lower() == "vegan")
+        assert vegan_count == 1
+
+    def test_skips_long_alt_texts(self):
+        long_text = "A" * 250
+        html = f'<html><body><img src="/a.png" alt="{long_text}"></body></html>'
+        texts = extract_seal_image_texts(html)
+        assert long_text not in texts
+
+
+# ---------------------------------------------------------------------------
+# TestSanitizeText (extraction module)
+# ---------------------------------------------------------------------------
+
+class TestSanitizeText:
+    def test_decodes_html_entities(self):
+        from src.extraction.deterministic import sanitize_text
+        assert sanitize_text("Shampoo &amp; Condicionador") == "Shampoo & Condicionador"
+        assert sanitize_text("Composi&ccedil;&atilde;o") == "Composição"
+
+    def test_strips_html_tags(self):
+        from src.extraction.deterministic import sanitize_text
+        assert sanitize_text("<p>Hello <b>world</b></p>") == "Hello world"
+        assert sanitize_text('<img src="x" alt="y"> text') == "text"
+
+    def test_normalizes_whitespace(self):
+        from src.extraction.deterministic import sanitize_text
+        assert sanitize_text("Hello   world\n\nnew line") == "Hello world new line"
+
+    def test_returns_none_for_empty(self):
+        from src.extraction.deterministic import sanitize_text
+        assert sanitize_text("") is None
+        assert sanitize_text(None) is None
+
+    def test_handles_mixed_entities_and_tags(self):
+        from src.extraction.deterministic import sanitize_text
+        result = sanitize_text("<p>Sem sulfato &amp; sem parabenos</p>")
+        assert result == "Sem sulfato & sem parabenos"

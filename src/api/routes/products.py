@@ -1,6 +1,8 @@
 # src/api/routes/products.py
 from __future__ import annotations
 
+import os
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
@@ -9,6 +11,9 @@ from src.storage.orm_models import Base, ProductORM, ProductEvidenceORM
 from src.storage.repository import ProductRepository
 
 router = APIRouter(tags=["products"])
+
+# If FOCUS_BRAND is set, default brand_slug filter to that brand
+_FOCUS_BRAND = os.environ.get("FOCUS_BRAND", "").strip() or None
 
 
 def _get_session():
@@ -19,6 +24,12 @@ def _get_session():
         yield session
 
 
+@router.get("/config/focus-brand")
+def get_focus_brand():
+    """Return the current focus brand (if set via FOCUS_BRAND env var)."""
+    return {"focus_brand": _FOCUS_BRAND}
+
+
 @router.get("/products")
 def list_products(
     brand_slug: str | None = None,
@@ -27,9 +38,11 @@ def list_products(
     offset: int = Query(default=0, ge=0),
     session: Session = Depends(_get_session),
 ):
+    # Apply focus brand default if no brand filter specified
+    effective_brand = brand_slug if brand_slug is not None else _FOCUS_BRAND
     repo = ProductRepository(session)
     products = repo.get_products(
-        brand_slug=brand_slug,
+        brand_slug=effective_brand,
         verified_only=verified_only,
         limit=limit,
         offset=offset,

@@ -1,6 +1,7 @@
 # src/extraction/deterministic.py
 from __future__ import annotations
 
+import html as html_module
 import json
 import re
 import logging
@@ -9,6 +10,19 @@ from src.core.models import ExtractionMethod
 from src.extraction.evidence_tracker import create_evidence
 
 logger = logging.getLogger(__name__)
+
+
+def sanitize_text(text: str | None) -> str | None:
+    """Clean text: decode HTML entities, strip tags, normalize whitespace."""
+    if not text:
+        return None
+    # Decode HTML entities (&amp; &ccedil; &#233; etc.)
+    cleaned = html_module.unescape(text)
+    # Remove any residual HTML tags
+    cleaned = re.sub(r'<[^>]+>', ' ', cleaned)
+    # Normalize whitespace (collapse multiple spaces/newlines)
+    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+    return cleaned if cleaned else None
 
 try:
     from bs4 import BeautifulSoup
@@ -249,7 +263,7 @@ def extract_product_deterministic(
                 str(img), ExtractionMethod.JSONLD,
             ))
         if jsonld.get("description"):
-            result["description"] = jsonld["description"]
+            result["description"] = sanitize_text(jsonld["description"])
         offers = jsonld.get("offers", {})
         if isinstance(offers, dict):
             if offers.get("price"):
@@ -273,7 +287,7 @@ def extract_product_deterministic(
     )
 
     if not result["product_name"] and sel_result["name"]:
-        result["product_name"] = sel_result["name"]
+        result["product_name"] = sanitize_text(sel_result["name"])
         evidence_list.append(create_evidence(
             "product_name", url, sel_result["name_selector"] or "",
             sel_result["name"], ExtractionMethod.HTML_SELECTOR,

@@ -392,6 +392,11 @@ def labels(brand: str, limit: int, dry_run: bool):
                     click.echo(f"    confidence: {result.confidence}")
             else:
                 repo.update_product_labels(product.id, result.to_dict())
+                # Delete old label evidence to avoid duplicates on re-run
+                session.query(ProductEvidenceORM).filter(
+                    ProductEvidenceORM.product_id == product.id,
+                    ProductEvidenceORM.field_name.like("label:%"),
+                ).delete(synchronize_session=False)
                 for ev in result.evidence_entries():
                     evidence_orm = ProductEvidenceORM(
                         product_id=product.id,

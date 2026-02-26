@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { getProducts, getProduct } from '../lib/api';
+import { getProducts, getProduct, getFocusBrand } from '../lib/api';
 import { useAPI } from '../hooks/useAPI';
 import type { Product } from '../types/api';
 import StatusBadge from '../components/StatusBadge';
@@ -11,6 +11,8 @@ const SEAL_DISPLAY: Record<string, string> = {
   paraben_free: 'Paraben Free',
   silicone_free: 'Silicone Free',
   fragrance_free: 'Fragrance Free',
+  petrolatum_free: 'Petrolatum Free',
+  dye_free: 'Dye Free',
   vegan: 'Vegan',
   cruelty_free: 'Cruelty Free',
   organic: 'Organic',
@@ -27,9 +29,19 @@ const SEAL_DISPLAY: Record<string, string> = {
 export default function ProductBrowser() {
   const [search, setSearch] = useState('');
   const [brandFilter, setBrandFilter] = useState('');
+  const [focusBrand, setFocusBrand] = useState<string | null>(null);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [sealFilter, setSealFilter] = useState('');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+
+  // Load focus brand on mount
+  useEffect(() => {
+    getFocusBrand().then(({ focus_brand }) => {
+      if (focus_brand) {
+        setFocusBrand(focus_brand);
+      }
+    }).catch(() => {});
+  }, []);
 
   const fetcher = useCallback(
     () => getProducts({ brand: brandFilter || undefined, verified_only: verifiedOnly }),
@@ -80,6 +92,11 @@ export default function ProductBrowser() {
         </h1>
         <p className="mt-2 text-sm text-ink-muted">
           Browse and search verified hair products with INCI ingredient data.
+          {focusBrand && (
+            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-champagne/10 text-champagne-dark border border-champagne/15">
+              Focus: {focusBrand}
+            </span>
+          )}
         </p>
       </motion.div>
 
