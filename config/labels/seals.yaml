@@ -1,0 +1,266 @@
+# ============================================================================
+# HAIRA v2 — Product Quality Seals Reference
+# ============================================================================
+# Used by LabelEngine to detect quality seals and certifications on product
+# pages. Keywords are matched case-insensitively against product text, labels,
+# badges, and metadata.
+#
+# Languages: Portuguese (primary), English, Spanish
+# Includes common variations: accented/unaccented, hyphenated, abbreviated.
+# ============================================================================
+
+seals:
+  sulfate_free:
+    keywords:
+      - "sem sulfato"
+      - "sem sulfatos"
+      - "livre de sulfato"
+      - "livre de sulfatos"
+      - "sulfate free"
+      - "sulfate-free"
+      - "sulphate free"
+      - "sulphate-free"
+      - "sin sulfato"
+      - "sin sulfatos"
+      - "libre de sulfatos"
+      - "no sulfate"
+      - "no sulfates"
+      - "0% sulfato"
+      - "zero sulfato"
+
+  paraben_free:
+    keywords:
+      - "sem parabeno"
+      - "sem parabenos"
+      - "livre de parabenos"
+      - "livre de parabeno"
+      - "paraben free"
+      - "paraben-free"
+      - "parabens free"
+      - "sin parabenos"
+      - "sin parabeno"
+      - "libre de parabenos"
+      - "no paraben"
+      - "no parabens"
+      - "0% parabenos"
+      - "zero parabeno"
+
+  silicone_free:
+    keywords:
+      - "sem silicone"
+      - "sem silicones"
+      - "livre de silicone"
+      - "livre de silicones"
+      - "silicone free"
+      - "silicone-free"
+      - "sin silicona"
+      - "sin siliconas"
+      - "libre de siliconas"
+      - "no silicone"
+      - "no silicones"
+      - "0% silicone"
+      - "zero silicone"
+
+  fragrance_free:
+    keywords:
+      - "sem fragrancia"
+      - "sem fragrancia"
+      - "sem perfume"
+      - "sem fragancia"
+      - "livre de fragrancia"
+      - "livre de perfume"
+      - "fragrance free"
+      - "fragrance-free"
+      - "unscented"
+      - "sin fragancia"
+      - "sin perfume"
+      - "libre de fragancia"
+      - "no fragrance"
+      - "sem aroma"
+      - "hipoalergenico sem perfume"
+
+  vegan:
+    keywords:
+      - "vegano"
+      - "vegana"
+      - "produto vegano"
+      - "formula vegana"
+      - "formulacao vegana"
+      - "vegan"
+      - "100% vegan"
+      - "100% vegano"
+      - "selo vegano"
+      - "certificado vegano"
+      - "vegan certified"
+      - "vegan friendly"
+      - "vegan-friendly"
+      - "vegano certificado"
+      - "producto vegano"
+
+  cruelty_free:
+    keywords:
+      - "cruelty free"
+      - "cruelty-free"
+      - "nao testado em animais"
+      - "nao testamos em animais"
+      - "livre de crueldade"
+      - "livre de crueldade animal"
+      - "sem testes em animais"
+      - "sem crueldade"
+      - "not tested on animals"
+      - "no animal testing"
+      - "sin crueldad animal"
+      - "libre de crueldad"
+      - "no testado en animales"
+      - "leaping bunny"
+      - "peta certified"
+
+  organic:
+    keywords:
+      - "organico"
+      - "organica"
+      - "produto organico"
+      - "certificado organico"
+      - "ingredientes organicos"
+      - "organic"
+      - "certified organic"
+      - "usda organic"
+      - "ecocert"
+      - "organico certificado"
+      - "organica certificada"
+      - "ecologico"
+      - "producto organico"
+      - "bio"
+      - "100% organico"
+
+  natural:
+    keywords:
+      - "natural"
+      - "produto natural"
+      - "ingredientes naturais"
+      - "100% natural"
+      - "formula natural"
+      - "naturalmente"
+      - "all natural"
+      - "all-natural"
+      - "naturally derived"
+      - "natural ingredients"
+      - "ingredientes de origem natural"
+      - "origen natural"
+      - "producto natural"
+      - "ingredientes naturales"
+      - "base natural"
+
+  hypoallergenic:
+    keywords:
+      - "hipoalergenico"
+      - "hipoalergenica"
+      - "hipoalergico"
+      - "hypoallergenic"
+      - "hipo-alergenico"
+      - "hipoalergenico testado"
+      - "hipoalergenico comprovado"
+      - "hipoalergenico clinicamente testado"
+      - "hipoalergenico dermatologicamente testado"
+      - "hipoalergenico"
+      - "hipoalergeno"
+      - "hipoalergenico certificado"
+
+  dermatologically_tested:
+    keywords:
+      - "dermatologicamente testado"
+      - "dermatologicamente testada"
+      - "testado dermatologicamente"
+      - "aprovado por dermatologistas"
+      - "recomendado por dermatologistas"
+      - "dermatologically tested"
+      - "derm tested"
+      - "dermatologist tested"
+      - "dermatologist approved"
+      - "dermatologicamente probado"
+      - "probado dermatologicamente"
+      - "testado por dermatologistas"
+      - "clinicamente testado"
+
+  ophthalmologically_tested:
+    keywords:
+      - "oftalmologicamente testado"
+      - "oftalmologicamente testada"
+      - "testado oftalmologicamente"
+      - "aprovado por oftalmologistas"
+      - "ophthalmologically tested"
+      - "ophthalmologist tested"
+      - "ophthalmologist approved"
+      - "eye tested"
+      - "oftalmologicamente probado"
+      - "testado por oftalmologistas"
+      - "seguro para os olhos"
+      - "seguro para area dos olhos"
+
+  uv_protection:
+    keywords:
+      - "protecao uv"
+      - "protecao solar"
+      - "filtro uv"
+      - "filtro solar"
+      - "protecao contra raios uv"
+      - "uv protection"
+      - "uv filter"
+      - "uv shield"
+      - "sun protection"
+      - "proteccion uv"
+      - "filtro uva"
+      - "filtro uvb"
+      - "anti-uv"
+      - "protecao solar capilar"
+      - "protege contra raios uv"
+
+  thermal_protection:
+    keywords:
+      - "protecao termica"
+      - "protetor termico"
+      - "protecao contra o calor"
+      - "protecao ao calor"
+      - "anti-calor"
+      - "thermal protection"
+      - "heat protection"
+      - "heat protectant"
+      - "heat shield"
+      - "thermal shield"
+      - "proteccion termica"
+      - "protector termico"
+      - "termo protetor"
+      - "termoativado"
+      - "protege ate 230"
+
+  low_poo:
+    keywords:
+      - "low poo"
+      - "low-poo"
+      - "lowpoo"
+      - "lo poo"
+      - "lo-poo"
+      - "low shampoo"
+      - "limpeza suave"
+      - "sulfato leve"
+      - "sem sulfato agressivo"
+      - "liberado para low poo"
+      - "aprovado para low poo"
+      - "low poo friendly"
+      - "low poo approved"
+
+  no_poo:
+    keywords:
+      - "no poo"
+      - "no-poo"
+      - "nopoo"
+      - "co-wash"
+      - "cowash"
+      - "co wash"
+      - "no shampoo"
+      - "sem shampoo"
+      - "liberado para no poo"
+      - "aprovado para no poo"
+      - "no poo friendly"
+      - "no poo approved"
+      - "limpeza sem espuma"

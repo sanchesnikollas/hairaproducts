@@ -1,0 +1,82 @@
+# ============================================================================
+# HAIRA v2 — Harsh Surfactants Reference List
+# ============================================================================
+# Used by LabelEngine to verify low_poo and no_poo compliance.
+# Names are lowercased and matched case-insensitively against INCI lists.
+#
+# low_poo: avoids harsh sulfates but allows mild surfactants
+# no_poo: avoids ALL sulfates and most synthetic surfactants entirely
+#
+# Sources: Curly Girl Method guidelines, cosmetic chemistry references.
+# ============================================================================
+
+# Surfactants prohibited in low_poo routines
+# These are harsh cleansing agents (primarily sulfates) that strip natural oils
+low_poo_prohibited:
+  - sodium lauryl sulfate
+  - sodium laureth sulfate
+  - ammonium lauryl sulfate
+  - ammonium laureth sulfate
+  - sodium myreth sulfate
+  - sodium coco sulfate
+  - sodium c14-16 olefin sulfonate
+  - sodium cocoyl isethionate sulfate
+  - tea-lauryl sulfate
+  - mea-lauryl sulfate
+  - dea-lauryl sulfate
+  - sodium trideceth sulfate
+  - sodium dodecylbenzenesulfonate
+
+# Surfactants prohibited in no_poo routines
+# Includes everything from low_poo plus milder sulfate-adjacent surfactants
+# and additional synthetic cleansing agents
+# NOTE: no_poo also prohibits all insoluble silicones (see silicones.yaml)
+no_poo_prohibited:
+  # All harsh sulfates (same as low_poo)
+  - sodium lauryl sulfate
+  - sodium laureth sulfate
+  - ammonium lauryl sulfate
+  - ammonium laureth sulfate
+  - sodium myreth sulfate
+  - sodium coco sulfate
+  - sodium c14-16 olefin sulfonate
+  - sodium cocoyl isethionate sulfate
+  - tea-lauryl sulfate
+  - mea-lauryl sulfate
+  - dea-lauryl sulfate
+  - sodium trideceth sulfate
+  - sodium dodecylbenzenesulfonate
+  # Additional surfactants prohibited in no_poo
+  - cocamidopropyl hydroxysultaine
+  - disodium laureth sulfosuccinate
+  - sodium cocoyl sarcosinate
+  - sodium lauroyl sarcosinate
+  - sodium methyl cocoyl taurate
+  - sodium cocoyl glutamate
+  - sodium lauroyl glutamate
+  - cocamidopropyl betaine
+  - sodium cocoyl isethionate
+  - disodium cocoamphodiacetate
+  - sodium lauryl glucose carboxylate
+  - decyl glucoside
+  - lauryl glucoside
+  - coco glucoside
+  - caprylyl/capryl glucoside
+
+# Mild surfactants allowed in low_poo (for reference / validation)
+low_poo_allowed:
+  - cocamidopropyl betaine
+  - sodium cocoyl isethionate
+  - decyl glucoside
+  - lauryl glucoside
+  - coco glucoside
+  - caprylyl/capryl glucoside
+  - disodium cocoamphodiacetate
+  - sodium cocoyl glutamate
+  - sodium lauroyl glutamate
+  - sodium methyl cocoyl taurate
+  - sodium cocoyl sarcosinate
+  - sodium lauroyl sarcosinate
+  - sodium lauryl glucose carboxylate
+  - disodium laureth sulfosuccinate
+  - cocamidopropyl hydroxysultaine
