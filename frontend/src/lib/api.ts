@@ -34,15 +34,15 @@ export interface ProductFilters {
 
 export async function getProducts(filters: ProductFilters = {}): Promise<Product[]> {
   const params = new URLSearchParams();
-  if (filters.brand) params.set('brand', filters.brand);
-  if (filters.verified_only) params.set('verified_only', 'true');
-  if (filters.page) params.set('page', String(filters.page));
-  if (filters.per_page) params.set('per_page', String(filters.per_page));
+  if (filters.brand) params.set('brand_slug', filters.brand);
+  if (filters.verified_only !== undefined) params.set('verified_only', String(filters.verified_only));
+  if (filters.per_page) params.set('limit', String(filters.per_page));
+  if (filters.page) params.set('offset', String(((filters.page ?? 1) - 1) * (filters.per_page ?? 100)));
   const qs = params.toString();
   return fetchJSON<Product[]>(`/products${qs ? `?${qs}` : ''}`);
 }
 
-export async function getProduct(id: number): Promise<Product> {
+export async function getProduct(id: string): Promise<Product> {
   return fetchJSON<Product>(`/products/${id}`);
 }
 

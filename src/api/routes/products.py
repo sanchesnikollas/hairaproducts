@@ -46,6 +46,7 @@ def list_products(
             "gender_target": p.gender_target,
             "inci_ingredients": p.inci_ingredients,
             "confidence": p.confidence,
+            "description": p.description,
             "product_labels": p.product_labels,
         }
         for p in products
@@ -79,6 +80,7 @@ def get_product(product_id: str, session: Session = Depends(_get_session)):
         "currency": product.currency,
         "line_collection": product.line_collection,
         "confidence": product.confidence,
+        "product_labels": product.product_labels,
         "extraction_method": product.extraction_method,
         "created_at": str(product.created_at) if product.created_at else None,
         "updated_at": str(product.updated_at) if product.updated_at else None,

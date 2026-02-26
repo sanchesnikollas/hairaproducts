@@ -27,7 +27,7 @@ export interface ProductEvidence {
 }
 
 export interface Product {
-  id: number;
+  id: string;
   brand_slug: string;
   product_name: string;
   product_url: string;
@@ -47,6 +47,10 @@ export interface Product {
   } | null;
   extraction_method: string | null;
   description: string | null;
+  usage_instructions: string | null;
+  benefits_claims: string[] | null;
+  size_volume: string | null;
+  line_collection: string | null;
   price: string | null;
   currency: string | null;
   created_at: string;
