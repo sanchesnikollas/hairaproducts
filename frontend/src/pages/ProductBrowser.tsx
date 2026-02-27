@@ -60,6 +60,10 @@ export default function ProductBrowser() {
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [sealFilter, setSealFilter] = useState('');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const [qualityFilter, setQualityFilter] = useState<'' | 'errors' | 'warnings' | 'clean'>('');
+  const [excludeKits, setExcludeKits] = useState(true);
+  const [fieldFilter, setFieldFilter] = useState<'' | 'has_inci' | 'no_inci' | 'has_desc' | 'no_desc' | 'has_price' | 'no_price'>('');
 
   useEffect(() => {
     getFocusBrand()
@@ -70,10 +74,10 @@ export default function ProductBrowser() {
   }, []);
 
   const fetcher = useCallback(
-    () => getProducts({ brand: brandFilter || undefined, verified_only: verifiedOnly }),
-    [brandFilter, verifiedOnly]
+    () => getProducts({ brand: brandFilter || undefined, verified_only: verifiedOnly, exclude_kits: excludeKits }),
+    [brandFilter, verifiedOnly, excludeKits]
   );
-  const { data: products, loading, error, refetch } = useAPI(fetcher, [brandFilter, verifiedOnly]);
+  const { data: products, loading, error, refetch } = useAPI(fetcher, [brandFilter, verifiedOnly, excludeKits]);
 
   const filtered = useMemo(() => {
     if (!products) return [];
@@ -94,13 +98,40 @@ export default function ProductBrowser() {
         return (labels.detected ?? []).includes(sealFilter) || (labels.inferred ?? []).includes(sealFilter);
       });
     }
+    if (qualityFilter === 'errors') {
+      result = result.filter((p) => (p.quality?.error_count ?? 0) > 0);
+    } else if (qualityFilter === 'warnings') {
+      result = result.filter((p) => (p.quality?.warning_count ?? 0) > 0 && (p.quality?.error_count ?? 0) === 0);
+    } else if (qualityFilter === 'clean') {
+      result = result.filter((p) => (p.quality?.error_count ?? 0) === 0 && (p.quality?.warning_count ?? 0) === 0);
+    }
+    if (fieldFilter === 'has_inci') result = result.filter((p) => (p.inci_ingredients?.length ?? 0) > 0);
+    else if (fieldFilter === 'no_inci') result = result.filter((p) => !p.inci_ingredients?.length);
+    else if (fieldFilter === 'has_desc') result = result.filter((p) => !!p.description?.trim());
+    else if (fieldFilter === 'no_desc') result = result.filter((p) => !p.description?.trim());
+    else if (fieldFilter === 'has_price') result = result.filter((p) => !!p.price);
+    else if (fieldFilter === 'no_price') result = result.filter((p) => !p.price);
     return result;
-  }, [products, search, sealFilter]);
+  }, [products, search, sealFilter, qualityFilter, fieldFilter]);
 
   const brandSlugs = useMemo(() => {
     if (!products) return [];
     return [...new Set(products.map((p) => p.brand_slug))].sort();
   }, [products]);
+
+  const statusCounts = useMemo(() => {
+    const all = products ?? [];
+    const verified = all.filter((p) => p.verification_status === 'verified_inci').length;
+    const catalog = all.filter((p) => p.verification_status === 'catalog_only').length;
+    const quarantined = all.filter((p) => p.verification_status === 'quarantined').length;
+    const withErrors = all.filter((p) => (p.quality?.error_count ?? 0) > 0).length;
+    const withWarnings = all.filter((p) => (p.quality?.warning_count ?? 0) > 0 && (p.quality?.error_count ?? 0) === 0).length;
+    const clean = all.filter((p) => (p.quality?.error_count ?? 0) === 0 && (p.quality?.warning_count ?? 0) === 0).length;
+    const hasInci = all.filter((p) => (p.inci_ingredients?.length ?? 0) > 0).length;
+    const hasDesc = all.filter((p) => !!p.description?.trim()).length;
+    const hasPrice = all.filter((p) => !!p.price).length;
+    return { total: all.length, filtered: filtered.length, verified, catalog, quarantined, withErrors, withWarnings, clean, hasInci, hasDesc, hasPrice };
+  }, [products, filtered]);
 
   if (loading) return <LoadingState message="Loading products..." />;
   if (error) return <ErrorState message={error} onRetry={refetch} />;
@@ -109,18 +140,94 @@ export default function ProductBrowser() {
     <div className="space-y-6">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <div className="flex items-center gap-3">
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-ink">Product Browser</h1>
-          {focusBrand && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-champagne/10 text-champagne-dark border border-champagne/15">
-              <span className="w-1.5 h-1.5 rounded-full bg-champagne" />
-              {formatBrandName(focusBrand)}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h1 className="font-display text-4xl font-semibold tracking-tight text-ink">Products</h1>
+            {focusBrand && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-champagne/10 text-champagne-dark border border-champagne/15">
+                <span className="w-1.5 h-1.5 rounded-full bg-champagne" />
+                {formatBrandName(focusBrand)}
+              </span>
+            )}
+          </div>
+          {/* View Toggle */}
+          <div className="flex items-center gap-1 bg-ink/3 rounded-lg p-0.5">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-ink' : 'text-ink-faint hover:text-ink-muted'}`}
+              title="List view"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
+                <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-ink' : 'text-ink-faint hover:text-ink-muted'}`}
+              title="Grid view"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Status Counts */}
+        <div className="mt-3 flex items-center gap-3 flex-wrap">
+          <span className="text-2xl font-display font-semibold text-ink tabular-nums">{statusCounts.total}</span>
+          <span className="text-sm text-ink-muted">products</span>
+          {statusCounts.filtered !== statusCounts.total && (
+            <>
+              <span className="w-px h-5 bg-ink/10" />
+              <span className="text-sm text-ink-muted tabular-nums">{statusCounts.filtered} shown</span>
+            </>
+          )}
+          <span className="w-px h-5 bg-ink/10" />
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-sage">
+            <span className="w-2 h-2 rounded-full bg-sage" />
+            {statusCounts.verified} verified
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber">
+            <span className="w-2 h-2 rounded-full bg-amber" />
+            {statusCounts.catalog} catalog only
+          </span>
+          {statusCounts.quarantined > 0 && (
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-coral">
+              <span className="w-2 h-2 rounded-full bg-coral" />
+              {statusCounts.quarantined} quarantined
             </span>
           )}
         </div>
-        <p className="mt-1.5 text-sm text-ink-muted">
-          {filtered.length} product{filtered.length !== 1 ? 's' : ''} with verified INCI ingredient data
-        </p>
+
+        {/* Quality Filter Bar */}
+        <div className="mt-3 flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-wider text-ink-faint font-semibold mr-1">Quality:</span>
+          {([
+            { key: '' as const, label: 'All', count: statusCounts.total },
+            { key: 'errors' as const, label: 'Has Errors', count: statusCounts.withErrors },
+            { key: 'warnings' as const, label: 'Warnings', count: statusCounts.withWarnings },
+            { key: 'clean' as const, label: 'Clean', count: statusCounts.clean },
+          ] as const).map(({ key, label, count }) => (
+            <button
+              key={key}
+              onClick={() => setQualityFilter(key)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                qualityFilter === key
+                  ? key === 'errors' ? 'bg-coral/10 text-coral border border-coral/20'
+                    : key === 'warnings' ? 'bg-amber/10 text-amber border border-amber/20'
+                    : key === 'clean' ? 'bg-sage/10 text-sage border border-sage/20'
+                    : 'bg-champagne/10 text-champagne-dark border border-champagne/20'
+                  : 'bg-ink/3 text-ink-muted hover:bg-ink/5 border border-transparent'
+              }`}
+            >
+              {label}
+              <span className="tabular-nums opacity-70">{count}</span>
+            </button>
+          ))}
+        </div>
       </motion.div>
 
       {/* Filters */}
@@ -168,6 +275,20 @@ export default function ProductBrowser() {
         </select>
 
         <select
+          value={fieldFilter}
+          onChange={(e) => setFieldFilter(e.target.value as typeof fieldFilter)}
+          className="px-4 py-2.5 bg-white border border-ink/8 rounded-xl text-sm text-ink-light focus:outline-none focus:ring-2 focus:ring-champagne/30 focus:border-champagne/40 transition-all appearance-none cursor-pointer"
+        >
+          <option value="">All fields</option>
+          <option value="has_inci">Has INCI ({statusCounts.hasInci})</option>
+          <option value="no_inci">Missing INCI ({statusCounts.total - statusCounts.hasInci})</option>
+          <option value="has_desc">Has description ({statusCounts.hasDesc})</option>
+          <option value="no_desc">Missing description ({statusCounts.total - statusCounts.hasDesc})</option>
+          <option value="has_price">Has price ({statusCounts.hasPrice})</option>
+          <option value="no_price">Missing price ({statusCounts.total - statusCounts.hasPrice})</option>
+        </select>
+
+        <select
           value={sealFilter}
           onChange={(e) => setSealFilter(e.target.value)}
           className="px-4 py-2.5 bg-white border border-ink/8 rounded-xl text-sm text-ink-light focus:outline-none focus:ring-2 focus:ring-champagne/30 focus:border-champagne/40 transition-all appearance-none cursor-pointer"
@@ -201,12 +322,34 @@ export default function ProductBrowser() {
           </span>
           Verified INCI only
         </button>
+
+        <button
+          onClick={() => setExcludeKits(!excludeKits)}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${
+            excludeKits
+              ? 'bg-champagne/8 border-champagne/20 text-champagne-dark'
+              : 'bg-white border-ink/8 text-ink-muted hover:text-ink hover:border-ink/15'
+          }`}
+        >
+          <span
+            className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center transition-all ${
+              excludeKits ? 'bg-champagne border-champagne' : 'border-ink/20'
+            }`}
+          >
+            {excludeKits && (
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </span>
+          Exclude kits
+        </button>
       </motion.div>
 
-      {/* Product Grid */}
+      {/* Product List / Grid */}
       {filtered.length === 0 ? (
         <EmptyState title="No products found" description="Try adjusting your search or filters." />
-      ) : (
+      ) : viewMode === 'grid' ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -216,6 +359,14 @@ export default function ProductBrowser() {
           {filtered.map((product, i) => (
             <ProductCard key={product.id} product={product} index={i} onClick={() => setSelectedProductId(product.id)} />
           ))}
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <ProductListView products={filtered} onSelect={(id) => setSelectedProductId(id)} />
         </motion.div>
       )}
 
@@ -333,6 +484,178 @@ function ProductCard({ product, index, onClick }: { product: Product; index: num
   );
 }
 
+// ── Field Presence Indicator ──
+
+const FIELD_INDICATORS = [
+  { key: 'inci', label: 'INCI', tip: 'INCI Ingredients' },
+  { key: 'desc', label: 'Desc', tip: 'Description' },
+  { key: 'usage', label: 'Use', tip: 'Usage Instructions' },
+  { key: 'benefits', label: 'Ben', tip: 'Benefits & Claims' },
+  { key: 'price', label: 'R$', tip: 'Price' },
+  { key: 'img', label: 'Img', tip: 'Image' },
+] as const;
+
+type FieldKey = (typeof FIELD_INDICATORS)[number]['key'];
+
+function getProductFields(p: Product): Record<FieldKey, 'ok' | 'error' | 'empty'> {
+  const hasInci = (p.inci_ingredients?.length ?? 0) > 0;
+  const inciError = (p.quality?.issues ?? []).some(
+    (i) => i.field === 'inci_ingredients' && i.severity === 'error'
+  );
+  return {
+    inci: inciError ? 'error' : hasInci ? 'ok' : 'empty',
+    desc: p.description?.trim() ? 'ok' : 'empty',
+    usage: p.usage_instructions?.trim() ? 'ok' : 'empty',
+    benefits: (p.benefits_claims?.length ?? 0) > 0 ? 'ok' : 'empty',
+    price: p.price ? 'ok' : 'empty',
+    img: p.image_url_main ? 'ok' : 'empty',
+  };
+}
+
+function FieldDot({ status, label }: { status: 'ok' | 'error' | 'empty'; label: string }) {
+  return (
+    <span
+      className={`inline-flex items-center justify-center w-[26px] text-[9px] font-semibold tracking-wide rounded py-0.5 ${
+        status === 'ok'
+          ? 'bg-sage/10 text-sage'
+          : status === 'error'
+            ? 'bg-coral/10 text-coral'
+            : 'bg-ink/4 text-ink-faint/60'
+      }`}
+      title={label}
+    >
+      {label}
+    </span>
+  );
+}
+
+// ── Shopify-Style List View ──
+
+function ProductListView({ products, onSelect }: { products: Product[]; onSelect: (id: string) => void }) {
+  return (
+    <div className="bg-white rounded-2xl border border-ink/5 overflow-hidden shadow-sm">
+      {/* Table Header */}
+      <div className="grid grid-cols-[48px_1fr_110px_130px_180px_64px] items-center gap-3 px-4 py-2.5 bg-cream/50 border-b border-ink/5 text-[10px] uppercase tracking-wider text-ink-faint font-semibold">
+        <span />
+        <span>Product</span>
+        <span>Status</span>
+        <span>Type</span>
+        <span className="text-center">Fields</span>
+        <span className="text-right">Quality</span>
+      </div>
+
+      {/* Rows */}
+      <div className="divide-y divide-ink/3">
+        {products.map((product, i) => (
+          <ProductListRow key={product.id} product={product} index={i} onClick={() => onSelect(product.id)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProductListRow({ product, index, onClick }: { product: Product; index: number; onClick: () => void }) {
+  const [imgError, setImgError] = useState(false);
+  const q = product.quality;
+  const hasErrors = (q?.error_count ?? 0) > 0;
+  const hasWarnings = (q?.warning_count ?? 0) > 0;
+  const fields = getProductFields(product);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2, delay: Math.min(index * 0.015, 0.3) }}
+      onClick={onClick}
+      className={`grid grid-cols-[48px_1fr_110px_130px_180px_64px] items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-champagne/3 transition-colors group ${
+        hasErrors ? 'bg-coral/[0.02]' : ''
+      }`}
+    >
+      {/* Thumbnail */}
+      <div className="w-12 h-12 rounded-lg bg-cream-dark overflow-hidden flex-shrink-0">
+        {product.image_url_main && !imgError ? (
+          <img
+            src={product.image_url_main}
+            alt={cleanProductName(product.product_name)}
+            className="w-full h-full object-contain"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-ink-faint">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="M21 15l-5-5L5 21" />
+            </svg>
+          </div>
+        )}
+      </div>
+
+      {/* Product Name + Brand */}
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-ink truncate group-hover:text-champagne-dark transition-colors">
+          {cleanProductName(product.product_name)}
+        </p>
+        <span className="text-[10px] font-medium uppercase tracking-wider text-champagne-dark">
+          {formatBrandName(product.brand_slug)}
+        </span>
+      </div>
+
+      {/* Status */}
+      <div>
+        <StatusBadge status={product.verification_status} />
+      </div>
+
+      {/* Type */}
+      <div>
+        {product.product_type_normalized ? (
+          <span className="text-xs text-ink-light truncate block capitalize">{product.product_type_normalized.replace('_', ' ')}</span>
+        ) : (
+          <span className="text-xs text-ink-faint">—</span>
+        )}
+      </div>
+
+      {/* Field Indicators */}
+      <div className="flex items-center gap-1">
+        {FIELD_INDICATORS.map(({ key, label }) => (
+          <FieldDot key={key} status={fields[key]} label={label} />
+        ))}
+      </div>
+
+      {/* Quality */}
+      <div className="text-right">
+        {q ? (
+          <div className="inline-flex items-center gap-1.5">
+            {hasErrors ? (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-coral bg-coral/8 px-2 py-0.5 rounded-md tabular-nums">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                  <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+                {q.error_count}
+              </span>
+            ) : hasWarnings ? (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber bg-amber/8 px-2 py-0.5 rounded-md tabular-nums">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                  <path d="M12 9v4" /><path d="M12 17h.01" />
+                </svg>
+                {q.warning_count}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-sage bg-sage/8 px-2 py-0.5 rounded-md">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+              </span>
+            )}
+          </div>
+        ) : (
+          <span className="text-xs text-ink-faint">—</span>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 // ── Field Validation ──
 
 type FieldStatus = 'ok' | 'warn' | 'missing';
@@ -437,6 +760,60 @@ function TagEditor({
         </button>
       </div>
       {tags.length === 0 && <p className="text-[10px] text-ink-faint">Separate multiple items with commas</p>}
+    </div>
+  );
+}
+
+// ── Quality Issues Banner ──
+
+function QualityIssuesBanner({ issues }: { issues: Array<{ field: string; code: string; severity: string; message: string; details: string }> }) {
+  const errors = issues.filter((i) => i.severity === 'error');
+  const warnings = issues.filter((i) => i.severity === 'warning');
+  const infos = issues.filter((i) => i.severity === 'info');
+
+  return (
+    <div className="space-y-2">
+      {errors.length > 0 && (
+        <div className="bg-coral/5 border border-coral/15 rounded-xl p-3 space-y-1.5">
+          <p className="text-[11px] uppercase tracking-wider font-semibold text-coral flex items-center gap-1.5">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+            {errors.length} Error{errors.length > 1 ? 's' : ''} — Must Fix
+          </p>
+          {errors.map((issue, i) => (
+            <div key={i} className="text-xs text-coral/90">
+              <span className="font-medium">{issue.field}:</span> {issue.message}
+              {issue.details && <span className="block text-[10px] text-coral/60 mt-0.5 truncate">{issue.details}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+      {warnings.length > 0 && (
+        <div className="bg-amber/5 border border-amber/15 rounded-xl p-3 space-y-1.5">
+          <p className="text-[11px] uppercase tracking-wider font-semibold text-amber flex items-center gap-1.5">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M12 9v4" /><path d="M12 17h.01" />
+            </svg>
+            {warnings.length} Warning{warnings.length > 1 ? 's' : ''} — Review
+          </p>
+          {warnings.map((issue, i) => (
+            <div key={i} className="text-xs text-amber/90">
+              <span className="font-medium">{issue.field}:</span> {issue.message}
+              {issue.details && <span className="block text-[10px] text-amber/60 mt-0.5 truncate">{issue.details}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+      {infos.length > 0 && (
+        <div className="bg-ink/3 border border-ink/5 rounded-xl p-3 space-y-1">
+          {infos.map((issue, i) => (
+            <div key={i} className="text-xs text-ink-muted">
+              <span className="font-medium">{issue.field}:</span> {issue.message}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -722,6 +1099,10 @@ function ProductModal({
 
             {/* Scrollable Body */}
             <div className="p-6 space-y-5 overflow-y-auto flex-1">
+              {/* Quality Issues Banner */}
+              {product.quality && product.quality.issues.length > 0 && (
+                <QualityIssuesBanner issues={product.quality.issues} />
+              )}
               {/* Basic Info */}
               <div className="space-y-4">
                 <div>
@@ -1043,15 +1424,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     <div>
       <h3 className="text-[11px] uppercase tracking-wider text-ink-muted font-semibold mb-2">{title}</h3>
       {children}
-    </div>
-  );
-}
-
-function MetaCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="bg-cream rounded-lg px-3 py-2.5">
-      <span className="text-[10px] uppercase tracking-wider text-ink-faint block">{label}</span>
-      <p className="text-sm text-ink-light mt-0.5 truncate">{value}</p>
     </div>
   );
 }

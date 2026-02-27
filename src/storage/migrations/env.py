@@ -5,13 +5,21 @@ from sqlalchemy import pool
 
 from alembic import context
 
-import sys, pathlib
+import os, sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[3]))
 from src.storage.orm_models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Override sqlalchemy.url from DATABASE_URL env var if available
+db_url = os.environ.get("DATABASE_URL")
+if db_url:
+    # Railway/Heroku use postgres:// but SQLAlchemy needs postgresql://
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    config.set_main_option("sqlalchemy.url", db_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

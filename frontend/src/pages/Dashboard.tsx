@@ -1,10 +1,9 @@
 import { useMemo } from 'react'
 import { motion } from 'motion/react'
+import { Link } from 'react-router-dom'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
-  AreaChart, Area,
-  Legend,
 } from 'recharts'
 import { useAPI } from '../hooks/useAPI'
 import { getBrands, getProducts } from '../lib/api'
@@ -50,65 +49,6 @@ const SEAL_LABELS: Record<string, string> = {
   no_poo: 'No Poo',
 }
 
-// ── Animated Counter ──
-
-function AnimatedNumber({ value, suffix = '', prefix = '' }: { value: number; suffix?: string; prefix?: string }) {
-  return (
-    <motion.span
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
-      className="tabular-nums"
-    >
-      {prefix}{typeof value === 'number' && value % 1 !== 0 ? value.toFixed(1) : value.toLocaleString()}{suffix}
-    </motion.span>
-  )
-}
-
-// ── Stat Card ──
-
-function StatCard({ label, value, suffix, prefix, accent, icon, delay = 0 }: {
-  label: string
-  value: number
-  suffix?: string
-  prefix?: string
-  accent: 'sage' | 'champagne' | 'coral' | 'amber'
-  icon: React.ReactNode
-  delay?: number
-}) {
-  const accentMap = {
-    sage: 'border-sage/20 bg-sage-bg/50',
-    champagne: 'border-champagne/20 bg-champagne/5',
-    coral: 'border-coral/20 bg-coral-bg/50',
-    amber: 'border-amber/20 bg-amber-bg/50',
-  }
-  const iconBg = {
-    sage: 'bg-sage/10 text-sage',
-    champagne: 'bg-champagne/10 text-champagne-dark',
-    coral: 'bg-coral/10 text-coral',
-    amber: 'bg-amber/10 text-amber',
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay }}
-      className={`rounded-2xl border ${accentMap[accent]} p-6 flex flex-col gap-3`}
-    >
-      <div className="flex items-center justify-between">
-        <span className="text-xs uppercase tracking-[0.15em] font-medium text-ink-muted">{label}</span>
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${iconBg[accent]}`}>
-          {icon}
-        </div>
-      </div>
-      <span className="font-display text-4xl font-semibold text-ink tracking-tight leading-none">
-        <AnimatedNumber value={value} suffix={suffix} prefix={prefix} />
-      </span>
-    </motion.div>
-  )
-}
-
 // ── Custom Tooltip ──
 
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) {
@@ -127,7 +67,7 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
   )
 }
 
-// ── Pipeline Breakdown Label ──
+// ── Pie Label ──
 
 function PieLabel({ cx, cy, midAngle, innerRadius, outerRadius, value, percent }: {
   cx?: number; cy?: number; midAngle?: number; innerRadius?: number; outerRadius?: number;
@@ -145,68 +85,77 @@ function PieLabel({ cx, cy, midAngle, innerRadius, outerRadius, value, percent }
   )
 }
 
+// ── Status Legend Card ──
+
+function StatusLegendCard({ color, icon, label, count, description, delay }: {
+  color: string
+  icon: React.ReactNode
+  label: string
+  count: number
+  description: string
+  delay: number
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay }}
+      className="bg-white rounded-2xl border border-ink/5 p-5 space-y-3"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: color + '18' }}>
+            <span style={{ color }}>{icon}</span>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.12em] font-semibold text-ink-muted">{label}</p>
+            <p className="font-display text-2xl font-semibold text-ink leading-none mt-0.5 tabular-nums">{count.toLocaleString()}</p>
+          </div>
+        </div>
+      </div>
+      <p className="text-xs text-ink-muted leading-relaxed">{description}</p>
+    </motion.div>
+  )
+}
+
 // ── Main Dashboard ──
 
 export default function Dashboard() {
   const { data: brands, loading: brandsLoading, error: brandsError } = useAPI(getBrands)
   const { data: products, loading: productsLoading, error: productsError } = useAPI(
-    () => getProducts({ verified_only: false, per_page: 500 })
+    () => getProducts({ verified_only: false, per_page: 1000 })
   )
 
   const loading = brandsLoading || productsLoading
   const error = brandsError || productsError
 
+  // Use the first (and currently only) brand — Amend
+  const brand = brands?.[0]
+
   // ── Computed Stats ──
 
   const stats = useMemo(() => {
-    if (!brands) return null
-    const totalExtracted = brands.reduce((s, b) => s + b.extracted_total, 0)
-    const totalVerified = brands.reduce((s, b) => s + b.verified_inci_total, 0)
-    const totalCatalog = brands.reduce((s, b) => s + b.catalog_only_total, 0)
-    const totalQuarantined = brands.reduce((s, b) => s + b.quarantined_total, 0)
-    const totalDiscovered = brands.reduce((s, b) => s + b.discovered_total, 0)
-    const avgRate = totalExtracted > 0 ? (totalVerified / totalExtracted) * 100 : 0
-    return { totalExtracted, totalVerified, totalCatalog, totalQuarantined, totalDiscovered, avgRate, brandCount: brands.length }
-  }, [brands])
-
-  // ── Brand Comparison Data ──
-
-  const brandChartData = useMemo(() => {
-    if (!brands) return []
-    return brands
-      .sort((a, b) => b.extracted_total - a.extracted_total)
-      .map(b => ({
-        name: b.brand_slug.charAt(0).toUpperCase() + b.brand_slug.slice(1),
-        verified: b.verified_inci_total,
-        catalog: b.catalog_only_total,
-        quarantined: b.quarantined_total,
-        rate: Math.round(b.verified_inci_rate * 100),
-      }))
-  }, [brands])
+    if (!brand) return null
+    const rate = brand.extracted_total > 0 ? (brand.verified_inci_total / brand.extracted_total) * 100 : 0
+    return {
+      extracted: brand.extracted_total,
+      verified: brand.verified_inci_total,
+      catalog: brand.catalog_only_total,
+      quarantined: brand.quarantined_total,
+      rate,
+    }
+  }, [brand])
 
   // ── Pipeline Donut ──
 
   const pipelineData = useMemo(() => {
     if (!stats) return []
     return [
-      { name: 'Verified INCI', value: stats.totalVerified, color: COLORS.sage },
-      { name: 'Catalog Only', value: stats.totalCatalog, color: COLORS.champagne },
-      { name: 'Quarantined', value: stats.totalQuarantined, color: COLORS.coral },
+      { name: 'Verified INCI', value: stats.verified, color: COLORS.sage },
+      { name: 'Catalog Only', value: stats.catalog, color: COLORS.champagne },
+      { name: 'Quarantined', value: stats.quarantined, color: COLORS.coral },
     ].filter(d => d.value > 0)
   }, [stats])
-
-  // ── Verification Rate by Brand ──
-
-  const rateData = useMemo(() => {
-    if (!brands) return []
-    return brands
-      .sort((a, b) => b.verified_inci_rate - a.verified_inci_rate)
-      .map(b => ({
-        name: b.brand_slug.charAt(0).toUpperCase() + b.brand_slug.slice(1),
-        rate: Math.round(b.verified_inci_rate * 100),
-        fill: b.verified_inci_rate >= 0.7 ? COLORS.sage : b.verified_inci_rate >= 0.4 ? COLORS.champagne : COLORS.coral,
-      }))
-  }, [brands])
 
   // ── Product Type Distribution ──
 
@@ -214,31 +163,19 @@ export default function Dashboard() {
     if (!products) return []
     const counts: Record<string, number> = {}
     products.forEach(p => {
-      const t = p.product_type_normalized || 'other'
+      const t = p.product_type_normalized || 'Other'
       counts[t] = (counts[t] || 0) + 1
     })
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 8)
+      .slice(0, 10)
       .map(([name, value]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), value }))
   }, [products])
 
   const typeColors = [
     COLORS.sage, COLORS.champagne, COLORS.coral, COLORS.amber,
-    '#8B9DC3', '#A6854A', '#9B8EC2', COLORS.inkFaint,
+    '#8B9DC3', '#A6854A', '#9B8EC2', COLORS.inkFaint, '#7CBDC4', '#C47C9B',
   ]
-
-  // ── Discovery Funnel ──
-
-  const funnelData = useMemo(() => {
-    if (!brands) return []
-    return brands.map(b => ({
-      name: b.brand_slug.charAt(0).toUpperCase() + b.brand_slug.slice(1),
-      discovered: b.discovered_total,
-      extracted: b.extracted_total,
-      verified: b.verified_inci_total,
-    }))
-  }, [brands])
 
   // ── Seal Distribution ──
 
@@ -260,36 +197,6 @@ export default function Dashboard() {
       }))
   }, [products])
 
-  // ── Seal Coverage by Brand ──
-
-  const sealCoverageData = useMemo(() => {
-    if (!products || !brands) return []
-    const brandTotals: Record<string, { withSeals: number; noSeals: number }> = {}
-    brands.forEach(b => {
-      brandTotals[b.brand_slug] = { withSeals: 0, noSeals: 0 }
-    })
-    products.forEach(p => {
-      if (!brandTotals[p.brand_slug]) {
-        brandTotals[p.brand_slug] = { withSeals: 0, noSeals: 0 }
-      }
-      const hasSeals = p.product_labels &&
-        ((p.product_labels.detected && p.product_labels.detected.length > 0) ||
-         (p.product_labels.inferred && p.product_labels.inferred.length > 0))
-      if (hasSeals) {
-        brandTotals[p.brand_slug].withSeals++
-      } else {
-        brandTotals[p.brand_slug].noSeals++
-      }
-    })
-    return Object.entries(brandTotals)
-      .sort((a, b) => b[1].withSeals - a[1].withSeals)
-      .map(([slug, data]) => ({
-        name: slug.charAt(0).toUpperCase() + slug.slice(1),
-        withSeals: data.withSeals,
-        noSeals: data.noSeals,
-      }))
-  }, [products, brands])
-
   // ── Labeled Products Count ──
 
   const labeledCount = useMemo(() => {
@@ -305,7 +212,9 @@ export default function Dashboard() {
 
   if (loading) return <LoadingState message="Loading dashboard data..." />
   if (error) return <ErrorState message={error} />
-  if (!stats || !brands) return null
+  if (!stats || !brand) return null
+
+  const brandName = brand.brand_slug.charAt(0).toUpperCase() + brand.brand_slug.slice(1)
 
   return (
     <div className="space-y-8 pb-12">
@@ -316,85 +225,78 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="font-display text-4xl font-semibold text-ink tracking-tight">
-          Dashboard
-        </h1>
-        <p className="text-ink-muted text-sm mt-1">
-          Pipeline overview across {stats.brandCount} brands &middot; {stats.totalDiscovered.toLocaleString()} URLs discovered &middot; {labeledCount.toLocaleString()} labeled
+        <div className="flex items-center gap-3">
+          <h1 className="font-display text-4xl font-semibold text-ink tracking-tight">
+            {brandName}
+          </h1>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-champagne/10 text-champagne-dark border border-champagne/15">
+            <span className="w-1.5 h-1.5 rounded-full bg-champagne" />
+            Focus Brand
+          </span>
+        </div>
+        <p className="text-ink-muted text-sm mt-1.5">
+          {stats.extracted.toLocaleString()} products extracted &middot; {labeledCount.toLocaleString()} with quality seals &middot; {Math.round(stats.rate)}% INCI verification rate
         </p>
       </motion.div>
 
-      {/* ── Stat Cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label="Products Extracted"
-          value={stats.totalExtracted}
-          accent="champagne"
-          delay={0.05}
-          icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 2h6l3 7H6L9 2z"/><rect x="4" y="9" width="16" height="13" rx="2"/></svg>}
-        />
-        <StatCard
-          label="Verified INCI"
-          value={stats.totalVerified}
-          accent="sage"
-          delay={0.1}
-          icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>}
-        />
-        <StatCard
-          label="Verification Rate"
-          value={stats.avgRate}
-          suffix="%"
-          accent={stats.avgRate >= 50 ? 'sage' : 'amber'}
-          delay={0.15}
-          icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>}
-        />
-        <StatCard
-          label="Quarantined"
-          value={stats.totalQuarantined}
-          accent="coral"
-          delay={0.2}
-          icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>}
-        />
+      {/* ── Status Guide ── */}
+      <div>
+        <motion.h2
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="text-[11px] uppercase tracking-[0.15em] font-semibold text-ink-muted mb-3"
+        >
+          Pipeline Status Guide
+        </motion.h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatusLegendCard
+            color={COLORS.sage}
+            icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>}
+            label="Verified INCI"
+            count={stats.verified}
+            description="Product with a complete, validated INCI ingredient list extracted from the source page. Ready for analysis and seal detection."
+            delay={0.15}
+          />
+          <StatusLegendCard
+            color={COLORS.champagne}
+            icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12h6M12 9v6"/></svg>}
+            label="Catalog Only"
+            count={stats.catalog}
+            description="Product identified and cataloged but without a validated ingredient list. Common for hair dyes, peroxides, and kits. Can be manually completed in the product editor."
+            delay={0.2}
+          />
+          <StatusLegendCard
+            color={COLORS.coral}
+            icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>}
+            label="Quarantined"
+            count={stats.quarantined}
+            description="Product with suspicious or incomplete data flagged for manual review. Check the Quarantine page to review and approve these."
+            delay={0.25}
+          />
+          <StatusLegendCard
+            color={COLORS.amber}
+            icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 2h6l3 7H6L9 2z"/><rect x="4" y="9" width="16" height="13" rx="2"/></svg>}
+            label="Total Extracted"
+            count={stats.extracted}
+            description="Total products successfully scraped from the brand's website. Includes all verification statuses. This is the complete product catalog."
+            delay={0.3}
+          />
+        </div>
       </div>
 
-      {/* ── Row 2: Brand Comparison + Pipeline Donut ── */}
+      {/* ── Row 1: Pipeline Donut + Product Types ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Brand Stacked Bar Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.25 }}
-          className="lg:col-span-2 bg-white rounded-2xl border border-ink/5 p-6"
-        >
-          <h2 className="font-display text-xl font-semibold text-ink mb-1">Product Breakdown</h2>
-          <p className="text-xs text-ink-muted mb-5">Products by brand and verification status</p>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={brandChartData} layout="vertical" margin={{ left: 20, right: 20, top: 0, bottom: 0 }}>
-              <XAxis type="number" tick={{ fontSize: 11, fill: COLORS.inkMuted }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: COLORS.ink, fontWeight: 500 }} axisLine={false} tickLine={false} width={90} />
-              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(26,23,20,0.03)' }} />
-              <Legend
-                iconType="circle"
-                iconSize={8}
-                wrapperStyle={{ fontSize: 11, paddingTop: 12 }}
-              />
-              <Bar dataKey="verified" name="Verified" stackId="a" fill={COLORS.sage} radius={[0, 0, 0, 0]} />
-              <Bar dataKey="catalog" name="Catalog" stackId="a" fill={COLORS.champagne} />
-              <Bar dataKey="quarantined" name="Quarantined" stackId="a" fill={COLORS.coral} radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </motion.div>
 
         {/* Pipeline Donut */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          transition={{ duration: 0.5, delay: 0.35 }}
           className="bg-white rounded-2xl border border-ink/5 p-6 flex flex-col items-center"
         >
-          <h2 className="font-display text-xl font-semibold text-ink mb-1 self-start">Pipeline Status</h2>
-          <p className="text-xs text-ink-muted mb-4 self-start">Overall verification breakdown</p>
+          <h2 className="font-display text-xl font-semibold text-ink mb-1 self-start">Verification Breakdown</h2>
+          <p className="text-xs text-ink-muted mb-4 self-start">How products are classified after extraction</p>
           <div className="relative">
             <ResponsiveContainer width={220} height={220}>
               <PieChart>
@@ -426,13 +328,11 @@ export default function Dashboard() {
                 />
               </PieChart>
             </ResponsiveContainer>
-            {/* Center label */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="font-display text-3xl font-semibold text-ink leading-none">{stats.totalExtracted}</span>
-              <span className="text-[10px] uppercase tracking-[0.15em] text-ink-muted mt-1">Products</span>
+              <span className="font-display text-3xl font-semibold text-ink leading-none">{Math.round(stats.rate)}%</span>
+              <span className="text-[10px] uppercase tracking-[0.15em] text-ink-muted mt-1">INCI Rate</span>
             </div>
           </div>
-          {/* Legend */}
           <div className="flex flex-col gap-2 mt-4 w-full">
             {pipelineData.map(d => (
               <div key={d.name} className="flex items-center justify-between text-xs">
@@ -445,69 +345,25 @@ export default function Dashboard() {
             ))}
           </div>
         </motion.div>
-      </div>
 
-      {/* ── Row 3: Verification Rate + Product Types ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* Verification Rate Bars */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.35 }}
-          className="bg-white rounded-2xl border border-ink/5 p-6"
-        >
-          <h2 className="font-display text-xl font-semibold text-ink mb-1">Verification Rate</h2>
-          <p className="text-xs text-ink-muted mb-5">INCI verification rate per brand</p>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={rateData} layout="vertical" margin={{ left: 20, right: 20, top: 0, bottom: 0 }}>
-              <XAxis
-                type="number"
-                domain={[0, 100]}
-                tick={{ fontSize: 11, fill: COLORS.inkMuted }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => `${v}%`}
-              />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: COLORS.ink, fontWeight: 500 }} axisLine={false} tickLine={false} width={90} />
-              <Tooltip
-                formatter={(v?: number) => [`${v ?? 0}%`, 'Rate']}
-                contentStyle={{
-                  background: 'white',
-                  border: '1px solid rgba(26,23,20,0.05)',
-                  borderRadius: 12,
-                  fontSize: 12,
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                }}
-                cursor={{ fill: 'rgba(26,23,20,0.03)' }}
-              />
-              <Bar dataKey="rate" radius={[0, 6, 6, 0]} barSize={28}>
-                {rateData.map((entry, i) => (
-                  <Cell key={i} fill={entry.fill} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </motion.div>
-
-        {/* Product Types Donut */}
+        {/* Product Types */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="bg-white rounded-2xl border border-ink/5 p-6"
+          className="lg:col-span-2 bg-white rounded-2xl border border-ink/5 p-6"
         >
           <h2 className="font-display text-xl font-semibold text-ink mb-1">Product Types</h2>
-          <p className="text-xs text-ink-muted mb-5">Distribution of product categories</p>
-          <div className="flex items-center gap-6">
-            <ResponsiveContainer width={180} height={180}>
+          <p className="text-xs text-ink-muted mb-5">Distribution of product categories in the catalog</p>
+          <div className="flex items-center gap-8">
+            <ResponsiveContainer width={200} height={200}>
               <PieChart>
                 <Pie
                   data={typeData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={45}
-                  outerRadius={80}
+                  innerRadius={50}
+                  outerRadius={90}
                   paddingAngle={2}
                   dataKey="value"
                   stroke="none"
@@ -527,7 +383,7 @@ export default function Dashboard() {
                 />
               </PieChart>
             </ResponsiveContainer>
-            <div className="flex flex-col gap-2 flex-1 min-w-0">
+            <div className="flex flex-col gap-2.5 flex-1 min-w-0">
               {typeData.map((d, i) => (
                 <div key={d.name} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2 min-w-0">
@@ -542,161 +398,82 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* ── Row 4: Seal Distribution + Seal Coverage ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Seal Distribution */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.55 }}
-          className="lg:col-span-2 bg-white rounded-2xl border border-ink/5 p-6"
-        >
-          <h2 className="font-display text-xl font-semibold text-ink mb-1">Seal Distribution</h2>
-          <p className="text-xs text-ink-muted mb-5">Quality seals detected across all products</p>
-          {sealDistributionData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={Math.max(280, sealDistributionData.length * 36)}>
-              <BarChart data={sealDistributionData} layout="vertical" margin={{ left: 20, right: 40, top: 0, bottom: 0 }}>
-                <XAxis type="number" tick={{ fontSize: 11, fill: COLORS.inkMuted }} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: COLORS.ink, fontWeight: 500 }} axisLine={false} tickLine={false} width={120} />
-                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(26,23,20,0.03)' }} />
-                <Bar dataKey="count" name="Products" fill={COLORS.sage} radius={[0, 6, 6, 0]} barSize={24} label={{ position: 'right', fontSize: 11, fill: COLORS.inkMuted, fontWeight: 500 }} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex items-center justify-center h-40 text-xs text-ink-muted">No seal data available</div>
-          )}
-        </motion.div>
-
-        {/* Seal Coverage by Brand */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-          className="bg-white rounded-2xl border border-ink/5 p-6"
-        >
-          <h2 className="font-display text-xl font-semibold text-ink mb-1">Seal Coverage by Brand</h2>
-          <p className="text-xs text-ink-muted mb-5">Products with quality seals per brand</p>
-          {sealCoverageData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={Math.max(220, sealCoverageData.length * 40)}>
-              <BarChart data={sealCoverageData} layout="vertical" margin={{ left: 20, right: 20, top: 0, bottom: 0 }}>
-                <XAxis type="number" tick={{ fontSize: 11, fill: COLORS.inkMuted }} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: COLORS.ink, fontWeight: 500 }} axisLine={false} tickLine={false} width={90} />
-                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(26,23,20,0.03)' }} />
-                <Legend
-                  iconType="circle"
-                  iconSize={8}
-                  wrapperStyle={{ fontSize: 11, paddingTop: 12 }}
-                />
-                <Bar dataKey="withSeals" name="With seals" stackId="a" fill={COLORS.sage} radius={[0, 0, 0, 0]} />
-                <Bar dataKey="noSeals" name="No seals" stackId="a" fill={COLORS.inkFaint} radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex items-center justify-center h-40 text-xs text-ink-muted">No seal data available</div>
-          )}
-        </motion.div>
-      </div>
-
-      {/* ── Row 5: Discovery Funnel ── */}
+      {/* ── Row 2: Seal Distribution ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.65 }}
+        transition={{ duration: 0.5, delay: 0.45 }}
         className="bg-white rounded-2xl border border-ink/5 p-6"
       >
-        <h2 className="font-display text-xl font-semibold text-ink mb-1">Discovery Funnel</h2>
-        <p className="text-xs text-ink-muted mb-5">From URL discovery to INCI verification</p>
-        <ResponsiveContainer width="100%" height={260}>
-          <AreaChart data={funnelData} margin={{ left: 20, right: 20, top: 10, bottom: 0 }}>
-            <defs>
-              <linearGradient id="gradDiscovered" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={COLORS.champagne} stopOpacity={0.3} />
-                <stop offset="100%" stopColor={COLORS.champagne} stopOpacity={0.02} />
-              </linearGradient>
-              <linearGradient id="gradExtracted" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={COLORS.amber} stopOpacity={0.3} />
-                <stop offset="100%" stopColor={COLORS.amber} stopOpacity={0.02} />
-              </linearGradient>
-              <linearGradient id="gradVerified" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={COLORS.sage} stopOpacity={0.4} />
-                <stop offset="100%" stopColor={COLORS.sage} stopOpacity={0.02} />
-              </linearGradient>
-            </defs>
-            <XAxis dataKey="name" tick={{ fontSize: 12, fill: COLORS.ink, fontWeight: 500 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: COLORS.inkMuted }} axisLine={false} tickLine={false} />
-            <Tooltip content={<ChartTooltip />} />
-            <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, paddingTop: 12 }} />
-            <Area type="monotone" dataKey="discovered" name="Discovered" stroke={COLORS.champagne} fill="url(#gradDiscovered)" strokeWidth={2} />
-            <Area type="monotone" dataKey="extracted" name="Extracted" stroke={COLORS.amber} fill="url(#gradExtracted)" strokeWidth={2} />
-            <Area type="monotone" dataKey="verified" name="Verified" stroke={COLORS.sage} fill="url(#gradVerified)" strokeWidth={2} />
-          </AreaChart>
-        </ResponsiveContainer>
+        <h2 className="font-display text-xl font-semibold text-ink mb-1">Quality Seals</h2>
+        <p className="text-xs text-ink-muted mb-5">
+          Seals detected from product text and inferred from INCI ingredient analysis.
+          {' '}{labeledCount} of {stats.extracted} products have at least one quality seal.
+        </p>
+        {sealDistributionData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={Math.max(280, sealDistributionData.length * 36)}>
+            <BarChart data={sealDistributionData} layout="vertical" margin={{ left: 20, right: 40, top: 0, bottom: 0 }}>
+              <XAxis type="number" tick={{ fontSize: 11, fill: COLORS.inkMuted }} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: COLORS.ink, fontWeight: 500 }} axisLine={false} tickLine={false} width={130} />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(26,23,20,0.03)' }} />
+              <Bar dataKey="count" name="Products" fill={COLORS.sage} radius={[0, 6, 6, 0]} barSize={24} label={{ position: 'right', fontSize: 11, fill: COLORS.inkMuted, fontWeight: 500 }} />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex items-center justify-center h-40 text-xs text-ink-muted">No seal data available</div>
+        )}
       </motion.div>
 
-      {/* ── Row 6: Brand Detail Table ── */}
+      {/* ── Quick Actions ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.7 }}
-        className="bg-white rounded-2xl border border-ink/5 overflow-hidden"
+        transition={{ duration: 0.5, delay: 0.5 }}
+        className="grid grid-cols-1 sm:grid-cols-2 gap-4"
       >
-        <div className="p-6 pb-0">
-          <h2 className="font-display text-xl font-semibold text-ink mb-1">Brand Details</h2>
-          <p className="text-xs text-ink-muted mb-4">Complete breakdown for each brand in the pipeline</p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-y border-ink/5">
-                {['Brand', 'Status', 'Discovered', 'Extracted', 'Verified', 'Catalog', 'Quarantined', 'Rate'].map(h => (
-                  <th key={h} className="px-6 py-3 text-left text-[10px] uppercase tracking-[0.15em] font-semibold text-ink-muted">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {brands?.sort((a, b) => b.extracted_total - a.extracted_total).map((b, i) => {
-                const rate = Math.round(b.verified_inci_rate * 100)
-                const rateColor = rate >= 70 ? 'text-sage' : rate >= 40 ? 'text-amber' : 'text-coral'
-                const barColor = rate >= 70 ? 'bg-sage' : rate >= 40 ? 'bg-amber' : 'bg-coral'
-                const barTrack = rate >= 70 ? 'bg-sage-light/40' : rate >= 40 ? 'bg-amber-light/40' : 'bg-coral-light/40'
-                return (
-                  <motion.tr
-                    key={b.brand_slug}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.75 + i * 0.05 }}
-                    className="border-b border-ink/[0.03] hover:bg-champagne/[0.03] transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <span className="font-medium text-ink text-sm capitalize">{b.brand_slug}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center rounded-full text-[10px] px-2.5 py-0.5 font-medium uppercase tracking-wide ${
-                        b.status === 'done' ? 'bg-sage-bg text-sage' : 'bg-amber-bg text-amber'
-                      }`}>{b.status || 'unknown'}</span>
-                    </td>
-                    <td className="px-6 py-4 text-sm tabular-nums text-ink-muted">{b.discovered_total.toLocaleString()}</td>
-                    <td className="px-6 py-4 text-sm tabular-nums font-medium text-ink">{b.extracted_total}</td>
-                    <td className="px-6 py-4 text-sm tabular-nums font-medium text-sage">{b.verified_inci_total}</td>
-                    <td className="px-6 py-4 text-sm tabular-nums text-champagne-dark">{b.catalog_only_total}</td>
-                    <td className="px-6 py-4 text-sm tabular-nums text-coral">{b.quarantined_total}</td>
-                    <td className="px-6 py-4 w-40">
-                      <div className="flex items-center gap-3">
-                        <div className={`flex-1 h-1.5 rounded-full ${barTrack} overflow-hidden`}>
-                          <div className={`h-full rounded-full ${barColor} progress-bar-animated`} style={{ width: `${rate}%` }} />
-                        </div>
-                        <span className={`text-xs font-semibold tabular-nums ${rateColor}`}>{rate}%</span>
-                      </div>
-                    </td>
-                  </motion.tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
+        <Link
+          to="/products"
+          className="group bg-white rounded-2xl border border-ink/5 p-6 hover:border-champagne/20 hover:shadow-md transition-all"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-champagne/10 flex items-center justify-center text-champagne-dark group-hover:bg-champagne/20 transition-colors">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M9 2h6l3 7H6L9 2z" />
+                <rect x="4" y="9" width="16" height="13" rx="2" />
+                <path d="M10 13h4" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-ink group-hover:text-champagne-dark transition-colors">Browse & Edit Products</h3>
+              <p className="text-xs text-ink-muted mt-0.5">
+                Review all {stats.extracted} products. Click any product to edit fields, add INCI ingredients, and validate data.
+              </p>
+            </div>
+          </div>
+        </Link>
 
+        {stats.quarantined > 0 && (
+          <Link
+            to="/quarantine"
+            className="group bg-white rounded-2xl border border-ink/5 p-6 hover:border-coral/20 hover:shadow-md transition-all"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-coral/10 flex items-center justify-center text-coral group-hover:bg-coral/20 transition-colors">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M12 9v4M12 17h.01" />
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-ink group-hover:text-coral transition-colors">Review Quarantine</h3>
+                <p className="text-xs text-ink-muted mt-0.5">
+                  {stats.quarantined} product{stats.quarantined !== 1 ? 's' : ''} flagged for review. Approve or investigate suspicious data.
+                </p>
+              </div>
+            </div>
+          </Link>
+        )}
+      </motion.div>
     </div>
   )
 }

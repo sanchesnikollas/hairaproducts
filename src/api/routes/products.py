@@ -9,9 +9,37 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from src.core.field_validator import validate_product_fields
 from src.storage.database import get_engine
 from src.storage.orm_models import Base, ProductORM, ProductEvidenceORM
 from src.storage.repository import ProductRepository
+
+
+def _is_kit(p: ProductORM) -> bool:
+    """Detect if a product is a kit/combo."""
+    name = (p.product_name or "").lower()
+    url = (p.product_url or "").lower()
+    return (
+        "kit " in name or name.startswith("kit ")
+        or "/kit-" in url or "/kit/" in url
+        or "combo " in name or name.startswith("combo ")
+    )
+
+
+def _validate_product(p: ProductORM) -> dict:
+    """Run field cross-validation on a product and return the report dict."""
+    report = validate_product_fields(
+        product_name=p.product_name,
+        inci_ingredients=p.inci_ingredients,
+        description=p.description,
+        usage_instructions=p.usage_instructions,
+        benefits_claims=p.benefits_claims,
+        price=p.price,
+        currency=p.currency,
+        image_url_main=p.image_url_main,
+        product_type_normalized=p.product_type_normalized,
+    )
+    return report.to_dict()
 
 router = APIRouter(tags=["products"])
 
@@ -53,7 +81,8 @@ def get_focus_brand():
 def list_products(
     brand_slug: str | None = None,
     verified_only: bool = False,
-    limit: int = Query(default=100, le=500),
+    exclude_kits: bool = True,
+    limit: int = Query(default=100, le=1000),
     offset: int = Query(default=0, ge=0),
     session: Session = Depends(_get_session),
 ):
@@ -66,8 +95,12 @@ def list_products(
         limit=limit,
         offset=offset,
     )
-    return [
-        {
+    result = []
+    for p in products:
+        kit = _is_kit(p)
+        if exclude_kits and kit:
+            continue
+        result.append({
             "id": p.id,
             "brand_slug": p.brand_slug,
             "product_name": p.product_name,
@@ -79,10 +112,14 @@ def list_products(
             "inci_ingredients": p.inci_ingredients,
             "confidence": p.confidence,
             "description": p.description,
+            "usage_instructions": p.usage_instructions,
+            "benefits_claims": p.benefits_claims,
             "product_labels": p.product_labels,
-        }
-        for p in products
-    ]
+            "price": p.price,
+            "is_kit": kit,
+            "quality": _validate_product(p),
+        })
+    return result
 
 
 @router.get("/products/{product_id}")
@@ -116,6 +153,7 @@ def get_product(product_id: str, session: Session = Depends(_get_session)):
         "extraction_method": product.extraction_method,
         "created_at": str(product.created_at) if product.created_at else None,
         "updated_at": str(product.updated_at) if product.updated_at else None,
+        "quality": _validate_product(product),
         "evidence": [
             {
                 "id": e.id,

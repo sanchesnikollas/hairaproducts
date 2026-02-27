@@ -27,6 +27,21 @@ export interface ProductEvidence {
   extracted_at: string | null;
 }
 
+export interface QualityIssue {
+  field: string;
+  code: string;
+  severity: 'error' | 'warning' | 'info';
+  message: string;
+  details: string;
+}
+
+export interface QualityReport {
+  score: number;
+  error_count: number;
+  warning_count: number;
+  issues: QualityIssue[];
+}
+
 export interface Product {
   id: string;
   brand_slug: string;
@@ -56,7 +71,9 @@ export interface Product {
   currency: string | null;
   created_at: string;
   updated_at: string;
+  is_kit?: boolean;
   evidence?: ProductEvidence[];
+  quality?: QualityReport;
 }
 
 export interface QuarantineItem {

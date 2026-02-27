@@ -3,7 +3,6 @@ import { motion } from 'motion/react';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: dashboardIcon },
-  { to: '/brands', label: 'Brands', icon: brandIcon },
   { to: '/products', label: 'Products', icon: productIcon },
   { to: '/quarantine', label: 'Quarantine', icon: quarantineIcon },
 ];
@@ -12,17 +11,6 @@ function dashboardIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 12h4l3-9 4 18 3-9h4" />
-    </svg>
-  );
-}
-
-function brandIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="7" height="7" rx="1" />
-      <rect x="14" y="3" width="7" height="7" rx="1" />
-      <rect x="3" y="14" width="7" height="7" rx="1" />
-      <rect x="14" y="14" width="7" height="7" rx="1" />
     </svg>
   );
 }

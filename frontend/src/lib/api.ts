@@ -27,6 +27,7 @@ export async function getBrandCoverage(slug: string): Promise<BrandCoverage> {
 export interface ProductFilters {
   brand?: string;
   verified_only?: boolean;
+  exclude_kits?: boolean;
   page?: number;
   per_page?: number;
 }
@@ -35,6 +36,7 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
   const params = new URLSearchParams();
   if (filters.brand) params.set('brand_slug', filters.brand);
   if (filters.verified_only !== undefined) params.set('verified_only', String(filters.verified_only));
+  if (filters.exclude_kits !== undefined) params.set('exclude_kits', String(filters.exclude_kits));
   if (filters.per_page) params.set('limit', String(filters.per_page));
   if (filters.page) params.set('offset', String(((filters.page ?? 1) - 1) * (filters.per_page ?? 100)));
   const qs = params.toString();
