@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime, timezone
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from src.storage.database import get_engine
@@ -11,6 +14,22 @@ from src.storage.orm_models import Base, ProductORM, ProductEvidenceORM
 from src.storage.repository import ProductRepository
 
 router = APIRouter(tags=["products"])
+
+
+class ProductUpdate(BaseModel):
+    product_name: Optional[str] = None
+    description: Optional[str] = None
+    usage_instructions: Optional[str] = None
+    inci_ingredients: Optional[list[str]] = None
+    price: Optional[float] = None
+    currency: Optional[str] = None
+    size_volume: Optional[str] = None
+    gender_target: Optional[str] = None
+    product_type_normalized: Optional[str] = None
+    line_collection: Optional[str] = None
+    image_url_main: Optional[str] = None
+    benefits_claims: Optional[list[str]] = None
+    verification_status: Optional[str] = None
 
 # If FOCUS_BRAND is set, default brand_slug filter to that brand
 _FOCUS_BRAND = os.environ.get("FOCUS_BRAND", "").strip() or None
@@ -33,7 +52,7 @@ def get_focus_brand():
 @router.get("/products")
 def list_products(
     brand_slug: str | None = None,
-    verified_only: bool = True,
+    verified_only: bool = False,
     limit: int = Query(default=100, le=500),
     offset: int = Query(default=0, ge=0),
     session: Session = Depends(_get_session),
@@ -109,4 +128,42 @@ def get_product(product_id: str, session: Session = Depends(_get_session)):
             }
             for e in product.evidence
         ],
+    }
+
+
+@router.patch("/products/{product_id}")
+def update_product(product_id: str, body: ProductUpdate, session: Session = Depends(_get_session)):
+    product = session.query(ProductORM).filter(ProductORM.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    updates = body.model_dump(exclude_unset=True)
+    for field, value in updates.items():
+        if hasattr(product, field):
+            setattr(product, field, value)
+    product.updated_at = datetime.now(timezone.utc)
+    session.commit()
+    session.refresh(product)
+
+    return {
+        "id": product.id,
+        "brand_slug": product.brand_slug,
+        "product_name": product.product_name,
+        "product_url": product.product_url,
+        "image_url_main": product.image_url_main,
+        "verification_status": product.verification_status,
+        "product_type_normalized": product.product_type_normalized,
+        "gender_target": product.gender_target,
+        "inci_ingredients": product.inci_ingredients,
+        "description": product.description,
+        "usage_instructions": product.usage_instructions,
+        "benefits_claims": product.benefits_claims,
+        "size_volume": product.size_volume,
+        "price": product.price,
+        "currency": product.currency,
+        "line_collection": product.line_collection,
+        "confidence": product.confidence,
+        "product_labels": product.product_labels,
+        "extraction_method": product.extraction_method,
+        "updated_at": str(product.updated_at) if product.updated_at else None,
     }

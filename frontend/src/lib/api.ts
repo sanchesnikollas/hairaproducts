@@ -45,6 +45,14 @@ export async function getProduct(id: string): Promise<Product> {
   return fetchJSON<Product>(`/products/${id}`);
 }
 
+export async function updateProduct(id: string, data: Partial<Product>): Promise<Product> {
+  return fetchJSON<Product>(`/products/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+}
+
 // ── Config ──
 
 export async function getFocusBrand(): Promise<{ focus_brand: string | null }> {

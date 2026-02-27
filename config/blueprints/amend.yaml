@@ -19,6 +19,8 @@ extraction:
   inci_selectors:
   - .product-ingredients p
   - .product-ingredients
+  - p.description-product-page
+  - .greyBackground p.description-product-page
   - '#ingredientes p'
   - '#composicao p'
   - '[data-tab=''ingredientes''] p'
