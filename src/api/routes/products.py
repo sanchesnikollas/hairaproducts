@@ -91,6 +91,7 @@ def _serialize_product_list_item(p: ProductORM) -> dict:
         "image_url_main": p.image_url_main,
         "verification_status": p.verification_status,
         "product_type_normalized": p.product_type_normalized,
+        "product_category": p.product_category,
         "gender_target": p.gender_target,
         "inci_ingredients": p.inci_ingredients,
         "confidence": p.confidence,
@@ -110,6 +111,7 @@ def list_products(
     verified_only: bool = False,
     exclude_kits: bool = True,
     search: str | None = None,
+    category: str | None = None,
     limit: int = Query(default=100, le=1000),
     offset: int = Query(default=0, ge=0),
     session: Session = Depends(_get_session),
@@ -121,6 +123,7 @@ def list_products(
         brand_slug=effective_brand,
         verified_only=verified_only,
         search=search,
+        category=category,
         limit=limit,
         offset=offset,
     )
@@ -128,6 +131,7 @@ def list_products(
         brand_slug=effective_brand,
         verified_only=verified_only,
         search=search,
+        category=category,
     )
     items = []
     for p in products:
@@ -139,7 +143,7 @@ def list_products(
 
 _EXPORT_COLUMNS = [
     "id", "brand_slug", "product_name", "product_url", "image_url_main",
-    "verification_status", "product_type_normalized", "gender_target",
+    "verification_status", "product_type_normalized", "product_category", "gender_target",
     "inci_ingredients", "description", "usage_instructions", "benefits_claims",
     "size_volume", "price", "currency", "line_collection", "confidence",
     "extraction_method", "product_labels",
@@ -206,6 +210,7 @@ def get_product(product_id: str, session: Session = Depends(_get_session)):
         "verification_status": product.verification_status,
         "product_type_raw": product.product_type_raw,
         "product_type_normalized": product.product_type_normalized,
+        "product_category": product.product_category,
         "gender_target": product.gender_target,
         "hair_relevance_reason": product.hair_relevance_reason,
         "inci_ingredients": product.inci_ingredients,
@@ -259,6 +264,7 @@ def update_product(product_id: str, body: ProductUpdate, session: Session = Depe
         "image_url_main": product.image_url_main,
         "verification_status": product.verification_status,
         "product_type_normalized": product.product_type_normalized,
+        "product_category": product.product_category,
         "gender_target": product.gender_target,
         "inci_ingredients": product.inci_ingredients,
         "description": product.description,

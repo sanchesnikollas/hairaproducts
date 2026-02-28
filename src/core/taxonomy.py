@@ -88,6 +88,55 @@ _TYPE_MAP: list[tuple[list[str], str]] = [
 ]
 
 
+CATEGORY_MAP: dict[str, str] = {
+    "shampoo": "shampoo",
+    "conditioner": "condicionador",
+    "mask": "mascara",
+    "treatment": "tratamento",
+    "ampule": "tratamento",
+    "scalp_treatment": "tratamento",
+    "exfoliant": "tratamento",
+    "tonic": "tratamento",
+    "leave_in": "leave_in",
+    "cream": "leave_in",
+    "oil_serum": "oleo_serum",
+    "serum": "oleo_serum",
+    "gel": "styling",
+    "mousse": "styling",
+    "spray": "styling",
+    "pomade": "styling",
+    "wax": "styling",
+    "clay": "styling",
+    "paste": "styling",
+    "texturizer": "styling",
+    "finisher": "styling",
+}
+
+VALID_CATEGORIES: set[str] = {
+    "shampoo", "condicionador", "mascara", "tratamento",
+    "leave_in", "oleo_serum", "styling", "coloracao",
+}
+
+_COLORACAO_KEYWORDS: list[str] = [
+    "coloração", "coloracao", "tintura", "tonalizante",
+    "matizador", "matizadora", "oxidante", "ox ",
+    "descolorante", "decolorante", "pó descolorante",
+]
+
+
+def normalize_category(product_type_normalized: str | None, product_name: str = "") -> str | None:
+    """Map a normalized product type to a high-level category."""
+    # Check coloração keywords first (product_type_normalized may be None for these)
+    name_lower = product_name.lower()
+    for kw in _COLORACAO_KEYWORDS:
+        if kw in name_lower:
+            return "coloracao"
+
+    if not product_type_normalized:
+        return None
+    return CATEGORY_MAP.get(product_type_normalized)
+
+
 def normalize_product_type(raw_name: str) -> str | None:
     lower = raw_name.lower()
     for keywords, normalized in _TYPE_MAP:

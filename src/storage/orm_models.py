@@ -34,6 +34,7 @@ class ProductORM(Base):
     verification_status = Column(String(50), nullable=False, default="catalog_only")
     product_type_raw = Column(String(255), nullable=True)
     product_type_normalized = Column(String(100), nullable=True)
+    product_category = Column(String(100), nullable=True, index=True)
     gender_target = Column(String(20), nullable=False, default="unknown")
     hair_relevance_reason = Column(Text, nullable=True)
     inci_ingredients = Column(JSON, nullable=True)

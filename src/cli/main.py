@@ -427,5 +427,167 @@ def labels(brand: str, limit: int, dry_run: bool):
             click.echo(f"\n(DRY RUN — nothing was saved)")
 
 
+@cli.command()
+@click.option("--brand", required=True, help="Brand slug")
+@click.option("--limit", type=int, default=0, help="Max products to process (0 = all)")
+@click.option("--dry-run", is_flag=True, help="Show what would be enriched without saving")
+def enrich(brand: str, limit: int, dry_run: bool):
+    """Re-process catalog_only products to find INCI via LLM fallback."""
+    from src.core.llm import LLMClient
+    from src.extraction.deterministic import extract_product_deterministic
+    from src.extraction.inci_extractor import extract_and_validate_inci
+    from src.core.taxonomy import normalize_category
+    from src.storage.database import get_engine
+    from src.storage.orm_models import Base
+    from src.storage.repository import ProductRepository
+    from sqlalchemy.orm import Session as SASession
+
+    engine = get_engine()
+    Base.metadata.create_all(engine)
+
+    # Try to set up browser
+    browser = None
+    try:
+        from src.core.browser import BrowserClient
+        browser = BrowserClient(headless=True)
+        click.echo("Browser initialized")
+    except Exception as e:
+        click.echo(f"Warning: Browser not available ({e}). Will use LLM only.")
+
+    # Set up LLM client
+    try:
+        llm = LLMClient()
+        if not llm._client:
+            click.echo("Error: ANTHROPIC_API_KEY not set. LLM fallback requires an API key.", err=True)
+            sys.exit(1)
+    except Exception as e:
+        click.echo(f"Error initializing LLM: {e}", err=True)
+        sys.exit(1)
+
+    with SASession(engine) as session:
+        repo = ProductRepository(session)
+        products = repo.get_products_without_inci(brand)
+
+        if not products:
+            click.echo(f"No catalog_only products without INCI found for '{brand}'.")
+            return
+
+        if limit > 0:
+            products = products[:limit]
+
+        click.echo(f"Found {len(products)} catalog_only products without INCI for {brand}")
+        if dry_run:
+            click.echo("(DRY RUN — no changes will be saved)\n")
+
+        enriched = 0
+        desc_added = 0
+        failed = 0
+
+        for i, product in enumerate(products, 1):
+            click.echo(f"  [{i}/{len(products)}] {product.product_name[:60]}...")
+
+            if not llm.can_call:
+                click.echo(f"  LLM budget exhausted after {i-1} products.")
+                break
+
+            html = None
+            if browser:
+                try:
+                    html = browser.fetch_page(product.product_url)
+                except Exception as e:
+                    click.echo(f"    Fetch failed: {e}")
+
+            if not html:
+                failed += 1
+                continue
+
+            # Try deterministic first (may have improved selectors)
+            det_result = extract_product_deterministic(html=html, url=product.product_url)
+            inci_raw = det_result.get("inci_raw")
+            inci_list = None
+
+            if inci_raw:
+                inci_result = extract_and_validate_inci(inci_raw)
+                if inci_result.valid:
+                    inci_list = inci_result.cleaned
+                    click.echo(f"    Found INCI via deterministic ({len(inci_list)} ingredients)")
+
+            # LLM fallback if deterministic failed
+            if inci_list is None:
+                try:
+                    from bs4 import BeautifulSoup
+                    soup = BeautifulSoup(html, "html.parser")
+                    for tag in soup(["script", "style", "nav", "footer", "header"]):
+                        tag.decompose()
+                    page_text = soup.get_text(separator="\n", strip=True)
+
+                    prompt = (
+                        "Extract the following fields from this hair product page.\n"
+                        f"Product: {product.product_name}\n\n"
+                        "Return JSON with these fields:\n"
+                        "- inci_ingredients: list of individual INCI ingredient names (strings), or null if not found\n"
+                        "- description: product description text, or null if not found\n\n"
+                        "IMPORTANT: Only extract INCI ingredients if you find a complete ingredient list "
+                        "(typically starting with 'Aqua' or 'Water'). Do NOT guess or infer ingredients."
+                    )
+                    llm_result = llm.extract_structured(page_text=page_text, prompt=prompt, max_tokens=2048)
+
+                    if llm_result and llm_result.get("inci_ingredients"):
+                        raw_llm = ", ".join(llm_result["inci_ingredients"])
+                        inci_val = extract_and_validate_inci(raw_llm)
+                        if inci_val.valid:
+                            inci_list = inci_val.cleaned
+                            click.echo(f"    Found INCI via LLM ({len(inci_list)} ingredients)")
+
+                    if not product.description and llm_result and llm_result.get("description"):
+                        if not dry_run:
+                            product.description = llm_result["description"]
+                        desc_added += 1
+                except Exception as e:
+                    click.echo(f"    LLM error: {e}")
+
+            if inci_list:
+                enriched += 1
+                if dry_run:
+                    click.echo(f"    Would update: {len(inci_list)} ingredients")
+                else:
+                    product.inci_ingredients = inci_list
+                    product.verification_status = "verified_inci"
+                    product.confidence = 0.85
+                    product.extraction_method = "llm_grounded"
+                    # Update category if missing
+                    if not product.product_category:
+                        product.product_category = normalize_category(
+                            product.product_type_normalized, product.product_name
+                        )
+            else:
+                failed += 1
+                click.echo(f"    No INCI found")
+
+        if not dry_run:
+            session.commit()
+
+    # Cleanup browser
+    if browser:
+        try:
+            browser.close()
+        except Exception:
+            pass
+
+    click.echo(f"\n{'='*60}")
+    click.echo(f"Enrich Report — {brand}")
+    click.echo(f"{'='*60}")
+    click.echo(f"Total processed:    {len(products)}")
+    click.echo(f"INCI found:         {enriched}")
+    click.echo(f"Description added:  {desc_added}")
+    click.echo(f"No INCI found:      {failed}")
+    click.echo(f"LLM budget:         {llm.cost_summary}")
+
+    if not dry_run and enriched > 0:
+        click.echo(f"\n{enriched} products updated to verified_inci.")
+    elif dry_run:
+        click.echo(f"\n(DRY RUN — nothing was saved)")
+
+
 if __name__ == "__main__":
     cli()

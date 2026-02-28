@@ -29,6 +29,7 @@ export interface ProductFilters {
   verified_only?: boolean;
   exclude_kits?: boolean;
   search?: string;
+  category?: string;
   page?: number;
   per_page?: number;
 }
@@ -39,6 +40,7 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Paginat
   if (filters.verified_only !== undefined) params.set('verified_only', String(filters.verified_only));
   if (filters.exclude_kits !== undefined) params.set('exclude_kits', String(filters.exclude_kits));
   if (filters.search) params.set('search', filters.search);
+  if (filters.category) params.set('category', filters.category);
   const perPage = filters.per_page ?? 100;
   params.set('limit', String(perPage));
   if (filters.page) params.set('offset', String(((filters.page ?? 1) - 1) * perPage));

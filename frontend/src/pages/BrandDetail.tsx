@@ -27,15 +27,25 @@ export default function BrandDetail() {
 
   const products = productsResponse?.items ?? [];
 
-  const typeBreakdown = useMemo(() => {
+  const CATEGORY_LABELS: Record<string, string> = {
+    shampoo: 'Shampoo',
+    condicionador: 'Condicionador',
+    mascara: 'Mascara',
+    tratamento: 'Tratamento',
+    leave_in: 'Leave-in',
+    oleo_serum: 'Oleo & Serum',
+    styling: 'Styling',
+    coloracao: 'Coloracao',
+  };
+
+  const categoryBreakdown = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const p of products) {
-      const t = p.product_type_normalized || 'Unknown';
+      const t = p.product_category || 'Other';
       counts[t] = (counts[t] || 0) + 1;
     }
     return Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10);
+      .sort((a, b) => b[1] - a[1]);
   }, [products]);
 
   const sealBreakdown = useMemo(() => {
@@ -131,18 +141,18 @@ export default function BrandDetail() {
         transition={{ duration: 0.5, delay: 0.2 }}
         className="grid grid-cols-1 md:grid-cols-2 gap-6"
       >
-        {/* Product Types */}
+        {/* Product Categories */}
         <div className="bg-white rounded-xl border border-ink/5 p-6 shadow-sm">
           <h2 className="text-[11px] uppercase tracking-wider text-ink-muted font-semibold mb-4">
-            Product Types
+            Product Categories
           </h2>
-          {typeBreakdown.length === 0 ? (
+          {categoryBreakdown.length === 0 ? (
             <p className="text-sm text-ink-faint">No products loaded yet.</p>
           ) : (
             <div className="space-y-2">
-              {typeBreakdown.map(([type, count]) => (
-                <div key={type} className="flex items-center justify-between">
-                  <span className="text-sm text-ink-light">{type}</span>
+              {categoryBreakdown.map(([cat, count]) => (
+                <div key={cat} className="flex items-center justify-between">
+                  <span className="text-sm text-ink-light">{CATEGORY_LABELS[cat] || cat}</span>
                   <span className="text-sm font-medium tabular-nums text-ink">{count}</span>
                 </div>
               ))}

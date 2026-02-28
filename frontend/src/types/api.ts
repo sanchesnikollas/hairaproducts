@@ -11,6 +11,7 @@ export interface BrandCoverage {
   catalog_only_total: number;
   quarantined_total: number;
   status: string;
+  last_run: string | null;
   blueprint_version: number;
   coverage_report: Record<string, unknown> | null;
   created_at: string;
@@ -49,6 +50,7 @@ export interface Product {
   product_url: string;
   image_url_main: string | null;
   product_type_normalized: string | null;
+  product_category: string | null;
   gender_target: string | null;
   inci_ingredients: string[] | null;
   confidence: number;

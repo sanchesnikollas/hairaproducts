@@ -61,6 +61,7 @@ export default function ProductBrowser() {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [brandFilter, setBrandFilter] = useState(searchParams.get('brand') ?? '');
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [focusBrand, setFocusBrand] = useState<string | null>(null);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [sealFilter, setSealFilter] = useState('');
@@ -71,7 +72,7 @@ export default function ProductBrowser() {
   const [fieldFilter, setFieldFilter] = useState<'' | 'has_inci' | 'no_inci' | 'has_desc' | 'no_desc' | 'has_price' | 'no_price'>('');
   const [confidenceFilter, setConfidenceFilter] = useState<'' | 'high' | 'medium' | 'low'>('');
   const [page, setPage] = useState(1);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Debounce search to avoid hitting API on every keystroke
   useEffect(() => {
@@ -96,12 +97,13 @@ export default function ProductBrowser() {
       verified_only: verifiedOnly,
       exclude_kits: excludeKits,
       search: debouncedSearch || undefined,
+      category: categoryFilter || undefined,
       page,
       per_page: PER_PAGE,
     }),
-    [brandFilter, verifiedOnly, excludeKits, debouncedSearch, page]
+    [brandFilter, categoryFilter, verifiedOnly, excludeKits, debouncedSearch, page]
   );
-  const { data: response, loading, error, refetch } = useAPI(fetcher, [brandFilter, verifiedOnly, excludeKits, debouncedSearch, page]);
+  const { data: response, loading, error, refetch } = useAPI(fetcher, [brandFilter, categoryFilter, verifiedOnly, excludeKits, debouncedSearch, page]);
 
   const products = response?.items ?? [];
   const totalProducts = response?.total ?? 0;
@@ -308,6 +310,22 @@ export default function ProductBrowser() {
               {formatBrandName(slug)}
             </option>
           ))}
+        </select>
+
+        <select
+          value={categoryFilter}
+          onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
+          className="px-4 py-2.5 bg-white border border-ink/8 rounded-xl text-sm text-ink-light focus:outline-none focus:ring-2 focus:ring-champagne/30 focus:border-champagne/40 transition-all appearance-none cursor-pointer"
+        >
+          <option value="">All categories</option>
+          <option value="shampoo">Shampoo</option>
+          <option value="condicionador">Condicionador</option>
+          <option value="mascara">Mascara</option>
+          <option value="tratamento">Tratamento</option>
+          <option value="leave_in">Leave-in</option>
+          <option value="oleo_serum">Oleo & Serum</option>
+          <option value="styling">Styling</option>
+          <option value="coloracao">Coloracao</option>
         </select>
 
         <select
@@ -529,8 +547,17 @@ function ProductCard({ product, index, onClick }: { product: Product; index: num
         </div>
 
         {/* Status badge overlay */}
-        <div className="absolute top-2.5 left-2.5">
+        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
           <StatusBadge status={product.verification_status} />
+          <span
+            className={`inline-flex items-center text-[9px] font-semibold px-1.5 py-0.5 rounded-full backdrop-blur-sm ${
+              (product.inci_ingredients?.length ?? 0) > 0
+                ? 'bg-sage/90 text-white'
+                : 'bg-ink/40 text-white/80'
+            }`}
+          >
+            {(product.inci_ingredients?.length ?? 0) > 0 ? 'INCI' : 'No INCI'}
+          </span>
         </div>
       </div>
 
@@ -543,10 +570,19 @@ function ProductCard({ product, index, onClick }: { product: Product; index: num
           {cleanProductName(product.product_name)}
         </h3>
 
-        {product.product_type_normalized && (
-          <span className="inline-block mt-1.5 text-[10px] text-ink-faint bg-ink/3 px-2 py-0.5 rounded-full w-fit">
-            {product.product_type_normalized}
-          </span>
+        {(product.product_category || product.product_type_normalized) && (
+          <div className="flex items-center gap-1.5 mt-1.5">
+            {product.product_category && (
+              <span className="inline-block text-[10px] text-champagne-dark bg-champagne/8 px-2 py-0.5 rounded-full w-fit font-medium">
+                {product.product_category.replace('_', '-')}
+              </span>
+            )}
+            {product.product_type_normalized && (
+              <span className="inline-block text-[10px] text-ink-faint bg-ink/3 px-2 py-0.5 rounded-full w-fit">
+                {product.product_type_normalized}
+              </span>
+            )}
+          </div>
         )}
 
         {/* Seals */}

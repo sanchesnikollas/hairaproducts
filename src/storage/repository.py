@@ -27,6 +27,7 @@ class ProductRepository:
             existing.verification_status = qa.status.value
             existing.product_type_raw = extraction.product_type_raw
             existing.product_type_normalized = extraction.product_type_normalized
+            existing.product_category = extraction.product_category
             existing.gender_target = extraction.gender_target.value
             existing.hair_relevance_reason = extraction.hair_relevance_reason
             existing.inci_ingredients = extraction.inci_ingredients
@@ -53,6 +54,7 @@ class ProductRepository:
                 verification_status=qa.status.value,
                 product_type_raw=extraction.product_type_raw,
                 product_type_normalized=extraction.product_type_normalized,
+                product_category=extraction.product_category,
                 gender_target=extraction.gender_target.value,
                 hair_relevance_reason=extraction.hair_relevance_reason,
                 inci_ingredients=extraction.inci_ingredients,
@@ -104,11 +106,13 @@ class ProductRepository:
 
         return product_id
 
-    def _apply_filters(self, query, brand_slug=None, verified_only=False, search=None):
+    def _apply_filters(self, query, brand_slug=None, verified_only=False, search=None, category=None):
         if brand_slug:
             query = query.filter(ProductORM.brand_slug == brand_slug)
         if verified_only:
             query = query.filter(ProductORM.verification_status == "verified_inci")
+        if category:
+            query = query.filter(ProductORM.product_category == category)
         if search:
             pattern = f"%{search}%"
             query = query.filter(
@@ -124,12 +128,13 @@ class ProductRepository:
         brand_slug: str | None = None,
         verified_only: bool = False,
         search: str | None = None,
+        category: str | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> list[ProductORM]:
         query = self._apply_filters(
             self._session.query(ProductORM),
-            brand_slug=brand_slug, verified_only=verified_only, search=search,
+            brand_slug=brand_slug, verified_only=verified_only, search=search, category=category,
         )
         return query.offset(offset).limit(limit).all()
 
@@ -138,12 +143,28 @@ class ProductRepository:
         brand_slug: str | None = None,
         verified_only: bool = False,
         search: str | None = None,
+        category: str | None = None,
     ) -> int:
         query = self._apply_filters(
             self._session.query(func.count(ProductORM.id)),
-            brand_slug=brand_slug, verified_only=verified_only, search=search,
+            brand_slug=brand_slug, verified_only=verified_only, search=search, category=category,
         )
         return query.scalar()
+
+    def get_products_without_inci(self, brand_slug: str) -> list[ProductORM]:
+        """Get catalog_only products without INCI ingredients for a brand."""
+        return (
+            self._session.query(ProductORM)
+            .filter(
+                ProductORM.brand_slug == brand_slug,
+                ProductORM.verification_status == "catalog_only",
+                or_(
+                    ProductORM.inci_ingredients.is_(None),
+                    ProductORM.inci_ingredients == "[]",
+                ),
+            )
+            .all()
+        )
 
     def get_product_by_id(self, product_id: str) -> ProductORM | None:
         return self._session.query(ProductORM).filter(ProductORM.id == product_id).first()

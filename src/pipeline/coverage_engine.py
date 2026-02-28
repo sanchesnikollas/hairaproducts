@@ -6,9 +6,9 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
-from src.core.models import ProductExtraction, GenderTarget, QAResult, QAStatus
+from src.core.models import ProductExtraction, GenderTarget, ExtractionMethod, QAResult, QAStatus
 from src.core.qa_gate import run_product_qa
-from src.core.taxonomy import normalize_product_type, detect_gender_target, is_hair_relevant_by_keywords
+from src.core.taxonomy import normalize_product_type, normalize_category, detect_gender_target, is_hair_relevant_by_keywords
 from src.discovery.url_classifier import classify_url, URLType
 from src.extraction.deterministic import extract_product_deterministic
 from src.extraction.inci_extractor import extract_and_validate_inci
@@ -60,7 +60,7 @@ class CoverageEngine:
         # Extract each product URL
         for url in hair_urls:
             try:
-                product_data = self._extract_product(url, brand_slug, inci_selectors, name_selectors)
+                product_data = self._extract_product(url, brand_slug, inci_selectors, name_selectors, blueprint_config=blueprint)
                 if not product_data:
                     continue
 
@@ -107,12 +107,37 @@ class CoverageEngine:
 
         return report
 
+    def _try_llm_extraction(self, url: str, html: str, product_name: str) -> dict | None:
+        """Use LLM to extract INCI and description from page text."""
+        from bs4 import BeautifulSoup
+
+        soup = BeautifulSoup(html, "html.parser")
+        # Remove script/style tags
+        for tag in soup(["script", "style", "nav", "footer", "header"]):
+            tag.decompose()
+        page_text = soup.get_text(separator="\n", strip=True)
+
+        prompt = (
+            "Extract the following fields from this hair product page.\n"
+            f"Product: {product_name}\n\n"
+            "Return JSON with these fields:\n"
+            "- inci_ingredients: list of individual INCI ingredient names (strings), or null if not found\n"
+            "- description: product description text, or null if not found\n\n"
+            "IMPORTANT: Only extract INCI ingredients if you find a complete ingredient list "
+            "(typically starting with 'Aqua' or 'Water'). Do NOT guess or infer ingredients."
+        )
+        result = self._llm_client.extract_structured(page_text=page_text, prompt=prompt, max_tokens=2048)
+        if result and (result.get("inci_ingredients") or result.get("description")):
+            return result
+        return None
+
     def _extract_product(
         self,
         url: str,
         brand_slug: str,
         inci_selectors: list[str],
         name_selectors: list[str],
+        blueprint_config: dict | None = None,
     ) -> ProductExtraction | None:
         # Fetch page HTML
         if not self._browser:
@@ -150,6 +175,8 @@ class CoverageEngine:
         inci_raw = det_result.get("inci_raw")
         inci_list = None
         confidence = 0.0
+        extraction_method = det_result.get("extraction_method")
+        description = det_result.get("description")
 
         if inci_raw:
             inci_result = extract_and_validate_inci(inci_raw)
@@ -158,6 +185,28 @@ class CoverageEngine:
                 confidence = 0.90
             else:
                 confidence = 0.30
+
+        # LLM fallback: if no INCI found and LLM is available + blueprint enables it
+        if inci_list is None and self._llm_client and self._llm_client.can_call:
+            if (blueprint_config or {}).get("use_llm_fallback", False):
+                try:
+                    llm_result = self._try_llm_extraction(url, html, product_name)
+                    if llm_result:
+                        if llm_result.get("inci_ingredients"):
+                            inci_raw_llm = ", ".join(llm_result["inci_ingredients"])
+                            inci_val = extract_and_validate_inci(inci_raw_llm)
+                            if inci_val.valid:
+                                inci_list = inci_val.cleaned
+                                confidence = 0.85
+                                extraction_method = ExtractionMethod.LLM_GROUNDED.value
+                                logger.info(f"LLM fallback found INCI for {url}")
+                        if not description and llm_result.get("description"):
+                            description = llm_result["description"]
+                except Exception as e:
+                    logger.warning(f"LLM fallback failed for {url}: {e}")
+
+        # Category
+        product_category = normalize_category(product_type, product_name)
 
         return ProductExtraction(
             brand_slug=brand_slug,
@@ -168,11 +217,12 @@ class CoverageEngine:
             hair_relevance_reason=reason or "product_url",
             product_type_raw=product_name,
             product_type_normalized=product_type,
+            product_category=product_category,
             inci_ingredients=inci_list,
-            description=det_result.get("description"),
+            description=description,
             price=det_result.get("price"),
             currency=det_result.get("currency"),
             confidence=confidence,
-            extraction_method=det_result.get("extraction_method"),
+            extraction_method=extraction_method,
             evidence=det_result.get("evidence", []),
         )

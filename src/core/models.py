@@ -74,6 +74,7 @@ class ProductExtraction(BaseModel):
     hair_relevance_reason: str = ""
     product_type_raw: Optional[str] = None
     product_type_normalized: Optional[str] = None
+    product_category: Optional[str] = None
     inci_ingredients: Optional[list[str]] = None
     description: Optional[str] = None
     usage_instructions: Optional[str] = None

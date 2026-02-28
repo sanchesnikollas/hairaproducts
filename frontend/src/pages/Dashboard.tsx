@@ -158,19 +158,30 @@ export default function Dashboard() {
     ].filter(d => d.value > 0)
   }, [stats])
 
-  // ── Product Type Distribution ──
+  // ── Product Category Distribution ──
+
+  const CATEGORY_LABELS: Record<string, string> = {
+    shampoo: 'Shampoo',
+    condicionador: 'Condicionador',
+    mascara: 'Mascara',
+    tratamento: 'Tratamento',
+    leave_in: 'Leave-in',
+    oleo_serum: 'Oleo & Serum',
+    styling: 'Styling',
+    coloracao: 'Coloracao',
+  }
 
   const typeData = useMemo(() => {
     if (!products) return []
     const counts: Record<string, number> = {}
     products.forEach(p => {
-      const t = p.product_type_normalized || 'Other'
+      const t = p.product_category || 'Other'
       counts[t] = (counts[t] || 0) + 1
     })
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
-      .map(([name, value]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), value }))
+      .map(([name, value]) => ({ name: CATEGORY_LABELS[name] || name.charAt(0).toUpperCase() + name.slice(1), value }))
   }, [products])
 
   const typeColors = [
@@ -354,7 +365,7 @@ export default function Dashboard() {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="lg:col-span-2 bg-white rounded-2xl border border-ink/5 p-6"
         >
-          <h2 className="font-display text-xl font-semibold text-ink mb-1">Product Types</h2>
+          <h2 className="font-display text-xl font-semibold text-ink mb-1">Product Categories</h2>
           <p className="text-xs text-ink-muted mb-5">Distribution of product categories in the catalog</p>
           <div className="flex items-center gap-8">
             <ResponsiveContainer width={200} height={200}>
