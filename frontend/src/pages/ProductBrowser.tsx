@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { getProducts, getProduct, getFocusBrand, updateProduct, getExportUrl } from '../lib/api';
 import { useAPI } from '../hooks/useAPI';
@@ -56,9 +57,10 @@ function formatBrandName(slug: string): string {
 const PER_PAGE = 100;
 
 export default function ProductBrowser() {
+  const [searchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [brandFilter, setBrandFilter] = useState('');
+  const [brandFilter, setBrandFilter] = useState(searchParams.get('brand') ?? '');
   const [focusBrand, setFocusBrand] = useState<string | null>(null);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [sealFilter, setSealFilter] = useState('');
@@ -67,6 +69,7 @@ export default function ProductBrowser() {
   const [qualityFilter, setQualityFilter] = useState<'' | 'errors' | 'warnings' | 'clean'>('');
   const [excludeKits, setExcludeKits] = useState(true);
   const [fieldFilter, setFieldFilter] = useState<'' | 'has_inci' | 'no_inci' | 'has_desc' | 'no_desc' | 'has_price' | 'no_price'>('');
+  const [confidenceFilter, setConfidenceFilter] = useState<'' | 'high' | 'medium' | 'low'>('');
   const [page, setPage] = useState(1);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -126,8 +129,11 @@ export default function ProductBrowser() {
     else if (fieldFilter === 'no_desc') result = result.filter((p) => !p.description?.trim());
     else if (fieldFilter === 'has_price') result = result.filter((p) => !!p.price);
     else if (fieldFilter === 'no_price') result = result.filter((p) => !p.price);
+    if (confidenceFilter === 'high') result = result.filter((p) => p.confidence >= 0.8);
+    else if (confidenceFilter === 'medium') result = result.filter((p) => p.confidence >= 0.5 && p.confidence < 0.8);
+    else if (confidenceFilter === 'low') result = result.filter((p) => p.confidence < 0.5);
     return result;
-  }, [products, sealFilter, qualityFilter, fieldFilter]);
+  }, [products, sealFilter, qualityFilter, fieldFilter, confidenceFilter]);
 
   const brandSlugs = useMemo(() => {
     return [...new Set(products.map((p) => p.brand_slug))].sort();
@@ -329,6 +335,17 @@ export default function ProductBrowser() {
               {label}
             </option>
           ))}
+        </select>
+
+        <select
+          value={confidenceFilter}
+          onChange={(e) => setConfidenceFilter(e.target.value as typeof confidenceFilter)}
+          className="px-4 py-2.5 bg-white border border-ink/8 rounded-xl text-sm text-ink-light focus:outline-none focus:ring-2 focus:ring-champagne/30 focus:border-champagne/40 transition-all appearance-none cursor-pointer"
+        >
+          <option value="">All confidence</option>
+          <option value="high">High (80%+)</option>
+          <option value="medium">Medium (50-79%)</option>
+          <option value="low">Low (&lt;50%)</option>
         </select>
 
         <button
@@ -910,7 +927,7 @@ function ProductModal({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imgError, setImgError] = useState(false);
-  const [showEvidence, setShowEvidence] = useState(false);
+  const [showEvidence, setShowEvidence] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
@@ -1021,6 +1038,9 @@ function ProductModal({
       if (lineCol !== (product.line_collection ?? '')) data.line_collection = lineCol || null;
       if (imageUrl !== (product.image_url_main ?? '')) data.image_url_main = imageUrl || null;
       if (verStatus !== (product.verification_status ?? '')) data.verification_status = verStatus;
+      if (product.product_labels?.manually_overridden) {
+        data.product_labels = product.product_labels;
+      }
 
       if (Object.keys(data).length === 0) {
         setSaveMsg({ text: 'No changes to save', ok: true });
@@ -1323,8 +1343,13 @@ function ProductModal({
                 </select>
               </div>
 
-              {/* Quality Seals (read-only) */}
-              <SealSection labels={product.product_labels} />
+              {/* Quality Seals (editable) */}
+              <SealEditor
+                labels={product.product_labels}
+                onChange={(updated) => {
+                  setProduct({ ...product, product_labels: updated });
+                }}
+              />
 
               {/* Source URL */}
               {product.product_url && (
@@ -1431,65 +1456,99 @@ function ProductModal({
   );
 }
 
-// ── Seal Section ──
+// ── Seal Editor ──
 
-function SealSection({ labels }: { labels: Product['product_labels'] }) {
-  if (!labels) return null;
-  const detected = labels.detected ?? [];
-  const inferred = labels.inferred ?? [];
-  if (detected.length === 0 && inferred.length === 0) return null;
+function SealEditor({ labels, onChange }: { labels: Product['product_labels']; onChange: (updated: Product['product_labels']) => void }) {
+  const detected = labels?.detected ?? [];
+  const inferred = labels?.inferred ?? [];
+  const allActive = [...detected, ...inferred];
+  const allSealKeys = Object.keys(SEAL_DISPLAY);
+  const inactive = allSealKeys.filter((k) => !allActive.includes(k));
+
+  function toggleSeal(seal: string) {
+    const current = labels ?? { detected: [], inferred: [], confidence: 0, sources: [], manually_verified: false, manually_overridden: false };
+    const isActive = [...(current.detected ?? []), ...(current.inferred ?? [])].includes(seal);
+
+    let newDetected = [...(current.detected ?? [])];
+    let newInferred = [...(current.inferred ?? [])];
+
+    if (isActive) {
+      newDetected = newDetected.filter((s) => s !== seal);
+      newInferred = newInferred.filter((s) => s !== seal);
+    } else {
+      newDetected = [...newDetected, seal];
+    }
+
+    onChange({
+      ...current,
+      detected: newDetected,
+      inferred: newInferred,
+      manually_overridden: true,
+    });
+  }
 
   return (
     <div className="space-y-3">
-      {/* Detected seals — high priority */}
-      {detected.length > 0 && (
-        <div>
-          <p className="text-[10px] uppercase tracking-wider text-sage font-semibold mb-2 flex items-center gap-1.5">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M9 12l2 2 4-4" />
-              <circle cx="12" cy="12" r="10" />
-            </svg>
-            Detected from product text
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {detected.map((seal) => (
-              <span
-                key={seal}
-                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-sage-bg text-sage border border-sage/15"
-              >
-                {SEAL_DISPLAY[seal]?.label ?? seal}
-              </span>
-            ))}
-          </div>
+      <p className="text-[11px] uppercase tracking-wider text-ink-muted font-semibold flex items-center gap-2">
+        Quality Seals
+        {labels?.manually_overridden && (
+          <span className="text-[9px] normal-case tracking-normal px-1.5 py-0.5 bg-amber-bg text-amber rounded">manually edited</span>
+        )}
+      </p>
+
+      {/* Active seals */}
+      {allActive.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {detected.map((seal) => (
+            <button
+              key={seal}
+              type="button"
+              onClick={() => toggleSeal(seal)}
+              className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-sage-bg text-sage border border-sage/15 hover:bg-sage/20 transition-colors"
+            >
+              {SEAL_DISPLAY[seal]?.label ?? seal}
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M18 6L6 18M6 6l12 12" /></svg>
+            </button>
+          ))}
+          {inferred.map((seal) => (
+            <button
+              key={seal}
+              type="button"
+              onClick={() => toggleSeal(seal)}
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-lg bg-ink/3 text-ink-muted hover:bg-ink/8 transition-colors"
+            >
+              {SEAL_DISPLAY[seal]?.label ?? seal}
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M18 6L6 18M6 6l12 12" /></svg>
+            </button>
+          ))}
         </div>
       )}
 
-      {/* Inferred seals — lower priority */}
-      {inferred.length > 0 && (
+      {/* Inactive seals — available to add */}
+      {inactive.length > 0 && (
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-ink-faint font-semibold mb-2 flex items-center gap-1.5">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 2l2.4 7.4h7.6l-6 4.6 2.3 7-6.3-4.6-6.3 4.6 2.3-7-6-4.6h7.6z" />
-            </svg>
-            Inferred from INCI analysis
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {inferred.map((seal) => (
-              <span
+          <p className="text-[10px] text-ink-faint mb-1.5">Click to add:</p>
+          <div className="flex flex-wrap gap-1">
+            {inactive.map((seal) => (
+              <button
                 key={seal}
-                className="inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-lg bg-ink/3 text-ink-muted"
+                type="button"
+                onClick={() => toggleSeal(seal)}
+                className="text-[10px] px-2 py-0.5 rounded bg-ink/3 text-ink-faint hover:bg-champagne/10 hover:text-champagne-dark transition-colors"
               >
-                {SEAL_DISPLAY[seal]?.label ?? seal}
-              </span>
+                + {SEAL_DISPLAY[seal]?.label ?? seal}
+              </button>
             ))}
           </div>
         </div>
       )}
 
       {/* Confidence */}
-      <p className="text-[10px] text-ink-faint">
-        Label confidence: <span className="font-medium tabular-nums">{Math.round(labels.confidence * 100)}%</span>
-      </p>
+      {labels && (
+        <p className="text-[10px] text-ink-faint">
+          Label confidence: <span className="font-medium tabular-nums">{Math.round(labels.confidence * 100)}%</span>
+        </p>
+      )}
     </div>
   );
 }
@@ -1506,15 +1565,40 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function EvidenceRow({ ev }: { ev: ProductEvidence }) {
-  const fieldLabel = ev.field_name.startsWith('label:') ? ev.field_name.replace('label:', '') : ev.field_name;
+  const fieldLabel = ev.field_name.startsWith('label:')
+    ? ev.field_name.replace('label:', '').replace(/_/g, ' ')
+    : ev.field_name.replace(/_/g, ' ');
+  const timestamp = ev.extracted_at ? new Date(ev.extracted_at).toLocaleDateString() : null;
 
   return (
-    <div className="flex items-start gap-3 px-3 py-2 bg-cream/70 rounded-lg text-xs">
-      <span className="font-medium text-ink whitespace-nowrap min-w-[100px]">{fieldLabel}</span>
-      <span className="text-ink-muted flex-1 break-all line-clamp-1">{ev.raw_source_text ?? '—'}</span>
-      <span className="text-[10px] uppercase tracking-wider text-ink-faint whitespace-nowrap">
-        {ev.extraction_method ?? ''}
-      </span>
+    <div className="px-3 py-2.5 bg-cream/70 rounded-lg text-xs space-y-1">
+      <div className="flex items-center gap-2">
+        <span className="font-semibold text-ink capitalize">{fieldLabel}</span>
+        {ev.extraction_method && (
+          <span className="text-[10px] uppercase tracking-wider text-ink-faint px-1.5 py-0.5 bg-ink/5 rounded">
+            {ev.extraction_method}
+          </span>
+        )}
+        {timestamp && (
+          <span className="text-[10px] text-ink-faint ml-auto tabular-nums">{timestamp}</span>
+        )}
+      </div>
+      {ev.raw_source_text && (
+        <p className="text-ink-muted leading-relaxed line-clamp-2">{ev.raw_source_text}</p>
+      )}
+      {ev.source_url && (
+        <a
+          href={ev.source_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[11px] text-champagne-dark hover:underline break-all"
+        >
+          {ev.source_url}
+        </a>
+      )}
+      {ev.evidence_locator && (
+        <p className="text-[10px] text-ink-faint font-mono">{ev.evidence_locator}</p>
+      )}
     </div>
   );
 }

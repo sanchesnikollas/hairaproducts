@@ -61,6 +61,7 @@ class ProductUpdate(BaseModel):
     image_url_main: Optional[str] = None
     benefits_claims: Optional[list[str]] = None
     verification_status: Optional[str] = None
+    product_labels: Optional[dict] = None
 
 # If FOCUS_BRAND is set, default brand_slug filter to that brand
 _FOCUS_BRAND = os.environ.get("FOCUS_BRAND", "").strip() or None

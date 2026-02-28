@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { getBrands } from '../lib/api';
 import { useAPI } from '../hooks/useAPI';
@@ -54,6 +55,8 @@ export default function BrandsDashboard() {
     if (sortField !== field) return '';
     return sortDir === 'asc' ? ' \u2191' : ' \u2193';
   }
+
+  const navigate = useNavigate();
 
   if (loading) return <LoadingState message="Loading brand coverage..." />;
   if (error) return <ErrorState message={error} onRetry={refetch} />;
@@ -134,7 +137,7 @@ export default function BrandsDashboard() {
             </thead>
             <tbody>
               {filtered.map((brand, i) => (
-                <BrandRow key={brand.brand_slug} brand={brand} index={i} />
+                <BrandRow key={brand.brand_slug} brand={brand} index={i} onClick={() => navigate(`/brands/${brand.brand_slug}`)} />
               ))}
             </tbody>
           </table>
@@ -184,7 +187,7 @@ function Th({
   );
 }
 
-function BrandRow({ brand, index }: { brand: BrandCoverage; index: number }) {
+function BrandRow({ brand, index, onClick }: { brand: BrandCoverage; index: number; onClick: () => void }) {
   const rateColor = brand.verified_inci_rate >= 0.8 ? 'sage' : brand.verified_inci_rate >= 0.5 ? 'champagne' : 'coral';
 
   return (
@@ -192,7 +195,8 @@ function BrandRow({ brand, index }: { brand: BrandCoverage; index: number }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3, delay: index * 0.02 }}
-      className="border-b border-ink/3 last:border-b-0 hover:bg-cream/50 transition-colors"
+      className="border-b border-ink/3 last:border-b-0 hover:bg-cream/50 transition-colors cursor-pointer"
+      onClick={onClick}
     >
       <td className="px-5 py-4">
         <span className="text-sm font-medium text-ink">{brand.brand_slug}</span>
