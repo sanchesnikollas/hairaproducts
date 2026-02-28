@@ -63,7 +63,7 @@ class ProductEvidenceORM(Base):
     product_id = Column(String(36), ForeignKey("products.id"), nullable=False)
     field_name = Column(String(100), nullable=False)
     source_url = Column(String(2000), nullable=False)
-    evidence_locator = Column(String(500), nullable=True)
+    evidence_locator = Column(Text, nullable=True)
     raw_source_text = Column(Text, nullable=True)
     extraction_method = Column(String(50), nullable=False)
     extracted_at = Column(DateTime, nullable=False, default=_utcnow)
