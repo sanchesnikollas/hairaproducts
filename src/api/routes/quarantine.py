@@ -69,3 +69,21 @@ def approve_quarantined(
 
     session.commit()
     return {"status": "approved", "quarantine_id": quarantine_id}
+
+
+@router.post("/quarantine/{quarantine_id}/reject")
+def reject_quarantined(
+    quarantine_id: str,
+    notes: str = "",
+    session: Session = Depends(_get_session),
+):
+    detail = session.query(QuarantineDetailORM).filter(QuarantineDetailORM.id == quarantine_id).first()
+    if not detail:
+        raise HTTPException(status_code=404, detail="Quarantine record not found")
+
+    detail.review_status = "rejected"
+    detail.reviewer_notes = notes
+    detail.reviewed_at = datetime.now(timezone.utc)
+
+    session.commit()
+    return {"status": "rejected", "quarantine_id": quarantine_id}

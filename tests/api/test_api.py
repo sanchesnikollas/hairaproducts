@@ -105,12 +105,81 @@ class TestBrandsEndpoint:
         assert resp.status_code == 404
 
 
+def _seed_quarantined_product(session, url="https://www.amend.com.br/q1"):
+    p = ProductORM(
+        brand_slug="amend",
+        product_name="Quarantined Shampoo",
+        product_url=url,
+        verification_status="quarantined",
+        gender_target="unisex",
+        confidence=0.3,
+    )
+    session.add(p)
+    session.flush()
+    q = QuarantineDetailORM(
+        product_id=p.id,
+        rejection_reason="Missing INCI ingredients",
+        rejection_code="missing_inci",
+        review_status="pending",
+    )
+    session.add(q)
+    session.commit()
+    return p, q
+
+
 class TestQuarantineEndpoint:
     def test_list_empty(self, client):
         resp = client.get("/api/quarantine")
         assert resp.status_code == 200
         assert resp.json() == []
 
+    def test_list_pending(self, client, db_session):
+        _seed_quarantined_product(db_session)
+        resp = client.get("/api/quarantine?review_status=pending")
+        assert resp.status_code == 200
+        items = resp.json()
+        assert len(items) == 1
+        assert items[0]["rejection_reason"] == "Missing INCI ingredients"
+        assert items[0]["rejection_code"] == "missing_inci"
+        assert items[0]["product_name"] == "Quarantined Shampoo"
+
     def test_approve_not_found(self, client):
         resp = client.post("/api/quarantine/nonexistent/approve")
         assert resp.status_code == 404
+
+    def test_approve_success(self, client, db_session):
+        p, q = _seed_quarantined_product(db_session)
+        resp = client.post(f"/api/quarantine/{q.id}/approve")
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "approved"
+        db_session.refresh(q)
+        assert q.review_status == "approved"
+        db_session.refresh(p)
+        assert p.verification_status == "verified_inci"
+
+    def test_reject_not_found(self, client):
+        resp = client.post("/api/quarantine/nonexistent/reject")
+        assert resp.status_code == 404
+
+    def test_reject_success(self, client, db_session):
+        p, q = _seed_quarantined_product(db_session)
+        resp = client.post(f"/api/quarantine/{q.id}/reject?notes=Bad%20data")
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "rejected"
+        db_session.refresh(q)
+        assert q.review_status == "rejected"
+        assert q.reviewer_notes == "Bad data"
+        # Product stays quarantined
+        db_session.refresh(p)
+        assert p.verification_status == "quarantined"
+
+    def test_list_filters_by_status(self, client, db_session):
+        _, q = _seed_quarantined_product(db_session, "https://amend.com.br/q2")
+        # Reject it
+        client.post(f"/api/quarantine/{q.id}/reject")
+        # Pending list should be empty
+        resp = client.get("/api/quarantine?review_status=pending")
+        assert len(resp.json()) == 0
+        # Rejected list should have it
+        resp = client.get("/api/quarantine?review_status=rejected")
+        assert len(resp.json()) == 1

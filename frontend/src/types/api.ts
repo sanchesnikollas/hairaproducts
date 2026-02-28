@@ -67,7 +67,7 @@ export interface Product {
   benefits_claims: string[] | null;
   size_volume: string | null;
   line_collection: string | null;
-  price: string | null;
+  price: number | null;
   currency: string | null;
   created_at: string;
   updated_at: string;
@@ -77,16 +77,15 @@ export interface Product {
 }
 
 export interface QuarantineItem {
-  id: number;
-  product_id: number;
-  brand_slug: string;
-  product_name: string;
-  product_url: string;
-  reason: string;
-  failed_checks: string;
+  id: string;
+  product_id: string;
+  brand_slug: string | null;
+  product_name: string | null;
+  product_url: string | null;
+  rejection_reason: string;
+  rejection_code: string | null;
   review_status: string;
-  reviewed_at: string | null;
-  product: Product;
+  reviewer_notes: string | null;
 }
 
 export interface PaginatedResponse<T> {

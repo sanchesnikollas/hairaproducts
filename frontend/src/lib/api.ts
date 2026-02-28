@@ -68,6 +68,11 @@ export async function getQuarantine(reviewStatus?: string): Promise<QuarantineIt
   return fetchJSON<QuarantineItem[]>(`/quarantine${qs}`);
 }
 
-export async function approveQuarantine(id: number): Promise<QuarantineItem> {
-  return fetchJSON<QuarantineItem>(`/quarantine/${id}/approve`, { method: 'POST' });
+export async function approveQuarantine(id: string): Promise<{ status: string; quarantine_id: string }> {
+  return fetchJSON(`/quarantine/${id}/approve`, { method: 'POST' });
+}
+
+export async function rejectQuarantine(id: string, notes?: string): Promise<{ status: string; quarantine_id: string }> {
+  const params = notes ? `?notes=${encodeURIComponent(notes)}` : '';
+  return fetchJSON(`/quarantine/${id}/reject${params}`, { method: 'POST' });
 }
