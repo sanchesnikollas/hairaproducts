@@ -1,4 +1,4 @@
-import type { BrandCoverage, Product, QuarantineItem } from '../types/api';
+import type { BrandCoverage, PaginatedResponse, Product, QuarantineItem } from '../types/api';
 
 const BASE_URL = '/api';
 
@@ -28,19 +28,31 @@ export interface ProductFilters {
   brand?: string;
   verified_only?: boolean;
   exclude_kits?: boolean;
+  search?: string;
   page?: number;
   per_page?: number;
 }
 
-export async function getProducts(filters: ProductFilters = {}): Promise<Product[]> {
+export async function getProducts(filters: ProductFilters = {}): Promise<PaginatedResponse<Product>> {
   const params = new URLSearchParams();
   if (filters.brand) params.set('brand_slug', filters.brand);
   if (filters.verified_only !== undefined) params.set('verified_only', String(filters.verified_only));
   if (filters.exclude_kits !== undefined) params.set('exclude_kits', String(filters.exclude_kits));
-  if (filters.per_page) params.set('limit', String(filters.per_page));
-  if (filters.page) params.set('offset', String(((filters.page ?? 1) - 1) * (filters.per_page ?? 100)));
+  if (filters.search) params.set('search', filters.search);
+  const perPage = filters.per_page ?? 100;
+  params.set('limit', String(perPage));
+  if (filters.page) params.set('offset', String(((filters.page ?? 1) - 1) * perPage));
   const qs = params.toString();
-  return fetchJSON<Product[]>(`/products${qs ? `?${qs}` : ''}`);
+  return fetchJSON<PaginatedResponse<Product>>(`/products${qs ? `?${qs}` : ''}`);
+}
+
+export function getExportUrl(filters: ProductFilters = {}, format: 'csv' | 'json' = 'csv'): string {
+  const params = new URLSearchParams();
+  if (filters.brand) params.set('brand_slug', filters.brand);
+  if (filters.verified_only !== undefined) params.set('verified_only', String(filters.verified_only));
+  if (filters.search) params.set('search', filters.search);
+  params.set('format', format);
+  return `/api/products/export?${params.toString()}`;
 }
 
 export async function getProduct(id: string): Promise<Product> {

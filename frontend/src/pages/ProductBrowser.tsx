@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { getProducts, getProduct, getFocusBrand, updateProduct } from '../lib/api';
+import { getProducts, getProduct, getFocusBrand, updateProduct, getExportUrl } from '../lib/api';
 import { useAPI } from '../hooks/useAPI';
 import type { Product, ProductEvidence } from '../types/api';
 import StatusBadge from '../components/StatusBadge';
@@ -53,8 +53,11 @@ function formatBrandName(slug: string): string {
 
 // ── Main Component ──
 
+const PER_PAGE = 100;
+
 export default function ProductBrowser() {
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [brandFilter, setBrandFilter] = useState('');
   const [focusBrand, setFocusBrand] = useState<string | null>(null);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
@@ -64,6 +67,17 @@ export default function ProductBrowser() {
   const [qualityFilter, setQualityFilter] = useState<'' | 'errors' | 'warnings' | 'clean'>('');
   const [excludeKits, setExcludeKits] = useState(true);
   const [fieldFilter, setFieldFilter] = useState<'' | 'has_inci' | 'no_inci' | 'has_desc' | 'no_desc' | 'has_price' | 'no_price'>('');
+  const [page, setPage] = useState(1);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Debounce search to avoid hitting API on every keystroke
+  useEffect(() => {
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(debounceRef.current);
+  }, [search]);
 
   useEffect(() => {
     getFocusBrand()
@@ -74,23 +88,24 @@ export default function ProductBrowser() {
   }, []);
 
   const fetcher = useCallback(
-    () => getProducts({ brand: brandFilter || undefined, verified_only: verifiedOnly, exclude_kits: excludeKits }),
-    [brandFilter, verifiedOnly, excludeKits]
+    () => getProducts({
+      brand: brandFilter || undefined,
+      verified_only: verifiedOnly,
+      exclude_kits: excludeKits,
+      search: debouncedSearch || undefined,
+      page,
+      per_page: PER_PAGE,
+    }),
+    [brandFilter, verifiedOnly, excludeKits, debouncedSearch, page]
   );
-  const { data: products, loading, error, refetch } = useAPI(fetcher, [brandFilter, verifiedOnly, excludeKits]);
+  const { data: response, loading, error, refetch } = useAPI(fetcher, [brandFilter, verifiedOnly, excludeKits, debouncedSearch, page]);
+
+  const products = response?.items ?? [];
+  const totalProducts = response?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalProducts / PER_PAGE));
 
   const filtered = useMemo(() => {
-    if (!products) return [];
     let result = products;
-    if (search) {
-      const q = search.toLowerCase();
-      result = result.filter(
-        (p) =>
-          p.product_name.toLowerCase().includes(q) ||
-          p.brand_slug.toLowerCase().includes(q) ||
-          (p.product_type_normalized ?? '').toLowerCase().includes(q)
-      );
-    }
     if (sealFilter) {
       result = result.filter((p) => {
         const labels = p.product_labels;
@@ -112,15 +127,14 @@ export default function ProductBrowser() {
     else if (fieldFilter === 'has_price') result = result.filter((p) => !!p.price);
     else if (fieldFilter === 'no_price') result = result.filter((p) => !p.price);
     return result;
-  }, [products, search, sealFilter, qualityFilter, fieldFilter]);
+  }, [products, sealFilter, qualityFilter, fieldFilter]);
 
   const brandSlugs = useMemo(() => {
-    if (!products) return [];
     return [...new Set(products.map((p) => p.brand_slug))].sort();
   }, [products]);
 
   const statusCounts = useMemo(() => {
-    const all = products ?? [];
+    const all = products;
     const verified = all.filter((p) => p.verification_status === 'verified_inci').length;
     const catalog = all.filter((p) => p.verification_status === 'catalog_only').length;
     const quarantined = all.filter((p) => p.verification_status === 'quarantined').length;
@@ -130,8 +144,8 @@ export default function ProductBrowser() {
     const hasInci = all.filter((p) => (p.inci_ingredients?.length ?? 0) > 0).length;
     const hasDesc = all.filter((p) => !!p.description?.trim()).length;
     const hasPrice = all.filter((p) => !!p.price).length;
-    return { total: all.length, filtered: filtered.length, verified, catalog, quarantined, withErrors, withWarnings, clean, hasInci, hasDesc, hasPrice };
-  }, [products, filtered]);
+    return { total: totalProducts, filtered: filtered.length, verified, catalog, quarantined, withErrors, withWarnings, clean, hasInci, hasDesc, hasPrice };
+  }, [products, filtered, totalProducts]);
 
   if (loading) return <LoadingState message="Loading products..." />;
   if (error) return <ErrorState message={error} onRetry={refetch} />;
@@ -150,6 +164,21 @@ export default function ProductBrowser() {
               </span>
             )}
           </div>
+          <div className="flex items-center gap-3">
+          {/* Export */}
+          <a
+            href={getExportUrl({ brand: brandFilter || undefined, verified_only: verifiedOnly, search: debouncedSearch || undefined })}
+            download
+            className="flex items-center gap-1.5 px-3 py-2 bg-white border border-ink/8 rounded-lg text-xs font-medium text-ink-muted hover:text-ink hover:border-ink/15 transition-all"
+            title="Export as CSV"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Export CSV
+          </a>
           {/* View Toggle */}
           <div className="flex items-center gap-1 bg-ink/3 rounded-lg p-0.5">
             <button
@@ -172,6 +201,7 @@ export default function ProductBrowser() {
                 <rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
               </svg>
             </button>
+          </div>
           </div>
         </div>
 
@@ -263,7 +293,7 @@ export default function ProductBrowser() {
 
         <select
           value={brandFilter}
-          onChange={(e) => setBrandFilter(e.target.value)}
+          onChange={(e) => { setBrandFilter(e.target.value); setPage(1); }}
           className="px-4 py-2.5 bg-white border border-ink/8 rounded-xl text-sm text-ink-light focus:outline-none focus:ring-2 focus:ring-champagne/30 focus:border-champagne/40 transition-all appearance-none cursor-pointer"
         >
           <option value="">All brands</option>
@@ -302,7 +332,7 @@ export default function ProductBrowser() {
         </select>
 
         <button
-          onClick={() => setVerifiedOnly(!verifiedOnly)}
+          onClick={() => { setVerifiedOnly(!verifiedOnly); setPage(1); }}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${
             verifiedOnly
               ? 'bg-sage-bg border-sage/20 text-sage'
@@ -324,7 +354,7 @@ export default function ProductBrowser() {
         </button>
 
         <button
-          onClick={() => setExcludeKits(!excludeKits)}
+          onClick={() => { setExcludeKits(!excludeKits); setPage(1); }}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${
             excludeKits
               ? 'bg-champagne/8 border-champagne/20 text-champagne-dark'
@@ -367,6 +397,53 @@ export default function ProductBrowser() {
           transition={{ duration: 0.4, delay: 0.2 }}
         >
           <ProductListView products={filtered} onSelect={(id) => setSelectedProductId(id)} />
+        </motion.div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
+          className="flex items-center justify-between pt-2"
+        >
+          <p className="text-sm text-ink-muted">
+            Showing {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, totalProducts)} of {totalProducts} products
+          </p>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage(1)}
+              disabled={page === 1}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-ink-muted hover:text-ink hover:bg-ink/5 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              First
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-ink-muted hover:text-ink hover:bg-ink/5 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Prev
+            </button>
+            <span className="px-3 py-1.5 text-xs font-medium tabular-nums text-ink">
+              {page} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-ink-muted hover:text-ink hover:bg-ink/5 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+            <button
+              onClick={() => setPage(totalPages)}
+              disabled={page === totalPages}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-ink-muted hover:text-ink hover:bg-ink/5 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Last
+            </button>
+          </div>
         </motion.div>
       )}
 

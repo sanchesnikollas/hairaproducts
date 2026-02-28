@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from src.core.models import ProductExtraction, QAResult, QAStatus
@@ -103,19 +104,46 @@ class ProductRepository:
 
         return product_id
 
-    def get_products(
-        self,
-        brand_slug: str | None = None,
-        verified_only: bool = False,
-        limit: int = 100,
-        offset: int = 0,
-    ) -> list[ProductORM]:
-        query = self._session.query(ProductORM)
+    def _apply_filters(self, query, brand_slug=None, verified_only=False, search=None):
         if brand_slug:
             query = query.filter(ProductORM.brand_slug == brand_slug)
         if verified_only:
             query = query.filter(ProductORM.verification_status == "verified_inci")
+        if search:
+            pattern = f"%{search}%"
+            query = query.filter(
+                or_(
+                    ProductORM.product_name.ilike(pattern),
+                    ProductORM.description.ilike(pattern),
+                )
+            )
+        return query
+
+    def get_products(
+        self,
+        brand_slug: str | None = None,
+        verified_only: bool = False,
+        search: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[ProductORM]:
+        query = self._apply_filters(
+            self._session.query(ProductORM),
+            brand_slug=brand_slug, verified_only=verified_only, search=search,
+        )
         return query.offset(offset).limit(limit).all()
+
+    def count_products(
+        self,
+        brand_slug: str | None = None,
+        verified_only: bool = False,
+        search: str | None = None,
+    ) -> int:
+        query = self._apply_filters(
+            self._session.query(func.count(ProductORM.id)),
+            brand_slug=brand_slug, verified_only=verified_only, search=search,
+        )
+        return query.scalar()
 
     def get_product_by_id(self, product_id: str) -> ProductORM | None:
         return self._session.query(ProductORM).filter(ProductORM.id == product_id).first()

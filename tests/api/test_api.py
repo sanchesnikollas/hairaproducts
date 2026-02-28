@@ -74,14 +74,52 @@ class TestProductsEndpoint:
     def test_list_empty(self, client):
         resp = client.get("/api/products")
         assert resp.status_code == 200
-        assert resp.json() == []
+        body = resp.json()
+        assert body["items"] == []
+        assert body["total"] == 0
 
     def test_list_verified(self, client, db_session):
         _seed_product(db_session, "https://amend.com.br/p1", "verified_inci")
         _seed_product(db_session, "https://amend.com.br/p2", "catalog_only")
         resp = client.get("/api/products?verified_only=true")
         assert resp.status_code == 200
-        assert len(resp.json()) == 1
+        body = resp.json()
+        assert len(body["items"]) == 1
+        assert body["total"] == 1
+
+    def test_list_pagination(self, client, db_session):
+        for i in range(5):
+            _seed_product(db_session, f"https://amend.com.br/page{i}", "verified_inci")
+        resp = client.get("/api/products?limit=2&offset=0")
+        body = resp.json()
+        assert len(body["items"]) == 2
+        assert body["total"] == 5
+        assert body["limit"] == 2
+        assert body["offset"] == 0
+        # Second page
+        resp2 = client.get("/api/products?limit=2&offset=2")
+        body2 = resp2.json()
+        assert len(body2["items"]) == 2
+        assert body2["offset"] == 2
+
+    def test_search(self, client, db_session):
+        _seed_product(db_session, "https://amend.com.br/s1", "verified_inci")
+        p2 = ProductORM(
+            brand_slug="amend",
+            product_name="Conditioner Shine",
+            product_url="https://amend.com.br/s2",
+            verification_status="verified_inci",
+            gender_target="unisex",
+            confidence=0.9,
+        )
+        db_session.add(p2)
+        db_session.commit()
+        # Search for "conditioner"
+        resp = client.get("/api/products?search=conditioner")
+        body = resp.json()
+        assert len(body["items"]) == 1
+        assert body["items"][0]["product_name"] == "Conditioner Shine"
+        assert body["total"] == 1
 
     def test_get_product_not_found(self, client):
         resp = client.get("/api/products/nonexistent")
@@ -92,6 +130,25 @@ class TestProductsEndpoint:
         resp = client.get(f"/api/products/{p.id}")
         assert resp.status_code == 200
         assert resp.json()["product_name"] == "Shampoo Gold Black"
+
+    def test_export_csv(self, client, db_session):
+        _seed_product(db_session)
+        resp = client.get("/api/products/export?format=csv")
+        assert resp.status_code == 200
+        assert "text/csv" in resp.headers["content-type"]
+        assert "attachment" in resp.headers["content-disposition"]
+        lines = resp.text.strip().split("\n")
+        assert len(lines) == 2  # header + 1 product
+        assert "product_name" in lines[0]
+
+    def test_export_json(self, client, db_session):
+        _seed_product(db_session)
+        resp = client.get("/api/products/export?format=json")
+        assert resp.status_code == 200
+        items = resp.json()
+        assert isinstance(items, list)
+        assert len(items) == 1
+        assert items[0]["product_name"] == "Shampoo Gold Black"
 
 
 class TestBrandsEndpoint:

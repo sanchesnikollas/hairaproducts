@@ -1,11 +1,14 @@
 # src/api/routes/products.py
 from __future__ import annotations
 
+import csv
+import io
 import os
 from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -77,11 +80,35 @@ def get_focus_brand():
     return {"focus_brand": _FOCUS_BRAND}
 
 
+def _serialize_product_list_item(p: ProductORM) -> dict:
+    kit = _is_kit(p)
+    return {
+        "id": p.id,
+        "brand_slug": p.brand_slug,
+        "product_name": p.product_name,
+        "product_url": p.product_url,
+        "image_url_main": p.image_url_main,
+        "verification_status": p.verification_status,
+        "product_type_normalized": p.product_type_normalized,
+        "gender_target": p.gender_target,
+        "inci_ingredients": p.inci_ingredients,
+        "confidence": p.confidence,
+        "description": p.description,
+        "usage_instructions": p.usage_instructions,
+        "benefits_claims": p.benefits_claims,
+        "product_labels": p.product_labels,
+        "price": p.price,
+        "is_kit": kit,
+        "quality": _validate_product(p),
+    }
+
+
 @router.get("/products")
 def list_products(
     brand_slug: str | None = None,
     verified_only: bool = False,
     exclude_kits: bool = True,
+    search: str | None = None,
     limit: int = Query(default=100, le=1000),
     offset: int = Query(default=0, ge=0),
     session: Session = Depends(_get_session),
@@ -92,34 +119,74 @@ def list_products(
     products = repo.get_products(
         brand_slug=effective_brand,
         verified_only=verified_only,
+        search=search,
         limit=limit,
         offset=offset,
     )
-    result = []
+    total = repo.count_products(
+        brand_slug=effective_brand,
+        verified_only=verified_only,
+        search=search,
+    )
+    items = []
     for p in products:
-        kit = _is_kit(p)
-        if exclude_kits and kit:
+        if exclude_kits and _is_kit(p):
             continue
-        result.append({
-            "id": p.id,
-            "brand_slug": p.brand_slug,
-            "product_name": p.product_name,
-            "product_url": p.product_url,
-            "image_url_main": p.image_url_main,
-            "verification_status": p.verification_status,
-            "product_type_normalized": p.product_type_normalized,
-            "gender_target": p.gender_target,
-            "inci_ingredients": p.inci_ingredients,
-            "confidence": p.confidence,
-            "description": p.description,
-            "usage_instructions": p.usage_instructions,
-            "benefits_claims": p.benefits_claims,
-            "product_labels": p.product_labels,
-            "price": p.price,
-            "is_kit": kit,
-            "quality": _validate_product(p),
-        })
-    return result
+        items.append(_serialize_product_list_item(p))
+    return {"items": items, "total": total, "limit": limit, "offset": offset}
+
+
+_EXPORT_COLUMNS = [
+    "id", "brand_slug", "product_name", "product_url", "image_url_main",
+    "verification_status", "product_type_normalized", "gender_target",
+    "inci_ingredients", "description", "usage_instructions", "benefits_claims",
+    "size_volume", "price", "currency", "line_collection", "confidence",
+    "extraction_method", "product_labels",
+]
+
+
+@router.get("/products/export")
+def export_products(
+    brand_slug: str | None = None,
+    verified_only: bool = False,
+    search: str | None = None,
+    format: str = Query(default="csv", pattern="^(csv|json)$"),
+    session: Session = Depends(_get_session),
+):
+    effective_brand = brand_slug if brand_slug is not None else _FOCUS_BRAND
+    repo = ProductRepository(session)
+    products = repo.get_products(
+        brand_slug=effective_brand,
+        verified_only=verified_only,
+        search=search,
+        limit=10000,
+        offset=0,
+    )
+
+    if format == "json":
+        items = [_serialize_product_list_item(p) for p in products]
+        return items
+
+    # CSV export
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=_EXPORT_COLUMNS, extrasaction="ignore")
+    writer.writeheader()
+    for p in products:
+        row = {}
+        for col in _EXPORT_COLUMNS:
+            val = getattr(p, col, None)
+            if isinstance(val, (list, dict)):
+                import json
+                val = json.dumps(val, ensure_ascii=False)
+            row[col] = val
+        writer.writerow(row)
+
+    buf.seek(0)
+    return StreamingResponse(
+        buf,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=products.csv"},
+    )
 
 
 @router.get("/products/{product_id}")

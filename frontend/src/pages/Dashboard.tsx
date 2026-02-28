@@ -122,9 +122,10 @@ function StatusLegendCard({ color, icon, label, count, description, delay }: {
 
 export default function Dashboard() {
   const { data: brands, loading: brandsLoading, error: brandsError } = useAPI(getBrands)
-  const { data: products, loading: productsLoading, error: productsError } = useAPI(
+  const { data: productsResponse, loading: productsLoading, error: productsError } = useAPI(
     () => getProducts({ verified_only: false, per_page: 1000 })
   )
+  const products = productsResponse?.items ?? null
 
   const loading = brandsLoading || productsLoading
   const error = brandsError || productsError
