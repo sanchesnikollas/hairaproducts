@@ -38,6 +38,7 @@ class CoverageEngine:
         extraction_config = blueprint.get("extraction", {})
         inci_selectors = extraction_config.get("inci_selectors", [])
         name_selectors = extraction_config.get("name_selectors", [])
+        image_selectors = extraction_config.get("image_selectors", [])
 
         report.discovered_total = len(discovered_urls)
 
@@ -60,7 +61,7 @@ class CoverageEngine:
         # Extract each product URL
         for url in hair_urls:
             try:
-                product_data = self._extract_product(url, brand_slug, inci_selectors, name_selectors, blueprint_config=blueprint)
+                product_data = self._extract_product(url, brand_slug, inci_selectors, name_selectors, image_selectors=image_selectors, blueprint_config=blueprint)
                 if not product_data:
                     continue
 
@@ -137,6 +138,7 @@ class CoverageEngine:
         brand_slug: str,
         inci_selectors: list[str],
         name_selectors: list[str],
+        image_selectors: list[str] | None = None,
         blueprint_config: dict | None = None,
     ) -> ProductExtraction | None:
         # Fetch page HTML
@@ -156,6 +158,7 @@ class CoverageEngine:
             url=url,
             inci_selectors=inci_selectors,
             name_selectors=name_selectors,
+            image_selectors=image_selectors or None,
         )
 
         product_name = det_result.get("product_name") or ""

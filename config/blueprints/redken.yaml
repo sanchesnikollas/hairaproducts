@@ -1,0 +1,35 @@
+brand_slug: redken
+brand_name: Redken
+platform: custom
+domain: www.redken.com.br
+allowed_domains:
+- www.redken.com.br
+entrypoints:
+- https://www.redken.com.br/produtos
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.redken.com.br/sitemap.xml
+  product_url_pattern: /produtos/
+  max_pages: 500
+  pagination:
+    type: scroll
+    max_pages: 10
+extraction:
+  inci_selectors:
+  - div[data-ioplist] p
+  - .tabs__pane__innercontent p
+  - details .accordion__content p
+  - .product-description p
+  name_selectors:
+  - h1.product-description__headers--product-name
+  - h1
+  - .product-name
+  image_selectors:
+  - img.product-mainImage
+  - .product-main-image-container img
+  - .pdpimage img.related-images
+  - img.lazyloaded
+  wait_for_selector: null
+  use_llm_fallback: true
+version: 1

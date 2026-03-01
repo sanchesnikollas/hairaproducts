@@ -228,6 +228,7 @@ def extract_product_deterministic(
     url: str,
     inci_selectors: list[str] | None = None,
     name_selectors: list[str] | None = None,
+    image_selectors: list[str] | None = None,
 ) -> dict:
     evidence_list = []
     result = {
@@ -283,7 +284,7 @@ def extract_product_deterministic(
         html,
         inci_selectors=default_inci_selectors,
         name_selectors=default_name_selectors if not result["product_name"] else None,
-        image_selectors=[".product-image", "img.product-img"] if not result["image_url_main"] else None,
+        image_selectors=(image_selectors or [".product-image", "img.product-img"]) if not result["image_url_main"] else None,
     )
 
     if not result["product_name"] and sel_result["name"]:

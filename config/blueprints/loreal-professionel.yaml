@@ -1,0 +1,36 @@
+brand_slug: loreal-professionel
+brand_name: "L'Oréal Professionnel"
+platform: custom
+domain: www.lorealprofessionnel.com.br
+allowed_domains:
+- www.lorealprofessionnel.com.br
+entrypoints:
+- https://www.lorealprofessionnel.com.br/todos-produtos
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.lorealprofessionnel.com.br/sitemap.xml
+  product_url_pattern: /todos-produtos/
+  max_pages: 500
+  pagination:
+    type: scroll
+    max_pages: 10
+extraction:
+  inci_selectors:
+  - .accordion__content p
+  - .product-description p
+  - '#ingredientes p'
+  - '#composicao p'
+  - '[data-tab=''ingredientes''] p'
+  name_selectors:
+  - h1
+  - .product-name
+  - .product-title
+  image_selectors:
+  - .media-gallery img
+  - .pdp-top img
+  - picture.picture img
+  - img.lazyloaded
+  wait_for_selector: null
+  use_llm_fallback: true
+version: 1
