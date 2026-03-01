@@ -95,7 +95,13 @@ def health():
 
 # ── Serve frontend static files in production ──
 
-_FRONTEND_DIST = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+# Try multiple possible locations for the frontend dist
+_FRONTEND_DIST_CANDIDATES = [
+    Path(__file__).resolve().parent.parent.parent / "frontend" / "dist",  # dev (editable install)
+    Path("/app/frontend/dist"),  # Docker container
+    Path.cwd() / "frontend" / "dist",  # fallback (cwd-based)
+]
+_FRONTEND_DIST = next((p for p in _FRONTEND_DIST_CANDIDATES if p.is_dir()), _FRONTEND_DIST_CANDIDATES[0])
 
 if _FRONTEND_DIST.is_dir():
     # Serve Vite-built assets (JS, CSS, images)

@@ -16,23 +16,17 @@ RUN cd frontend && npm ci
 COPY frontend/ ./frontend/
 RUN cd frontend && npm run build
 
-# Copy backend source + config
+# Copy all source
 COPY pyproject.toml ./
 COPY src/ ./src/
 COPY config/ ./config/
 COPY alembic.ini ./
+COPY entrypoint.sh ./
 
-# Install Python dependencies (after src/ is available)
-RUN pip install --no-cache-dir .
+# Install Python package (editable so src imports work from /app)
+RUN pip install --no-cache-dir -e .
 
 # Expose port (Railway sets PORT env var)
 EXPOSE ${PORT:-8000}
 
-# Start: run migrations then launch server
-CMD sh -c "echo 'Running migrations...' && \
-    alembic upgrade head 2>&1 && \
-    echo 'Migrations complete. Starting server...' && \
-    uvicorn src.api.main:app \
-    --host 0.0.0.0 \
-    --port ${PORT:-8000} \
-    --workers 2"
+ENTRYPOINT ["sh", "/app/entrypoint.sh"]
