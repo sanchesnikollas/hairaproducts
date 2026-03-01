@@ -29,8 +29,10 @@ COPY alembic.ini ./
 EXPOSE ${PORT:-8000}
 
 # Start: run migrations then launch server
-CMD alembic upgrade head && \
+CMD sh -c "echo 'Running migrations...' && \
+    alembic upgrade head 2>&1 && \
+    echo 'Migrations complete. Starting server...' && \
     uvicorn src.api.main:app \
     --host 0.0.0.0 \
     --port ${PORT:-8000} \
-    --workers 2
+    --workers 2"
