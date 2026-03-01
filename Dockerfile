@@ -9,10 +9,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY pyproject.toml ./
-RUN pip install --no-cache-dir -e .
-
 # Build frontend
 COPY frontend/package.json frontend/package-lock.json ./frontend/
 RUN cd frontend && npm ci
@@ -20,10 +16,14 @@ RUN cd frontend && npm ci
 COPY frontend/ ./frontend/
 RUN cd frontend && npm run build
 
-# Copy backend source
+# Copy backend source + config
+COPY pyproject.toml ./
 COPY src/ ./src/
 COPY config/ ./config/
 COPY alembic.ini ./
+
+# Install Python dependencies (after src/ is available)
+RUN pip install --no-cache-dir .
 
 # Expose port (Railway sets PORT env var)
 EXPOSE ${PORT:-8000}
