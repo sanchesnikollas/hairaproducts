@@ -20,8 +20,15 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    with op.batch_alter_table('product_evidence') as batch_op:
-        batch_op.alter_column('evidence_locator',
+    conn = op.get_bind()
+    if conn.dialect.name == 'sqlite':
+        with op.batch_alter_table('product_evidence') as batch_op:
+            batch_op.alter_column('evidence_locator',
+                       existing_type=sa.VARCHAR(length=500),
+                       type_=sa.Text(),
+                       existing_nullable=True)
+    else:
+        op.alter_column('product_evidence', 'evidence_locator',
                    existing_type=sa.VARCHAR(length=500),
                    type_=sa.Text(),
                    existing_nullable=True)
@@ -29,8 +36,15 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Downgrade schema."""
-    with op.batch_alter_table('product_evidence') as batch_op:
-        batch_op.alter_column('evidence_locator',
+    conn = op.get_bind()
+    if conn.dialect.name == 'sqlite':
+        with op.batch_alter_table('product_evidence') as batch_op:
+            batch_op.alter_column('evidence_locator',
+                       existing_type=sa.Text(),
+                       type_=sa.VARCHAR(length=500),
+                       existing_nullable=True)
+    else:
+        op.alter_column('product_evidence', 'evidence_locator',
                    existing_type=sa.Text(),
                    type_=sa.VARCHAR(length=500),
                    existing_nullable=True)
