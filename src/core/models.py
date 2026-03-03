@@ -61,6 +61,7 @@ class Evidence(BaseModel):
     evidence_locator: str
     raw_source_text: str
     extraction_method: ExtractionMethod
+    source_section_label: Optional[str] = None
     extracted_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -78,6 +79,8 @@ class ProductExtraction(BaseModel):
     inci_ingredients: Optional[list[str]] = None
     description: Optional[str] = None
     usage_instructions: Optional[str] = None
+    composition: Optional[str] = None
+    care_usage: Optional[str] = None
     benefits_claims: Optional[list[str]] = None
     size_volume: Optional[str] = None
     price: Optional[float] = None
