@@ -34,6 +34,38 @@ extraction:
   - .product-image img
   - img.product-img
   - .gallery img
+  section_label_map:
+    description:
+      labels:
+      - descricao
+      - sobre o produto
+      - detalhes do produto
+      - o produto
+    care_usage:
+      labels:
+      - modo de uso
+      - como usar
+      - modo de aplicacao
+      - instrucoes de uso
+      - como aplicar
+    composition:
+      labels:
+      - principios ativos
+      - ativos
+      - formula
+      - tecnologia
+      - composicao do produto
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - inci
+      - composicao completa
+      - lista de ingredientes
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
   wait_for_selector: null
   use_llm_fallback: true
 version: 1
