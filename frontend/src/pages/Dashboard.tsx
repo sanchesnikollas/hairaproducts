@@ -224,7 +224,38 @@ export default function Dashboard() {
 
   if (loading) return <LoadingState message="Loading dashboard data..." />
   if (error) return <ErrorState message={error} />
-  if (!stats || !brand) return null
+  if (!stats || !brand) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="space-y-6"
+      >
+        <div className="w-20 h-20 mx-auto rounded-2xl bg-champagne/10 flex items-center justify-center">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-champagne-dark">
+            <path d="M9 2h6l3 7H6L9 2z" />
+            <rect x="4" y="9" width="16" height="13" rx="2" />
+            <path d="M10 13h4" />
+          </svg>
+        </div>
+        <div>
+          <h1 className="font-display text-3xl font-semibold text-ink tracking-tight">Welcome to HAIRA</h1>
+          <p className="text-ink-muted text-sm mt-2 max-w-md mx-auto">
+            No brand data found yet. Run the pipeline to discover, extract, and analyze hair products.
+          </p>
+        </div>
+        <div className="bg-white rounded-2xl border border-ink/5 p-6 max-w-lg mx-auto text-left space-y-3">
+          <p className="text-xs uppercase tracking-[0.12em] font-semibold text-ink-muted">Getting started</p>
+          <div className="space-y-2 text-sm text-ink-muted">
+            <p><span className="font-mono text-xs bg-ink/5 px-2 py-0.5 rounded">haira registry --input "Lista de Produtos.xlsx"</span></p>
+            <p><span className="font-mono text-xs bg-ink/5 px-2 py-0.5 rounded">haira blueprint --brand &lt;slug&gt;</span></p>
+            <p><span className="font-mono text-xs bg-ink/5 px-2 py-0.5 rounded">haira scrape --brand &lt;slug&gt;</span></p>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  )
 
   const brandName = brand.brand_slug.charAt(0).toUpperCase() + brand.brand_slug.slice(1)
 
