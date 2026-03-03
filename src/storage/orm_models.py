@@ -40,6 +40,8 @@ class ProductORM(Base):
     inci_ingredients = Column(JSON, nullable=True)
     description = Column(Text, nullable=True)
     usage_instructions = Column(Text, nullable=True)
+    composition = Column(Text, nullable=True)
+    care_usage = Column(Text, nullable=True)
     benefits_claims = Column(JSON, nullable=True)
     size_volume = Column(String(100), nullable=True)
     price = Column(Float, nullable=True)
@@ -67,6 +69,7 @@ class ProductEvidenceORM(Base):
     evidence_locator = Column(Text, nullable=True)
     raw_source_text = Column(Text, nullable=True)
     extraction_method = Column(String(50), nullable=False)
+    source_section_label = Column(String(255), nullable=True)
     extracted_at = Column(DateTime, nullable=False, default=_utcnow)
 
     product = relationship("ProductORM", back_populates="evidence")
