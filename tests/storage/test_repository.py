@@ -103,6 +103,56 @@ class TestUpdateProductLabels:
         repo.update_product_labels("nonexistent-id", {"detected": []})
 
 
+class TestTaxonomyFieldsInUpsert:
+    def test_composition_and_care_usage_persisted_on_insert(self, repo, db_session):
+        extraction = _make_extraction(
+            composition="Contains Keratin and Argan Oil",
+            care_usage="Apply to wet hair, massage, rinse after 3 minutes",
+        )
+        qa = QAResult(status=QAStatus.CATALOG_ONLY, passed=True, checks_passed=["name_valid"])
+        product_id = repo.upsert_product(extraction, qa)
+        db_session.flush()
+        product = repo.get_product_by_id(product_id)
+        assert product.composition == "Contains Keratin and Argan Oil"
+        assert product.care_usage == "Apply to wet hair, massage, rinse after 3 minutes"
+
+    def test_composition_and_care_usage_persisted_on_update(self, repo, db_session):
+        extraction = _make_extraction()
+        qa = QAResult(status=QAStatus.CATALOG_ONLY, passed=True, checks_passed=["name_valid"])
+        repo.upsert_product(extraction, qa)
+        db_session.commit()
+
+        updated = _make_extraction(
+            composition="New composition text",
+            care_usage="New care usage text",
+        )
+        repo.upsert_product(updated, qa)
+        db_session.commit()
+
+        products = repo.get_products(brand_slug="amend")
+        assert products[0].composition == "New composition text"
+        assert products[0].care_usage == "New care usage text"
+
+    def test_evidence_source_section_label_persisted(self, repo, db_session):
+        ev = Evidence(
+            field_name="composition",
+            source_url="https://www.amend.com.br/shampoo-gold-black",
+            evidence_locator="h2:Composição",
+            raw_source_text="Contains Keratin and Argan Oil",
+            extraction_method=ExtractionMethod.HTML_SELECTOR,
+            source_section_label="Composição",
+        )
+        extraction = _make_extraction(evidence=[ev])
+        qa = QAResult(status=QAStatus.CATALOG_ONLY, passed=True, checks_passed=["name_valid"])
+        product_id = repo.upsert_product(extraction, qa)
+        db_session.flush()
+
+        from src.storage.orm_models import ProductEvidenceORM
+        evidence_rows = db_session.query(ProductEvidenceORM).filter_by(product_id=product_id).all()
+        assert len(evidence_rows) == 1
+        assert evidence_rows[0].source_section_label == "Composição"
+
+
 class TestBrandStats:
     def test_upsert_coverage(self, repo, db_session):
         stats = {

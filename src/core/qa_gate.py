@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 from src.core.inci_validator import validate_inci_list
 from src.core.models import ProductExtraction, QAResult, QAStatus
 from src.core.taxonomy import HAIR_PRODUCT_TYPES
+from src.extraction.section_classifier import validate_inci_content
 
 
 @dataclass
@@ -70,6 +71,10 @@ def run_product_qa(
             checks_failed=failed,
             rejection_reason="; ".join(failed),
         )
+
+    # Soft check: composition that looks like formal INCI (cross-contamination)
+    if product.composition and validate_inci_content(product.composition):
+        passed.append("composition_looks_like_inci")
 
     # If no INCI, it's catalog_only
     if not product.inci_ingredients:

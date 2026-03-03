@@ -1333,6 +1333,22 @@ function ProductModal({
                 />
               </div>
 
+              {/* Composition (read-only, from section classifier) */}
+              {product.composition && (
+                <div>
+                  <FieldLabel label="Composition" status="ok" />
+                  <p className="text-sm text-ink-muted bg-cream/70 rounded-lg px-3 py-2">{product.composition}</p>
+                </div>
+              )}
+
+              {/* Care & Usage (read-only, from section classifier) */}
+              {product.care_usage && (
+                <div>
+                  <FieldLabel label="Care & Usage" status="ok" />
+                  <p className="text-sm text-ink-muted bg-cream/70 rounded-lg px-3 py-2">{product.care_usage}</p>
+                </div>
+              )}
+
               {/* Benefits & Claims */}
               <div>
                 <FieldLabel label={`Benefits & Claims (${benefits.length})`} status={v.benefits_claims} />
@@ -1613,6 +1629,11 @@ function EvidenceRow({ ev }: { ev: ProductEvidence }) {
         {ev.extraction_method && (
           <span className="text-[10px] uppercase tracking-wider text-ink-faint px-1.5 py-0.5 bg-ink/5 rounded">
             {ev.extraction_method}
+          </span>
+        )}
+        {ev.source_section_label && (
+          <span className="text-[10px] text-champagne-dark px-1.5 py-0.5 bg-champagne/10 rounded">
+            {ev.source_section_label}
           </span>
         )}
         {timestamp && (

@@ -229,6 +229,7 @@ def extract_product_deterministic(
     inci_selectors: list[str] | None = None,
     name_selectors: list[str] | None = None,
     image_selectors: list[str] | None = None,
+    section_label_map: dict | None = None,
 ) -> dict:
     evidence_list = []
     result = {
@@ -236,6 +237,8 @@ def extract_product_deterministic(
         "image_url_main": None,
         "inci_raw": None,
         "description": None,
+        "care_usage": None,
+        "composition": None,
         "price": None,
         "currency": None,
         "evidence": evidence_list,
@@ -271,6 +274,26 @@ def extract_product_deterministic(
                 result["price"] = float(offers["price"])
                 result["currency"] = offers.get("priceCurrency", "BRL")
         result["extraction_method"] = "jsonld"
+
+    # Section classifier: extract taxonomy fields from headings
+    if section_label_map:
+        from src.extraction.section_classifier import extract_sections_from_html
+        section_result = extract_sections_from_html(html, section_label_map)
+        if section_result.care_usage and not result["care_usage"]:
+            result["care_usage"] = section_result.care_usage
+        if section_result.composition and not result["composition"]:
+            result["composition"] = section_result.composition
+        if section_result.ingredients_inci_raw and not result["inci_raw"]:
+            result["inci_raw"] = section_result.ingredients_inci_raw
+        if section_result.description and not result["description"]:
+            result["description"] = section_result.description
+        # Create evidence entries for section-extracted fields
+        for section in section_result.sections:
+            evidence_list.append(create_evidence(
+                section.taxonomy_field, url, section.selector,
+                section.content[:500], ExtractionMethod.HTML_SELECTOR,
+                source_section_label=section.source_section_label,
+            ))
 
     # Try CSS selectors to fill gaps
     default_name_selectors = name_selectors or ["h1.product-name", "h1", ".product-title"]

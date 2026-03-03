@@ -151,6 +151,66 @@ class TestProductsEndpoint:
         assert items[0]["product_name"] == "Shampoo Gold Black"
 
 
+class TestTaxonomyFieldsInAPI:
+    def test_product_detail_includes_taxonomy_fields(self, client, db_session):
+        from src.storage.orm_models import ProductEvidenceORM
+        p = ProductORM(
+            brand_slug="amend",
+            product_name="Shampoo Taxonomy",
+            product_url="https://www.amend.com.br/taxonomy-test",
+            image_url_main="https://img.com/x.jpg",
+            verification_status="catalog_only",
+            gender_target="unisex",
+            confidence=0.5,
+            composition="Contains Keratin and Argan Oil",
+            care_usage="Apply to wet hair, massage, rinse",
+        )
+        db_session.add(p)
+        db_session.flush()
+        ev = ProductEvidenceORM(
+            product_id=p.id,
+            field_name="composition",
+            source_url="https://www.amend.com.br/taxonomy-test",
+            evidence_locator="h2:Composição",
+            raw_source_text="Contains Keratin and Argan Oil",
+            extraction_method="html_selector",
+            source_section_label="Composição",
+        )
+        db_session.add(ev)
+        db_session.commit()
+
+        resp = client.get(f"/api/products/{p.id}")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["composition"] == "Contains Keratin and Argan Oil"
+        assert body["care_usage"] == "Apply to wet hair, massage, rinse"
+        assert len(body["evidence"]) == 1
+        assert body["evidence"][0]["source_section_label"] == "Composição"
+
+    def test_product_list_includes_taxonomy_fields(self, client, db_session):
+        p = ProductORM(
+            brand_slug="amend",
+            product_name="Shampoo List Tax",
+            product_url="https://www.amend.com.br/list-tax-test",
+            image_url_main="https://img.com/x.jpg",
+            verification_status="catalog_only",
+            gender_target="unisex",
+            confidence=0.5,
+            composition="Active ingredients here",
+            care_usage="Apply and rinse",
+        )
+        db_session.add(p)
+        db_session.commit()
+
+        resp = client.get("/api/products")
+        assert resp.status_code == 200
+        items = resp.json()["items"]
+        assert len(items) >= 1
+        item = next(i for i in items if i["product_name"] == "Shampoo List Tax")
+        assert item["composition"] == "Active ingredients here"
+        assert item["care_usage"] == "Apply and rinse"
+
+
 class TestBrandsEndpoint:
     def test_list_empty(self, client):
         resp = client.get("/api/brands")

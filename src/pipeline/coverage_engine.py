@@ -39,6 +39,7 @@ class CoverageEngine:
         inci_selectors = extraction_config.get("inci_selectors", [])
         name_selectors = extraction_config.get("name_selectors", [])
         image_selectors = extraction_config.get("image_selectors", [])
+        section_label_map = extraction_config.get("section_label_map")
 
         report.discovered_total = len(discovered_urls)
 
@@ -61,7 +62,7 @@ class CoverageEngine:
         # Extract each product URL
         for url in hair_urls:
             try:
-                product_data = self._extract_product(url, brand_slug, inci_selectors, name_selectors, image_selectors=image_selectors, blueprint_config=blueprint)
+                product_data = self._extract_product(url, brand_slug, inci_selectors, name_selectors, image_selectors=image_selectors, blueprint_config=blueprint, section_label_map=section_label_map)
                 if not product_data:
                     continue
 
@@ -140,6 +141,7 @@ class CoverageEngine:
         name_selectors: list[str],
         image_selectors: list[str] | None = None,
         blueprint_config: dict | None = None,
+        section_label_map: dict | None = None,
     ) -> ProductExtraction | None:
         # Fetch page HTML
         if not self._browser:
@@ -159,6 +161,7 @@ class CoverageEngine:
             inci_selectors=inci_selectors,
             name_selectors=name_selectors,
             image_selectors=image_selectors or None,
+            section_label_map=section_label_map,
         )
 
         product_name = det_result.get("product_name") or ""
@@ -223,6 +226,8 @@ class CoverageEngine:
             product_category=product_category,
             inci_ingredients=inci_list,
             description=description,
+            composition=det_result.get("composition"),
+            care_usage=det_result.get("care_usage"),
             price=det_result.get("price"),
             currency=det_result.get("currency"),
             confidence=confidence,

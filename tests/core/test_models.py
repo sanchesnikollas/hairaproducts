@@ -95,6 +95,51 @@ class TestProductExtraction:
         assert len(product.inci_ingredients) == 5
 
 
+class TestEvidenceSectionLabel:
+    def test_evidence_has_source_section_label(self):
+        ev = Evidence(
+            field_name="ingredients_inci",
+            source_url="https://example.com",
+            evidence_locator="h2.section-title",
+            raw_source_text="Aqua, Cetearyl Alcohol",
+            extraction_method=ExtractionMethod.HTML_SELECTOR,
+            source_section_label="Ingredientes",
+        )
+        assert ev.source_section_label == "Ingredientes"
+
+    def test_evidence_section_label_defaults_none(self):
+        ev = Evidence(
+            field_name="inci_ingredients",
+            source_url="https://example.com",
+            evidence_locator=".selector",
+            raw_source_text="text",
+            extraction_method=ExtractionMethod.HTML_SELECTOR,
+        )
+        assert ev.source_section_label is None
+
+
+class TestProductExtractionTaxonomy:
+    def test_product_extraction_has_taxonomy_fields(self):
+        pe = ProductExtraction(
+            brand_slug="test",
+            product_name="Test Product",
+            product_url="https://example.com/product",
+            composition="Contains Keratin and Argan Oil",
+            care_usage="Apply to wet hair, massage, rinse after 3 minutes",
+        )
+        assert pe.composition == "Contains Keratin and Argan Oil"
+        assert pe.care_usage == "Apply to wet hair, massage, rinse after 3 minutes"
+
+    def test_taxonomy_fields_default_none(self):
+        pe = ProductExtraction(
+            brand_slug="test",
+            product_name="Test Product",
+            product_url="https://example.com/product",
+        )
+        assert pe.composition is None
+        assert pe.care_usage is None
+
+
 class TestQAResult:
     def test_pass(self):
         result = QAResult(

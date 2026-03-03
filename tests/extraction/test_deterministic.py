@@ -52,6 +52,112 @@ class TestExtractProductDeterministic:
         assert len(result["evidence"]) > 0
 
 
+class TestSectionLabelMapIntegration:
+    """Tests for section_label_map parameter in extract_product_deterministic."""
+
+    def test_extracts_care_usage_and_composition(self):
+        html = """
+        <html><head>
+        <script type="application/ld+json">
+        {"@context": "https://schema.org", "@type": "Product", "name": "Shampoo Test",
+         "image": "https://example.com/img.jpg"}
+        </script>
+        </head><body>
+            <h1>Shampoo Test</h1>
+            <h2>Descricao</h2>
+            <p>Um shampoo nutritivo para cabelos secos.</p>
+            <h2>Modo de Uso</h2>
+            <p>Aplique nos cabelos molhados e massageie.</p>
+            <h2>Principios Ativos</h2>
+            <p>Queratina hidrolisada, oleo de argan, pantenol.</p>
+            <h2>Ingredientes</h2>
+            <p>Aqua, Sodium Laureth Sulfate, Cocamidopropyl Betaine, Glycerin, Parfum, Citric Acid</p>
+        </body></html>
+        """
+        section_label_map = {
+            "description": {"labels": ["descricao", "sobre o produto"]},
+            "care_usage": {"labels": ["modo de uso", "como usar"]},
+            "composition": {"labels": ["principios ativos", "ativos"]},
+            "ingredients_inci": {
+                "labels": ["ingredientes", "inci"],
+                "validators": ["has_separators", "min_length_30"],
+            },
+        }
+        result = extract_product_deterministic(
+            html=html,
+            url="https://example.com/shampoo-test",
+            section_label_map=section_label_map,
+        )
+        assert result["care_usage"] == "Aplique nos cabelos molhados e massageie."
+        assert result["composition"] == "Queratina hidrolisada, oleo de argan, pantenol."
+        assert result["inci_raw"] is not None
+        assert "Aqua" in result["inci_raw"]
+        assert result["description"] is not None
+
+    def test_section_classifier_fills_description_when_jsonld_missing(self):
+        html = """
+        <html><body>
+            <h1>Condicionador Test</h1>
+            <h2>Sobre o Produto</h2>
+            <p>Um condicionador premium para cabelos danificados.</p>
+        </body></html>
+        """
+        section_label_map = {
+            "description": {"labels": ["sobre o produto", "descricao"]},
+            "care_usage": {"labels": ["modo de uso"]},
+            "composition": {"labels": ["principios ativos"]},
+            "ingredients_inci": {"labels": ["ingredientes"]},
+        }
+        result = extract_product_deterministic(
+            html=html,
+            url="https://example.com/condicionador",
+            section_label_map=section_label_map,
+        )
+        assert result["description"] == "Um condicionador premium para cabelos danificados."
+
+    def test_evidence_includes_source_section_label(self):
+        html = """
+        <html><body>
+            <h1>Mascara Test</h1>
+            <h2>Modo de Uso</h2>
+            <p>Aplique mecha a mecha nos cabelos limpos.</p>
+        </body></html>
+        """
+        section_label_map = {
+            "description": {"labels": ["descricao"]},
+            "care_usage": {"labels": ["modo de uso"]},
+            "composition": {"labels": ["principios ativos"]},
+            "ingredients_inci": {"labels": ["ingredientes"]},
+        }
+        result = extract_product_deterministic(
+            html=html,
+            url="https://example.com/mascara",
+            section_label_map=section_label_map,
+        )
+        section_evidence = [e for e in result["evidence"] if e.source_section_label is not None]
+        assert len(section_evidence) >= 1
+        assert section_evidence[0].source_section_label == "Modo de Uso"
+
+    def test_no_section_label_map_preserves_existing_behavior(self):
+        """When section_label_map is None, behavior is unchanged."""
+        html = """
+        <html><head>
+        <script type="application/ld+json">
+        {"@context": "https://schema.org", "@type": "Product", "name": "Basic Product",
+         "description": "A basic product.", "image": "https://example.com/img.jpg"}
+        </script>
+        </head><body><h1>Basic Product</h1></body></html>
+        """
+        result = extract_product_deterministic(
+            html=html,
+            url="https://example.com/basic",
+        )
+        assert result["product_name"] == "Basic Product"
+        assert result["description"] == "A basic product."
+        assert result.get("care_usage") is None
+        assert result.get("composition") is None
+
+
 class TestInciTabLabels:
     """Tests for _extract_inci_by_tab_labels with various real-world DOM patterns."""
 

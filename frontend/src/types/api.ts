@@ -25,6 +25,7 @@ export interface ProductEvidence {
   evidence_locator: string | null;
   raw_source_text: string | null;
   extraction_method: string | null;
+  source_section_label: string | null;
   extracted_at: string | null;
 }
 
@@ -66,6 +67,8 @@ export interface Product {
   extraction_method: string | null;
   description: string | null;
   usage_instructions: string | null;
+  composition: string | null;
+  care_usage: string | null;
   benefits_claims: string[] | null;
   size_volume: string | null;
   line_collection: string | null;

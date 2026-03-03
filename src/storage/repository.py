@@ -33,6 +33,8 @@ class ProductRepository:
             existing.inci_ingredients = extraction.inci_ingredients
             existing.description = extraction.description
             existing.usage_instructions = extraction.usage_instructions
+            existing.composition = extraction.composition
+            existing.care_usage = extraction.care_usage
             existing.benefits_claims = extraction.benefits_claims
             existing.size_volume = extraction.size_volume
             existing.price = extraction.price
@@ -60,6 +62,8 @@ class ProductRepository:
                 inci_ingredients=extraction.inci_ingredients,
                 description=extraction.description,
                 usage_instructions=extraction.usage_instructions,
+                composition=extraction.composition,
+                care_usage=extraction.care_usage,
                 benefits_claims=extraction.benefits_claims,
                 size_volume=extraction.size_volume,
                 price=extraction.price,
@@ -83,6 +87,7 @@ class ProductRepository:
                 evidence_locator=ev.evidence_locator,
                 raw_source_text=ev.raw_source_text,
                 extraction_method=ev.extraction_method.value,
+                source_section_label=ev.source_section_label,
                 extracted_at=ev.extracted_at,
             )
             self._session.add(evidence_orm)

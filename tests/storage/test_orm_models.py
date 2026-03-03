@@ -72,6 +72,59 @@ class TestProductORM:
         assert len(product.evidence) == 1
 
 
+class TestProductTaxonomyColumns:
+    def test_product_has_taxonomy_columns(self):
+        """Verify new taxonomy columns exist on ProductORM."""
+        columns = {c.name for c in ProductORM.__table__.columns}
+        assert "composition" in columns
+        assert "care_usage" in columns
+
+    def test_evidence_has_section_label_column(self):
+        """Verify source_section_label column exists on ProductEvidenceORM."""
+        columns = {c.name for c in ProductEvidenceORM.__table__.columns}
+        assert "source_section_label" in columns
+
+    def test_product_taxonomy_fields_persist(self, db_session):
+        product = ProductORM(
+            brand_slug="amend",
+            product_name="Shampoo Test",
+            product_url="https://www.amend.com.br/shampoo-test",
+            verification_status="catalog_only",
+            gender_target="unknown",
+            confidence=0.0,
+            composition="Contains Keratin",
+            care_usage="Apply to wet hair",
+        )
+        db_session.add(product)
+        db_session.commit()
+        loaded = db_session.get(ProductORM, product.id)
+        assert loaded.composition == "Contains Keratin"
+        assert loaded.care_usage == "Apply to wet hair"
+
+    def test_evidence_section_label_persists(self, db_session):
+        product = ProductORM(
+            brand_slug="amend", product_name="Shampoo",
+            product_url="https://www.amend.com.br/shampoo-ev",
+            verification_status="catalog_only", gender_target="unknown",
+            confidence=0.0,
+        )
+        db_session.add(product)
+        db_session.flush()
+        evidence = ProductEvidenceORM(
+            product_id=product.id,
+            field_name="composition",
+            source_url="https://www.amend.com.br/shampoo-ev",
+            evidence_locator=".section",
+            raw_source_text="Contains Keratin",
+            extraction_method="html_selector",
+            source_section_label="Composicao",
+        )
+        db_session.add(evidence)
+        db_session.commit()
+        loaded = db_session.query(ProductEvidenceORM).filter_by(id=evidence.id).one()
+        assert loaded.source_section_label == "Composicao"
+
+
 class TestBrandCoverageORM:
     def test_create(self, db_session):
         cov = BrandCoverageORM(
