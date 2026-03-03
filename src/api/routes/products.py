@@ -97,6 +97,8 @@ def _serialize_product_list_item(p: ProductORM) -> dict:
         "confidence": p.confidence,
         "description": p.description,
         "usage_instructions": p.usage_instructions,
+        "composition": p.composition,
+        "care_usage": p.care_usage,
         "benefits_claims": p.benefits_claims,
         "product_labels": p.product_labels,
         "price": p.price,
@@ -216,6 +218,8 @@ def get_product(product_id: str, session: Session = Depends(_get_session)):
         "inci_ingredients": product.inci_ingredients,
         "description": product.description,
         "usage_instructions": product.usage_instructions,
+        "composition": product.composition,
+        "care_usage": product.care_usage,
         "benefits_claims": product.benefits_claims,
         "size_volume": product.size_volume,
         "price": product.price,
@@ -235,6 +239,7 @@ def get_product(product_id: str, session: Session = Depends(_get_session)):
                 "evidence_locator": e.evidence_locator,
                 "raw_source_text": e.raw_source_text,
                 "extraction_method": e.extraction_method,
+                "source_section_label": e.source_section_label,
                 "extracted_at": str(e.extracted_at) if e.extracted_at else None,
             }
             for e in product.evidence
