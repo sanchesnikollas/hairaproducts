@@ -12,6 +12,7 @@ def create_evidence(
     evidence_locator: str,
     raw_source_text: str,
     method: ExtractionMethod,
+    source_section_label: str | None = None,
 ) -> Evidence:
     return Evidence(
         field_name=field_name,
@@ -19,5 +20,6 @@ def create_evidence(
         evidence_locator=evidence_locator,
         raw_source_text=raw_source_text[:2000],
         extraction_method=method,
+        source_section_label=source_section_label,
         extracted_at=datetime.now(timezone.utc),
     )
