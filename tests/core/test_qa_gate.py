@@ -54,6 +54,28 @@ class TestCatalogOnlyQA:
         assert result.passed is False
 
 
+class TestCompositionCrossContamination:
+    def test_composition_with_inci_content_adds_soft_check(self):
+        """If composition looks like INCI, a soft warning check should be recorded."""
+        product = _make_product(
+            composition="Aqua, Sodium Laureth Sulfate, Cocamidopropyl Betaine, Glycerin, Parfum, Citric Acid",
+        )
+        result = run_product_qa(product, VALID_DOMAINS)
+        # Should still pass (soft check), but check should be recorded
+        assert result.passed is True
+        assert "composition_looks_like_inci" in result.checks_passed or "composition_looks_like_inci" in result.checks_failed
+
+    def test_composition_without_inci_content_no_warning(self):
+        """Normal composition text should not trigger the check."""
+        product = _make_product(
+            composition="Queratina hidrolisada e oleo de argan",
+        )
+        result = run_product_qa(product, VALID_DOMAINS)
+        assert result.passed is True
+        assert "composition_looks_like_inci" not in result.checks_passed
+        assert "composition_looks_like_inci" not in result.checks_failed
+
+
 class TestVerifiedInciQA:
     def test_valid_verified(self):
         product = _make_product(
