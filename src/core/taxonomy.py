@@ -25,6 +25,15 @@ HAIR_PRODUCT_TYPES: set[str] = {
     "ampule",
     "serum",
     "cream",
+    "coloracao",
+    "oxidante",
+    "descolorante",
+    "relaxante",
+    "ativador",
+    "protetor",
+    "reconstructor",
+    "reparador",
+    "kit",
 }
 
 HAIR_KEYWORDS: list[str] = [
@@ -65,26 +74,46 @@ KIDS_KEYWORDS: list[str] = [
 ]
 
 _TYPE_MAP: list[tuple[list[str], str]] = [
-    (["shampoo"], "shampoo"),
+    # --- Coloração / química (must come before generic matches) ---
+    (["água oxigenada", "agua oxigenada", "oxidante", "ox "], "oxidante"),
+    (["pó descolorante", "po descolorante", "descolorante"], "descolorante"),
+    (["coloração", "coloracao", "tintura", "tonalizante", "color intensy", "color delicaté", "color delicate", "magnific color"], "coloracao"),
+    (["relaxante", "relaxamento", "alisante", "guanidina"], "relaxante"),
+    # --- Tratamento / reconstrução ---
+    (["queratina líquida", "queratina liquida", "proteína capilar", "proteina capilar", "repositor de massa", "rmc system"], "reconstructor"),
+    (["reconstrutor", "reconstrução", "reconstrutora", "overnight"], "reconstructor"),
+    (["reparador de pontas", "reparador"], "reparador"),
+    (["ativador de cachos", "ativador"], "ativador"),
+    (["filtro solar", "defesa solar", "protetor da cor", "blindagem"], "protetor"),
+    # --- Básicos ---
+    (["shampoo", "xampu"], "shampoo"),
     (["condicionador", "conditioner"], "conditioner"),
     (["máscara", "mascara", "mask"], "mask"),
     (["leave-in", "leave in"], "leave_in"),
+    (["creme de pentear", "creme para pentear"], "cream"),
     (["óleo", "oleo", "oil"], "oil_serum"),
     (["sérum", "serum"], "oil_serum"),
     (["tônico", "tonico", "tonic"], "tonic"),
     (["pomada", "pomade"], "pomade"),
     (["gel"], "gel"),
     (["mousse"], "mousse"),
-    (["spray"], "spray"),
+    (["spray", "hair spray"], "spray"),
     (["cera", "wax"], "wax"),
     (["argila", "clay"], "clay"),
     (["pasta", "paste"], "paste"),
-    (["creme de pentear", "creme para pentear", "cream"], "cream"),
     (["ampola", "ampule"], "ampule"),
     (["finalizador", "finisher"], "finisher"),
-    (["tratamento", "treatment", "reconstrução"], "treatment"),
+    (["modelador", "modeladora"], "finisher"),
+    (["fluido", "fluído"], "finisher"),
+    (["seca sem frizz", "antifrizz"], "finisher"),
+    # --- Cremes genéricos (catch-all, must be after creme de pentear) ---
+    (["creme disciplinante", "creme nutritivo", "creme protetor", "creme reconstrutor"], "cream"),
+    (["cream", "creme"], "cream"),
+    (["tratamento", "treatment"], "treatment"),
     (["esfoliante", "exfoliant"], "exfoliant"),
     (["texturizador", "texturizer"], "texturizer"),
+    (["emulsão neutralizante", "neutralizante"], "relaxante"),
+    (["renovador capilar"], "treatment"),
 ]
 
 
@@ -97,8 +126,12 @@ CATEGORY_MAP: dict[str, str] = {
     "scalp_treatment": "tratamento",
     "exfoliant": "tratamento",
     "tonic": "tratamento",
+    "reconstructor": "tratamento",
+    "reparador": "tratamento",
+    "protetor": "tratamento",
     "leave_in": "leave_in",
     "cream": "leave_in",
+    "ativador": "leave_in",
     "oil_serum": "oleo_serum",
     "serum": "oleo_serum",
     "gel": "styling",
@@ -110,11 +143,17 @@ CATEGORY_MAP: dict[str, str] = {
     "paste": "styling",
     "texturizer": "styling",
     "finisher": "styling",
+    "coloracao": "coloracao",
+    "oxidante": "coloracao",
+    "descolorante": "coloracao",
+    "relaxante": "transformacao",
+    "kit": "kit",
 }
 
 VALID_CATEGORIES: set[str] = {
     "shampoo", "condicionador", "mascara", "tratamento",
     "leave_in", "oleo_serum", "styling", "coloracao",
+    "transformacao", "kit",
 }
 
 _COLORACAO_KEYWORDS: list[str] = [

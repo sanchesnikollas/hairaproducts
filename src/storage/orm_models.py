@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import (
-    Column, String, Text, Float, Integer, DateTime, ForeignKey, JSON, UniqueConstraint,
+    Boolean, Column, String, Text, Float, Integer, DateTime, ForeignKey, JSON, UniqueConstraint,
 )
 from sqlalchemy.orm import DeclarativeBase, relationship
 
@@ -35,6 +35,7 @@ class ProductORM(Base):
     product_type_raw = Column(String(255), nullable=True)
     product_type_normalized = Column(String(100), nullable=True)
     product_category = Column(String(100), nullable=True, index=True)
+    is_kit = Column(Boolean, nullable=False, default=False, index=True)
     gender_target = Column(String(20), nullable=False, default="unknown")
     hair_relevance_reason = Column(Text, nullable=True)
     inci_ingredients = Column(JSON, nullable=True)
