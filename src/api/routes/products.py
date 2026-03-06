@@ -19,14 +19,8 @@ from src.storage.repository import ProductRepository
 
 
 def _is_kit(p: ProductORM) -> bool:
-    """Detect if a product is a kit/combo."""
-    name = (p.product_name or "").lower()
-    url = (p.product_url or "").lower()
-    return (
-        "kit " in name or name.startswith("kit ")
-        or "/kit-" in url or "/kit/" in url
-        or "combo " in name or name.startswith("combo ")
-    )
+    """Check if a product is a kit/combo using the DB column."""
+    return bool(p.is_kit)
 
 
 def _validate_product(p: ProductORM) -> dict:
@@ -227,6 +221,7 @@ def get_product(product_id: str, session: Session = Depends(_get_session)):
         "line_collection": product.line_collection,
         "confidence": product.confidence,
         "product_labels": product.product_labels,
+        "is_kit": product.is_kit,
         "extraction_method": product.extraction_method,
         "created_at": str(product.created_at) if product.created_at else None,
         "updated_at": str(product.updated_at) if product.updated_at else None,
