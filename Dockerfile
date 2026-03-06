@@ -22,6 +22,7 @@ COPY src/ ./src/
 COPY config/ ./config/
 COPY alembic.ini ./
 COPY entrypoint.sh ./
+COPY haira.db ./
 
 # Install Python package (editable so src imports work from /app)
 RUN pip install --no-cache-dir -e .

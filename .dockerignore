@@ -1,7 +1,6 @@
 __pycache__
 *.pyc
 .env
-haira.db
 *.egg-info
 .venv
 node_modules
