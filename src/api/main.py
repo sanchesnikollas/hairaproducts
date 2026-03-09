@@ -93,24 +93,6 @@ def health():
     return {"status": "ok"}
 
 
-@app.post("/api/admin/cleanup-non-amend")
-def cleanup_non_amend():
-    """Temporary endpoint: remove all non-amend data."""
-    from sqlalchemy import text
-    from src.storage.database import get_engine
-    engine = get_engine()
-    results = {}
-    with engine.begin() as conn:
-        non_amend_ids = "SELECT id FROM products WHERE brand_slug <> 'amend'"
-        for table in ['product_evidence', 'quarantine_details']:
-            r = conn.execute(text(f'DELETE FROM {table} WHERE product_id IN ({non_amend_ids})'))
-            results[table] = r.rowcount
-        r = conn.execute(text("DELETE FROM products WHERE brand_slug <> 'amend'"))
-        results['products'] = r.rowcount
-        r = conn.execute(text("DELETE FROM brand_coverage WHERE brand_slug <> 'amend'"))
-        results['brand_coverage'] = r.rowcount
-    return {"status": "cleaned", "removed": results}
-
 
 # ── Serve frontend static files in production ──
 
