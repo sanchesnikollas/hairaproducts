@@ -1,11 +1,15 @@
 # src/api/routes/brands.py
 from __future__ import annotations
 
+import os
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from src.storage.database import get_engine
 from src.storage.repository import ProductRepository
+
+_FOCUS_BRAND = os.environ.get("FOCUS_BRAND", "").strip() or None
 
 router = APIRouter(tags=["brands"])
 
@@ -35,6 +39,7 @@ def list_brands(session: Session = Depends(_get_session)):
             "last_run": str(c.last_run) if c.last_run else None,
         }
         for c in coverages
+        if _FOCUS_BRAND is None or c.brand_slug == _FOCUS_BRAND
     ]
 
 
