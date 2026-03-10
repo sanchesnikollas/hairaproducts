@@ -111,13 +111,15 @@ class ProductRepository:
 
         return product_id
 
-    def _apply_filters(self, query, brand_slug=None, verified_only=False, search=None, category=None):
+    def _apply_filters(self, query, brand_slug=None, verified_only=False, search=None, category=None, exclude_kits=False):
         if brand_slug:
             query = query.filter(ProductORM.brand_slug == brand_slug)
         if verified_only:
             query = query.filter(ProductORM.verification_status == "verified_inci")
         if category:
             query = query.filter(ProductORM.product_category == category)
+        if exclude_kits:
+            query = query.filter(ProductORM.is_kit == False)
         if search:
             pattern = f"%{search}%"
             query = query.filter(
@@ -134,12 +136,13 @@ class ProductRepository:
         verified_only: bool = False,
         search: str | None = None,
         category: str | None = None,
+        exclude_kits: bool = False,
         limit: int = 100,
         offset: int = 0,
     ) -> list[ProductORM]:
         query = self._apply_filters(
             self._session.query(ProductORM),
-            brand_slug=brand_slug, verified_only=verified_only, search=search, category=category,
+            brand_slug=brand_slug, verified_only=verified_only, search=search, category=category, exclude_kits=exclude_kits,
         )
         return query.offset(offset).limit(limit).all()
 
@@ -149,10 +152,11 @@ class ProductRepository:
         verified_only: bool = False,
         search: str | None = None,
         category: str | None = None,
+        exclude_kits: bool = False,
     ) -> int:
         query = self._apply_filters(
             self._session.query(func.count(ProductORM.id)),
-            brand_slug=brand_slug, verified_only=verified_only, search=search, category=category,
+            brand_slug=brand_slug, verified_only=verified_only, search=search, category=category, exclude_kits=exclude_kits,
         )
         return query.scalar()
 

@@ -120,6 +120,7 @@ def list_products(
         verified_only=verified_only,
         search=search,
         category=category,
+        exclude_kits=exclude_kits,
         limit=limit,
         offset=offset,
     )
@@ -128,12 +129,9 @@ def list_products(
         verified_only=verified_only,
         search=search,
         category=category,
+        exclude_kits=exclude_kits,
     )
-    items = []
-    for p in products:
-        if exclude_kits and _is_kit(p):
-            continue
-        items.append(_serialize_product_list_item(p))
+    items = [_serialize_product_list_item(p) for p in products]
     return {"items": items, "total": total, "limit": limit, "offset": offset}
 
 
