@@ -1,3 +1,5 @@
+import { cn } from '@/lib/utils';
+
 interface ProgressBarProps {
   value: number; // 0-1
   label?: string;
@@ -6,14 +8,14 @@ interface ProgressBarProps {
   height?: 'sm' | 'md';
 }
 
-const colorMap = {
+const colorMap: Record<string, string> = {
   sage: 'bg-sage',
   champagne: 'bg-champagne',
   coral: 'bg-coral',
   amber: 'bg-amber',
 };
 
-const trackMap = {
+const trackMap: Record<string, string> = {
   sage: 'bg-sage-light/40',
   champagne: 'bg-champagne-light/40',
   coral: 'bg-coral-light/40',
@@ -28,7 +30,6 @@ export default function ProgressBar({
   height = 'sm',
 }: ProgressBarProps) {
   const pct = Math.round(value * 100);
-  const barHeight = height === 'sm' ? 'h-1.5' : 'h-2.5';
 
   return (
     <div className="flex flex-col gap-1">
@@ -42,9 +43,19 @@ export default function ProgressBar({
           )}
         </div>
       )}
-      <div className={`w-full ${barHeight} rounded-full ${trackMap[color]} overflow-hidden`}>
+      <div
+        className={cn(
+          'w-full rounded-full overflow-hidden',
+          height === 'sm' ? 'h-1.5' : 'h-2.5',
+          trackMap[color],
+        )}
+      >
         <div
-          className={`${barHeight} rounded-full ${colorMap[color]} progress-bar-animated`}
+          className={cn(
+            'rounded-full progress-bar-animated',
+            height === 'sm' ? 'h-1.5' : 'h-2.5',
+            colorMap[color],
+          )}
           style={{ width: `${pct}%` }}
         />
       </div>

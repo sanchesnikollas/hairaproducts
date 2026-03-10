@@ -1,34 +1,52 @@
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+
 interface StatusBadgeProps {
   status: string;
   size?: 'sm' | 'md';
 }
 
-const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
-  verified_inci: { bg: 'bg-sage-bg', text: 'text-sage', label: 'Verified INCI' },
-  catalog_only: { bg: 'bg-amber-bg', text: 'text-amber', label: 'Catalog Only' },
-  quarantined: { bg: 'bg-coral-bg', text: 'text-coral', label: 'Quarantined' },
-  done: { bg: 'bg-sage-bg', text: 'text-sage', label: 'Done' },
-  pending: { bg: 'bg-amber-bg', text: 'text-amber', label: 'Pending' },
-  running: { bg: 'bg-champagne/10', text: 'text-champagne-dark', label: 'Running' },
-  approved: { bg: 'bg-sage-bg', text: 'text-sage', label: 'Approved' },
-  rejected: { bg: 'bg-coral-bg', text: 'text-coral', label: 'Rejected' },
-  pending_review: { bg: 'bg-amber-bg', text: 'text-amber', label: 'Pending Review' },
+type StatusConfig = {
+  variant: 'secondary' | 'outline' | 'destructive';
+  label: string;
+  className?: string;
+};
+
+const statusConfig: Record<string, StatusConfig> = {
+  verified_inci: { variant: 'secondary', label: 'Verified INCI' },
+  catalog_only: { variant: 'outline', label: 'Catalog Only', className: 'border-amber/30 bg-amber-bg text-amber' },
+  quarantined: { variant: 'destructive', label: 'Quarantined' },
+  done: { variant: 'secondary', label: 'Done' },
+  pending: { variant: 'outline', label: 'Pending', className: 'border-amber/30 bg-amber-bg text-amber' },
+  running: { variant: 'outline', label: 'Running', className: 'border-champagne/30 bg-champagne-light/20 text-champagne-dark' },
+  approved: { variant: 'secondary', label: 'Approved' },
+  rejected: { variant: 'destructive', label: 'Rejected' },
+  pending_review: { variant: 'outline', label: 'Pending Review', className: 'border-amber/30 bg-amber-bg text-amber' },
+};
+
+const fallbackConfig: StatusConfig = {
+  variant: 'outline',
+  label: '',
+  className: 'border-ink/10 text-ink-muted',
 };
 
 export default function StatusBadge({ status, size = 'sm' }: StatusBadgeProps) {
-  const config = statusConfig[status] ?? {
-    bg: 'bg-ink/5',
-    text: 'text-ink-muted',
-    label: status,
-  };
+  const config = statusConfig[status] ?? { ...fallbackConfig, label: status };
 
-  const sizeClasses = size === 'sm' ? 'text-[11px] px-2.5 py-0.5' : 'text-xs px-3 py-1';
+  const sizeClasses = size === 'sm'
+    ? 'text-[11px] h-auto px-2.5 py-0.5'
+    : 'text-xs h-auto px-3 py-1';
 
   return (
-    <span
-      className={`inline-flex items-center rounded-full font-medium tracking-wide uppercase ${config.bg} ${config.text} ${sizeClasses}`}
+    <Badge
+      variant={config.variant}
+      className={cn(
+        'tracking-wide uppercase font-medium',
+        sizeClasses,
+        config.className,
+      )}
     >
       {config.label}
-    </span>
+    </Badge>
   );
 }
