@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { getBrandCoverage, getProducts } from '../lib/api';
-import { useAPI } from '../hooks/useAPI';
-import ProgressBar from '../components/ProgressBar';
-import StatusBadge from '../components/StatusBadge';
-import LoadingState, { ErrorState } from '../components/LoadingState';
+import { getBrandCoverage, getProducts } from '@/lib/api';
+import { useAPI } from '@/hooks/useAPI';
+import ProgressBar from '@/components/ProgressBar';
+import StatusBadge from '@/components/StatusBadge';
+import LoadingState, { ErrorState } from '@/components/LoadingState';
 
 function formatBrandName(slug: string): string {
   return slug
@@ -25,7 +25,7 @@ export default function BrandDetail() {
     [slug]
   );
 
-  const products = productsResponse?.items ?? [];
+  const products = useMemo(() => productsResponse?.items ?? [], [productsResponse]);
 
   const CATEGORY_LABELS: Record<string, string> = {
     shampoo: 'Shampoo',

@@ -1,12 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { getBrands } from '../lib/api';
-import { useAPI } from '../hooks/useAPI';
-import type { BrandCoverage } from '../types/api';
-import ProgressBar from '../components/ProgressBar';
-import StatusBadge from '../components/StatusBadge';
-import LoadingState, { ErrorState, EmptyState } from '../components/LoadingState';
+import { getBrands } from '@/lib/api';
+import { useAPI } from '@/hooks/useAPI';
+import type { BrandCoverage } from '@/types/api';
+import ProgressBar from '@/components/ProgressBar';
+import StatusBadge from '@/components/StatusBadge';
+import LoadingState, { ErrorState, EmptyState } from '@/components/LoadingState';
 
 type SortField = 'brand_slug' | 'verified_inci_rate' | 'extracted_total' | 'discovered_total';
 type SortDir = 'asc' | 'desc';
@@ -19,7 +19,7 @@ export default function BrandsDashboard() {
 
   const filtered = useMemo(() => {
     if (!brands) return [];
-    let result = brands.filter((b) =>
+    const result = brands.filter((b) =>
       b.brand_slug.toLowerCase().includes(search.toLowerCase())
     );
     result.sort((a, b) => {

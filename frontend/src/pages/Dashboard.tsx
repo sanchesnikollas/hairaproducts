@@ -5,9 +5,9 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from 'recharts'
-import { useAPI } from '../hooks/useAPI'
-import { getBrands, getProducts, getQuarantine } from '../lib/api'
-import { ErrorState } from '../components/LoadingState'
+import { useAPI } from '@/hooks/useAPI'
+import { getBrands, getProducts, getQuarantine } from '@/lib/api'
+import { ErrorState } from '@/components/LoadingState'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'

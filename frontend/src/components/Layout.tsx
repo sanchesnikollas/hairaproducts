@@ -66,9 +66,18 @@ export default function Layout() {
   }, []);
 
   useEffect(() => {
-    fetchQuarantineCount();
+    // Initial fetch + polling
+    const controller = new AbortController();
+    getQuarantine('pending')
+      .then((items) => {
+        if (!controller.signal.aborted) setQuarantineCount(items.length);
+      })
+      .catch(() => {});
     const interval = setInterval(fetchQuarantineCount, 60_000);
-    return () => clearInterval(interval);
+    return () => {
+      controller.abort();
+      clearInterval(interval);
+    };
   }, [fetchQuarantineCount]);
 
   // Cmd+K / Ctrl+K keyboard shortcut

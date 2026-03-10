@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
-import { getQuarantine, approveQuarantine, rejectQuarantine } from '../lib/api';
-import { useAPI } from '../hooks/useAPI';
-import type { QuarantineItem } from '../types/api';
+import { getQuarantine, approveQuarantine, rejectQuarantine } from '@/lib/api';
+import { useAPI } from '@/hooks/useAPI';
+import type { QuarantineItem } from '@/types/api';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

@@ -82,10 +82,11 @@ export default function ProductBrowser() {
       .catch(() => {});
   }, []);
 
-  // Reset page when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [status, category, excludeKits, verifiedOnly]);
+  // Wrap filter setters to also reset page
+  const handleStatusChange = useCallback((s: StatusFilter) => { setStatus(s); setPage(1); }, []);
+  const handleCategoryChange = useCallback((c: string) => { setCategory(c); setPage(1); }, []);
+  const handleExcludeKitsChange = useCallback((v: boolean) => { setExcludeKits(v); setPage(1); }, []);
+  const handleVerifiedOnlyChange = useCallback((v: boolean) => { setVerifiedOnly(v); setPage(1); }, []);
 
   // Fetch products
   const fetcher = useCallback(
@@ -107,7 +108,7 @@ export default function ProductBrowser() {
     [brandFilter, verifiedOnly, excludeKits, debouncedSearch, category, page, status]
   );
 
-  const products = response?.items ?? [];
+  const products = useMemo(() => response?.items ?? [], [response]);
   const totalProducts = response?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalProducts / PER_PAGE));
 
@@ -215,15 +216,15 @@ export default function ProductBrowser() {
       >
         <ProductFilters
           status={status}
-          onStatusChange={setStatus}
+          onStatusChange={handleStatusChange}
           search={search}
           onSearchChange={setSearch}
           category={category}
-          onCategoryChange={setCategory}
+          onCategoryChange={handleCategoryChange}
           excludeKits={excludeKits}
-          onExcludeKitsChange={setExcludeKits}
+          onExcludeKitsChange={handleExcludeKitsChange}
           verifiedOnly={verifiedOnly}
-          onVerifiedOnlyChange={setVerifiedOnly}
+          onVerifiedOnlyChange={handleVerifiedOnlyChange}
           categories={categories}
           statusCounts={statusCounts}
         />

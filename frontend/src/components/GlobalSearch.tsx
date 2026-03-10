@@ -52,9 +52,9 @@ export default function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) 
     }
   }, [open]);
 
-  const handleSelect = (_productId: string) => {
+  const handleSelect = (productId: string) => {
     onOpenChange(false);
-    navigate('/products');
+    navigate(`/products?highlight=${productId}`);
   };
 
   return (
