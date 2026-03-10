@@ -82,12 +82,12 @@ export default function ProductFilters({
           />
         </InputGroup>
 
-        <Select value={category} onValueChange={(v) => onCategoryChange(v ?? '')}>
+        <Select value={category || '__all__'} onValueChange={(v) => onCategoryChange(v === '__all__' ? '' : (v ?? ''))}>
           <SelectTrigger className="min-w-[160px]">
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All categories</SelectItem>
+            <SelectItem value="__all__">All categories</SelectItem>
             {categories.map((cat) => (
               <SelectItem key={cat} value={cat}>
                 {cat}

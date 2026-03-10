@@ -17,15 +17,30 @@ export default function QuarantineReview() {
   const [activeTab, setActiveTab] = useState<ReviewStatus>('pending');
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
 
+  // Fetch items for all tabs to get accurate counts
   const fetcher = useCallback(() => getQuarantine(activeTab), [activeTab]);
   const { data: items, loading, error, refetch } = useAPI(fetcher, [activeTab]);
+
+  const pendingFetcher = useCallback(() => getQuarantine('pending'), []);
+  const approvedFetcher = useCallback(() => getQuarantine('approved'), []);
+  const rejectedFetcher = useCallback(() => getQuarantine('rejected'), []);
+  const { data: pendingItems, refetch: refetchPending } = useAPI(pendingFetcher);
+  const { data: approvedItems, refetch: refetchApproved } = useAPI(approvedFetcher);
+  const { data: rejectedItems, refetch: refetchRejected } = useAPI(rejectedFetcher);
+
+  const refetchAll = useCallback(() => {
+    refetch();
+    refetchPending();
+    refetchApproved();
+    refetchRejected();
+  }, [refetch, refetchPending, refetchApproved, refetchRejected]);
 
   const visibleItems = items?.filter((item) => !removedIds.has(item.id)) ?? [];
 
   const counts = {
-    pending: items?.filter((i) => i.review_status === 'pending').length ?? 0,
-    approved: items?.filter((i) => i.review_status === 'approved').length ?? 0,
-    rejected: items?.filter((i) => i.review_status === 'rejected').length ?? 0,
+    pending: pendingItems?.length ?? 0,
+    approved: approvedItems?.length ?? 0,
+    rejected: rejectedItems?.length ?? 0,
   };
 
   function handleTabChange(value: string | number | null) {
@@ -40,7 +55,7 @@ export default function QuarantineReview() {
       await approveQuarantine(id, notes || undefined);
       setRemovedIds((prev) => new Set(prev).add(id));
       toast.success('Item approved successfully');
-      setTimeout(() => refetch(), 600);
+      setTimeout(() => refetchAll(), 600);
     } catch {
       toast.error('Failed to approve item');
     }
@@ -51,7 +66,7 @@ export default function QuarantineReview() {
       await rejectQuarantine(id, notes || undefined);
       setRemovedIds((prev) => new Set(prev).add(id));
       toast.success('Item rejected');
-      setTimeout(() => refetch(), 600);
+      setTimeout(() => refetchAll(), 600);
     } catch {
       toast.error('Failed to reject item');
     }
@@ -108,7 +123,7 @@ export default function QuarantineReview() {
               error={error}
               onApprove={handleApprove}
               onReject={handleReject}
-              onRetry={refetch}
+              onRetry={refetchAll}
               isPending
             />
           </TabsContent>
@@ -119,7 +134,7 @@ export default function QuarantineReview() {
               error={error}
               onApprove={handleApprove}
               onReject={handleReject}
-              onRetry={refetch}
+              onRetry={refetchAll}
             />
           </TabsContent>
           <TabsContent value="rejected">
@@ -129,7 +144,7 @@ export default function QuarantineReview() {
               error={error}
               onApprove={handleApprove}
               onReject={handleReject}
-              onRetry={refetch}
+              onRetry={refetchAll}
             />
           </TabsContent>
         </Tabs>

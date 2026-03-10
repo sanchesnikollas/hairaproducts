@@ -113,8 +113,18 @@ export default function ProductSheet({
     if (!product) return;
     setSaving(true);
     try {
-      const updated = await updateProduct(product.id, editForm);
-      setProduct(updated);
+      await updateProduct(product.id, editForm);
+      // Re-fetch full product to get all fields (PATCH returns partial)
+      const refreshed = await getProduct(product.id);
+      setProduct(refreshed);
+      setEditForm({
+        product_name: refreshed.product_name || '',
+        description: refreshed.description || '',
+        product_category: refreshed.product_category || '',
+        product_type_normalized: refreshed.product_type_normalized || '',
+        gender_target: refreshed.gender_target || '',
+        verification_status: refreshed.verification_status || '',
+      });
       setEditing(false);
       onProductUpdated();
       toast.success('Product updated successfully');

@@ -145,6 +145,47 @@ function BottomSectionSkeleton() {
   )
 }
 
+// ── SVG Icons ──
+
+function PackageIcon({ className }: { className?: string }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M16.5 9.4l-9-5.19" />
+      <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
+    </svg>
+  );
+}
+
+function CheckCircleIcon({ className }: { className?: string }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+  );
+}
+
+function ClipboardIcon({ className }: { className?: string }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" />
+      <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+    </svg>
+  );
+}
+
+function AlertTriangleIcon({ className }: { className?: string }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  );
+}
+
 // ── Main Dashboard ──
 
 export default function Dashboard() {
@@ -261,7 +302,7 @@ export default function Dashboard() {
       label: 'Total Products',
       value: stats.total,
       percent: '100%',
-      icon: '\uD83D\uDCE6',
+      icon: <PackageIcon className="text-ink" />,
       color: 'text-ink',
       bgColor: 'bg-ink/5',
     },
@@ -269,7 +310,7 @@ export default function Dashboard() {
       label: 'Verified INCI',
       value: stats.verified,
       percent: `${Math.round((stats.verified / stats.total) * 100)}%`,
-      icon: '\u2705',
+      icon: <CheckCircleIcon className="text-sage" />,
       color: 'text-sage',
       bgColor: 'bg-sage/10',
     },
@@ -277,7 +318,7 @@ export default function Dashboard() {
       label: 'Catalog Only',
       value: stats.catalog,
       percent: `${Math.round((stats.catalog / stats.total) * 100)}%`,
-      icon: '\uD83D\uDCCB',
+      icon: <ClipboardIcon className="text-amber-600" />,
       color: 'text-amber-600',
       bgColor: 'bg-amber-50',
     },
@@ -285,7 +326,7 @@ export default function Dashboard() {
       label: 'Quarantined',
       value: stats.quarantined,
       percent: `${Math.round((stats.quarantined / stats.total) * 100)}%`,
-      icon: '\u26A0\uFE0F',
+      icon: <AlertTriangleIcon className="text-coral" />,
       color: 'text-coral',
       bgColor: 'bg-coral/10',
     },
@@ -330,7 +371,7 @@ export default function Dashboard() {
             )}>
               <CardContent className="pt-2">
                 <div className="flex items-start gap-3">
-                  <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0', kpi.bgColor)}>
+                  <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', kpi.bgColor)}>
                     {kpi.icon}
                   </div>
                   <div className="min-w-0">
@@ -514,8 +555,8 @@ export default function Dashboard() {
           <Card className="shadow-sm hover:shadow-md transition-shadow duration-300 flex-1">
             <CardContent className="pt-6 flex flex-col justify-between h-full">
               <div>
-                <div className="w-12 h-12 rounded-xl bg-champagne/10 flex items-center justify-center text-2xl mb-4">
-                  {'\uD83D\uDCE6'}
+                <div className="w-12 h-12 rounded-xl bg-champagne/10 flex items-center justify-center mb-4 text-champagne-dark">
+                  <PackageIcon />
                 </div>
                 <h3 className="font-display text-lg font-semibold text-ink">Browse Products</h3>
                 <p className="text-sm text-ink-muted mt-1">
@@ -539,8 +580,8 @@ export default function Dashboard() {
             <CardContent className="pt-6 flex flex-col justify-between h-full">
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-coral/10 flex items-center justify-center text-2xl">
-                    {'\u26A0\uFE0F'}
+                  <div className="w-12 h-12 rounded-xl bg-coral/10 flex items-center justify-center text-coral">
+                    <AlertTriangleIcon />
                   </div>
                   {pendingCount > 0 && (
                     <Badge variant="destructive" className="text-xs">
