@@ -137,7 +137,7 @@ export default function ProductSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-[500px] p-0 overflow-hidden">
+      <SheetContent side="right" className="w-full sm:max-w-[500px] p-0 overflow-hidden z-[60]">
         <ScrollArea className="h-full">
           <div className="p-6 space-y-6">
             {loading || !product ? (

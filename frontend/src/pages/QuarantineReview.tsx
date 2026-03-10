@@ -279,10 +279,10 @@ function QuarantineCard({
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
-              <CardTitle className="truncate text-ink font-semibold">
+              <CardTitle className="truncate text-ink font-semibold min-w-0 flex-1">
                 {item.product_name ?? 'Unknown Product'}
               </CardTitle>
-              <Badge variant="destructive">{item.rejection_reason}</Badge>
+              <Badge variant="destructive" className="shrink-0">{item.rejection_reason}</Badge>
             </div>
             <motion.svg
               animate={{ rotate: expanded ? 180 : 0 }}
@@ -371,7 +371,7 @@ function QuarantineCard({
 
               {/* Actions — only for pending items */}
               {isPending && (
-                <CardFooter className="gap-3">
+                <CardFooter className="gap-3 flex-wrap">
                   <Input
                     placeholder="Reviewer notes (optional)"
                     value={notes}

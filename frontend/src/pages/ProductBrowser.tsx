@@ -236,7 +236,7 @@ export default function ProductBrowser() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
-        <div className="rounded-xl border border-ink/8 bg-white overflow-hidden">
+        <div className="rounded-xl border border-ink/8 bg-white overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
