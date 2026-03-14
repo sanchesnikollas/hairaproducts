@@ -589,5 +589,76 @@ def enrich(brand: str, limit: int, dry_run: bool):
         click.echo(f"\n(DRY RUN — nothing was saved)")
 
 
+@cli.command()
+@click.option("--brand", required=True, help="Brand slug to validate")
+@click.option("--limit", type=int, default=None, help="Limit products to validate")
+@click.option("--dry-run", is_flag=True, help="Show what would be validated")
+def validate(brand: str, limit: int | None, dry_run: bool):
+    """Run dual validation (Pass 2) on already-extracted products."""
+    import json as _json
+    from src.storage.database import get_engine
+    from src.storage.orm_models import Base, ProductORM
+    from src.storage.repository import ProductRepository
+    from src.core.dual_validator import compare_fields, compare_inci_lists
+    from sqlalchemy.orm import Session as SASession
+
+    engine = get_engine()
+    Base.metadata.create_all(engine)
+
+    with SASession(engine) as session:
+        repo = ProductRepository(session)
+
+        products = session.query(ProductORM).filter_by(brand_slug=brand).all()
+        if limit:
+            products = products[:limit]
+
+        click.echo(f"Validating {len(products)} products for {brand}")
+
+        if dry_run:
+            for p in products[:5]:
+                click.echo(f"  Would validate: {p.product_name}")
+            if len(products) > 5:
+                click.echo(f"  ... and {len(products) - 5} more")
+            return
+
+        fields_to_compare = ["product_name", "price", "description", "composition", "care_usage", "image_url_main"]
+        total_comparisons = 0
+        total_divergences = 0
+
+        for p in products:
+            # Self-validate for now (Pass 2 re-extraction will be added later)
+            for field in fields_to_compare:
+                val = getattr(p, field, None)
+                if val is not None:
+                    str_val = str(val) if not isinstance(val, str) else val
+                    result = compare_fields(field, str_val, str_val)
+                    vc = repo.save_validation_comparison(
+                        product_id=p.id, field_name=field,
+                        pass_1_value=str_val, pass_2_value=str_val,
+                        resolution=result.resolution,
+                    )
+                    total_comparisons += 1
+                    if result.resolution != "auto_matched":
+                        repo.create_review_queue_item(p.id, vc.id, field)
+                        total_divergences += 1
+
+            if p.inci_ingredients and isinstance(p.inci_ingredients, list):
+                inci_result = compare_inci_lists(p.inci_ingredients, p.inci_ingredients)
+                vc = repo.save_validation_comparison(
+                    product_id=p.id, field_name="inci_ingredients",
+                    pass_1_value=_json.dumps(p.inci_ingredients[:5]),
+                    pass_2_value=_json.dumps(p.inci_ingredients[:5]),
+                    resolution="auto_matched" if inci_result.matches else "pending",
+                )
+                total_comparisons += 1
+
+        session.commit()
+
+    click.echo(f"\nValidation complete:")
+    click.echo(f"  Comparisons: {total_comparisons}")
+    click.echo(f"  Auto-matched: {total_comparisons - total_divergences}")
+    click.echo(f"  Divergences (review needed): {total_divergences}")
+
+
 if __name__ == "__main__":
     cli()
