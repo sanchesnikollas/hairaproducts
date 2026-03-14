@@ -99,3 +99,47 @@ export interface PaginatedResponse<T> {
   limit: number;
   offset: number;
 }
+
+export interface IngredientSummary {
+  id: string;
+  canonical_name: string;
+  inci_name: string | null;
+  category: string | null;
+  product_count: number;
+}
+
+export interface ProductIngredient {
+  position: number;
+  raw_name: string;
+  validation_status: string;
+  ingredient: {
+    id: string;
+    canonical_name: string;
+    category: string | null;
+  };
+}
+
+export interface ValidationComparison {
+  id: string;
+  field_name: string;
+  pass_1_value: string | null;
+  pass_2_value: string | null;
+  resolution: string;
+  created_at: string | null;
+}
+
+export interface ReviewQueueItem {
+  id: string;
+  product_id: string;
+  field_name: string;
+  status: string;
+  reviewer_notes: string | null;
+  created_at: string | null;
+  product_name: string | null;
+  brand_slug: string | null;
+  comparison: {
+    pass_1_value: string | null;
+    pass_2_value: string | null;
+    resolution: string;
+  } | null;
+}

@@ -11,6 +11,7 @@ const navItems = [
   { to: '/brands', label: 'Brands', icon: brandsIcon },
   { to: '/products', label: 'Products', icon: productIcon },
   { to: '/quarantine', label: 'Quarantine', icon: quarantineIcon },
+  { to: '/review-queue', label: 'Review Queue', icon: reviewQueueIcon },
 ];
 
 function dashboardIcon() {
@@ -48,6 +49,15 @@ function quarantineIcon() {
       <path d="M12 9v4" />
       <path d="M12 17h.01" />
       <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+    </svg>
+  );
+}
+
+function reviewQueueIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 11l3 3L22 4" />
+      <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
     </svg>
   );
 }

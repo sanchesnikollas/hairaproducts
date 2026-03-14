@@ -5,6 +5,7 @@ import BrandsDashboard from './pages/BrandsDashboard'
 import BrandDetail from './pages/BrandDetail'
 import ProductBrowser from './pages/ProductBrowser'
 import QuarantineReview from './pages/QuarantineReview'
+import ReviewQueue from './pages/ReviewQueue'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="brands/:slug" element={<BrandDetail />} />
         <Route path="products" element={<ProductBrowser />} />
         <Route path="quarantine" element={<QuarantineReview />} />
+        <Route path="review-queue" element={<ReviewQueue />} />
       </Route>
     </Routes>
   )

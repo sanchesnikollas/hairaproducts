@@ -1,4 +1,4 @@
-import type { BrandCoverage, PaginatedResponse, Product, QuarantineItem } from '../types/api';
+import type { BrandCoverage, IngredientSummary, PaginatedResponse, Product, ProductIngredient, QuarantineItem, ReviewQueueItem } from '../types/api';
 
 const BASE_URL = '/api';
 
@@ -90,4 +90,29 @@ export async function approveQuarantine(id: string, notes?: string): Promise<{ s
 export async function rejectQuarantine(id: string, notes?: string): Promise<{ status: string; quarantine_id: string }> {
   const params = notes ? `?notes=${encodeURIComponent(notes)}` : '';
   return fetchJSON(`/quarantine/${id}/reject${params}`, { method: 'POST' });
+}
+
+// ── Ingredients ──
+
+export async function fetchIngredients(query?: string): Promise<IngredientSummary[]> {
+  const params = query ? `?q=${encodeURIComponent(query)}` : '';
+  return fetchJSON<IngredientSummary[]>(`/ingredients${params}`);
+}
+
+export async function fetchProductIngredients(productId: string): Promise<ProductIngredient[]> {
+  return fetchJSON<ProductIngredient[]>(`/products/${productId}/ingredients`);
+}
+
+// ── Review Queue ──
+
+export async function fetchReviewQueue(status = 'pending'): Promise<ReviewQueueItem[]> {
+  return fetchJSON<ReviewQueueItem[]>(`/review-queue?status=${status}`);
+}
+
+export async function resolveReviewItem(itemId: string, status: string, notes?: string): Promise<void> {
+  await fetchJSON(`/review-queue/${itemId}/resolve`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status, reviewer_notes: notes }),
+  });
 }
