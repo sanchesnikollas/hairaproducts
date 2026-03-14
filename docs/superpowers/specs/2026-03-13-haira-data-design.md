@@ -24,7 +24,7 @@ Discovery → Extraction → Dual Validation → QA Gate → Label Detection →
 
 ### Components
 
-- **Platform Adapters** (`src/discovery/platform_adapters/`) — Per-platform logic (VTEX, Shopify, L'Oréal stack, Grupo Boticário). Handle sitemaps, DOM crawling, WAF bypass.
+- **Platform Adapters** (`src/discovery/platform_adapters/`) — Per-platform logic. Currently: `base.py`, `sitemap.py`, `dom_crawler.py`. Planned: dedicated adapters for VTEX, Shopify, L'Oréal stack, Grupo Boticário. Handle sitemaps, DOM crawling, WAF bypass.
 - **Semi-auto Blueprints** (`config/blueprints/{slug}.yaml`) — YAML configs per brand defining platform type, selectors, extraction settings. Generated semi-automatically from platform adapter + manual tuning.
 - **Dual Validation** — Two independent extractions compared automatically. Divergences go to review queue, not directly to catalog.
 - **Evidence Trail** — Every extracted field tracked via `ProductEvidenceORM` with method, selector, and original value.
@@ -32,7 +32,7 @@ Discovery → Extraction → Dual Validation → QA Gate → Label Detection →
 ### Processing Model
 
 - **Marca a marca** — One brand at a time, fully validated before moving to next.
-- **Cadence:** 5 brands / 2 days target.
+- **Cadence:** 5 brands / 2 days target (complex brands with WAF or custom DOM may take longer).
 - **Tier 1 first** — Brands with complete ingredient data on their sites.
 
 ## 3. Database Schema
@@ -78,7 +78,9 @@ CREATE TABLE product_ingredients (
     ingredient_id UUID REFERENCES ingredients(id),
     position INTEGER,                      -- order in INCI list (1 = highest concentration)
     raw_name TEXT,                          -- original name as scraped
-    confidence TEXT DEFAULT 'auto_validated',
+    validation_status TEXT DEFAULT 'raw',   -- raw, auto_validated, dual_validated, needs_review, manually_verified
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
     UNIQUE(product_id, ingredient_id)
 );
 ```
@@ -108,8 +110,10 @@ CREATE TABLE product_claims (
     product_id UUID REFERENCES products(id),
     claim_id UUID REFERENCES claims(id),
     source TEXT,                           -- 'keyword', 'inci_inference', 'manual'
-    confidence FLOAT,
+    confidence_score FLOAT,               -- numeric confidence (0.0-1.0), distinct from validation_status
     evidence_text TEXT,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
     UNIQUE(product_id, claim_id)
 );
 ```
@@ -124,19 +128,25 @@ CREATE TABLE product_images (
     image_type TEXT DEFAULT 'gallery',     -- main, gallery, swatch, ingredient_list
     position INTEGER,
     width INTEGER,
-    height INTEGER
+    height INTEGER,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
 );
 ```
 
 #### Compositions
 
 ```sql
+-- Multi-section compositions (complements ProductORM.composition which stores single text)
+-- During dual-write: ProductORM.composition = concatenation of all sections; this table = structured view
 CREATE TABLE product_compositions (
     id UUID PRIMARY KEY,
     product_id UUID REFERENCES products(id),
     section_label TEXT,                    -- "Composição", "Fórmula"
     content TEXT NOT NULL,
-    source_selector TEXT
+    source_selector TEXT,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
 );
 ```
 
@@ -150,7 +160,6 @@ CREATE TABLE validation_comparisons (
     field_name TEXT NOT NULL,
     pass_1_value TEXT,
     pass_2_value TEXT,
-    match BOOLEAN,
     resolution TEXT,                       -- 'auto_matched', 'human_resolved', 'pending'
     resolved_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW()
@@ -179,6 +188,10 @@ CREATE TABLE review_queue (
 ## 4. Scraping Strategy
 
 ### Platform Adapters
+
+**Existing** (`src/discovery/platform_adapters/`): `base.py`, `sitemap.py`, `dom_crawler.py`
+
+**Planned** (to be built as brands require them):
 
 | Platform | Adapter | Discovery | Notes |
 |----------|---------|-----------|-------|
@@ -293,7 +306,27 @@ extraction:
 - `inci_ingredients` — ordered list comparison with fuzzy matching for ingredient names
 - `price` — numeric comparison (tolerance ±1%)
 - `description` — similarity score (>90% = match)
+- `composition` — similarity score
+- `care_usage` — similarity score
 - `image_url_main` — URL comparison
+
+### Integration with Pipeline
+
+- **Module:** `src/core/dual_validator.py` — comparison logic, diff engine, auto-resolution rules
+- **CLI:** `haira validate --brand <slug>` — runs Pass 2 on already-extracted products
+- **Flow in CoverageEngine:**
+  1. `haira scrape --brand <slug>` runs Pass 1 (standard extraction), saves with `validation_status='raw'`
+  2. `haira validate --brand <slug>` runs Pass 2 (re-extraction with different selector priority), compares fields, writes `validation_comparisons` rows
+  3. Matches → `validation_status='auto_validated'`; divergences → `review_queue` with `status='pending'`
+- Pass 2 reuses `_extract_product()` but shuffles selector priority (e.g., section classifier first, JSON-LD second) to test extraction robustness
+- Dual validation is a separate step, not inline with scrape — allows running Pass 1 for all URLs first, then batch validation
+
+### Quarantine vs Review Queue
+
+These are complementary systems:
+- **`quarantine_details`** — QA gate failures (missing name, invalid INCI, failed checks). Existing system.
+- **`review_queue`** — Dual validation divergences (Pass 1 ≠ Pass 2). New system.
+- Both visible in the Quarantine Review page, with a tab/filter to distinguish source.
 
 ## 7. Interface (Operational)
 
@@ -311,6 +344,18 @@ The interface focuses on operational needs first:
 - **Dashboard** — Add pipeline status widget, brand progress overview
 - **Product Browser** — Add normalized ingredient view, evidence trail
 - **Quarantine Review** — Already exists, enhance with dual validation context
+
+### New API Routes (planned)
+
+| Route | Module | Purpose |
+|-------|--------|---------|
+| `GET /api/ingredients` | `routes/ingredients.py` | List/search canonical ingredients |
+| `GET /api/products/{id}/ingredients` | `routes/products.py` | Normalized ingredient list for a product |
+| `GET /api/review-queue` | `routes/quarantine.py` | List pending dual validation divergences |
+| `POST /api/review-queue/{id}/resolve` | `routes/quarantine.py` | Resolve a review queue item |
+| `GET /api/validation/{product_id}` | `routes/products.py` | View comparison results for a product |
+
+Corresponding Pydantic response models must be added to `src/core/models.py` (e.g., `Ingredient`, `Claim`, `ValidationComparison`, `ReviewQueueItem`).
 
 ### Future (exploratory)
 
@@ -367,11 +412,31 @@ The interface focuses on operational needs first:
 - SQLite for development, PostgreSQL for production (via `DATABASE_URL`)
 - Playwright requires system-level browser install (`playwright install chromium`)
 
+### ORM Implementation Notes
+
+- All timestamps use Python-level defaults (SQLAlchemy `_utcnow()` pattern) for SQLite/PostgreSQL compatibility — not SQL `NOW()`
+- Alias uniqueness: `UNIQUE(alias)` on `ingredient_aliases` is intentional — one canonical name per alias globally. Conflicts resolved during seeding by human review.
+- New ORM models in `src/storage/orm_models.py`, Pydantic models in `src/core/models.py`
+- Dual-write logic in a new `src/storage/normalized_writer.py` service — keeps `ProductRepository` focused on the existing product table
+
+### Ingredient Seeding Strategy
+
+1. Parse existing `inci_ingredients` JSON arrays from all products in DB
+2. Normalize casing (title case) and strip whitespace
+3. Group by normalized name → each group becomes one canonical ingredient
+4. Portuguese names (from O Boticário) get alias entries with `language='pt'`
+5. CAS numbers and safety ratings populated later from external reference data
+6. Manual review for ambiguous cases (e.g., short names that could match multiple ingredients)
+
 ### Migration Order
 
 1. Create new normalized tables (ingredients, claims, images, compositions, validation)
 2. Populate canonical ingredient glossary (seed from existing INCI data)
-3. Add dual-write to pipeline (JSON columns + normalized tables)
+3. Add dual-write to pipeline — incrementally:
+   a. First: ingredients only (`product_ingredients`)
+   b. Then: claims (`product_claims`)
+   c. Then: images (`product_images`)
+   d. Then: compositions (`product_compositions`)
 4. Build review queue UI
 5. Migrate historical data from JSON columns to normalized tables
 6. Add pipeline monitor and quality dashboard widgets
