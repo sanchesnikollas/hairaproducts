@@ -67,8 +67,20 @@ class CoverageEngine:
                     continue
 
                 qa_result = run_product_qa(product_data, allowed_domains)
-                self._repo.upsert_product(product_data, qa_result)
+                product_id = self._repo.upsert_product(product_data, qa_result)
                 report.extracted_total += 1
+
+                # Dual-write to normalized tables
+                from src.storage.normalized_writer import NormalizedWriter
+                if not hasattr(self, '_normalized_writer'):
+                    self._normalized_writer = NormalizedWriter(self._session)
+
+                saved_product = self._repo.get_product_by_id(product_id)
+                if saved_product:
+                    try:
+                        self._normalized_writer.write_all(saved_product)
+                    except Exception as e:
+                        logger.warning(f"Normalized write failed for {url}: {e}")
 
                 if qa_result.status == QAStatus.VERIFIED_INCI:
                     report.verified_inci_total += 1
@@ -148,8 +160,10 @@ class CoverageEngine:
             logger.debug(f"No browser, skipping {url}")
             return None
 
+        wait_for = (blueprint_config or {}).get("extraction", {}).get("wait_for_selector")
+        expand = bool(wait_for)  # If there's a wait_for_selector, likely needs accordion expansion
         try:
-            html = self._browser.fetch_page(url)
+            html = self._browser.fetch_page(url, wait_for=wait_for, expand_accordions=expand)
         except Exception as e:
             logger.warning(f"Failed to fetch {url}: {e}")
             return None
