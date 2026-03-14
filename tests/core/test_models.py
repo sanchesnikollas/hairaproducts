@@ -160,3 +160,35 @@ class TestQAResult:
         )
         assert result.passed is False
         assert result.rejection_reason is not None
+
+
+def test_ingredient_model():
+    from src.core.models import Ingredient
+    ing = Ingredient(id="abc", canonical_name="Dimethicone", category="silicone")
+    assert ing.canonical_name == "Dimethicone"
+
+def test_ingredient_with_aliases():
+    from src.core.models import Ingredient
+    ing = Ingredient(id="abc", canonical_name="Dimethicone", aliases=["DIMETHICONE", "Dimeticone"])
+    assert len(ing.aliases) == 2
+
+def test_claim_model():
+    from src.core.models import Claim
+    c = Claim(id="abc", canonical_name="sulfate_free", display_name="Sulfate Free", category="seal")
+    assert c.display_name == "Sulfate Free"
+
+def test_validation_comparison_model():
+    from src.core.models import ValidationComparison
+    vc = ValidationComparison(
+        id="abc", product_id="xyz", field_name="product_name",
+        pass_1_value="Shampoo X", pass_2_value="Shampoo X", resolution="auto_matched"
+    )
+    assert vc.resolution == "auto_matched"
+
+def test_review_queue_item_model():
+    from src.core.models import ReviewQueueItem
+    rq = ReviewQueueItem(
+        id="abc", product_id="xyz", field_name="inci_ingredients",
+        status="pending",
+    )
+    assert rq.status == "pending"

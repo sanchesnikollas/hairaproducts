@@ -99,3 +99,56 @@ class QAResult(BaseModel):
     checks_passed: list[str] = Field(default_factory=list)
     checks_failed: list[str] = Field(default_factory=list)
     rejection_reason: Optional[str] = None
+
+
+class ValidationStatusLevel(str, enum.Enum):
+    RAW = "raw"
+    AUTO_VALIDATED = "auto_validated"
+    DUAL_VALIDATED = "dual_validated"
+    NEEDS_REVIEW = "needs_review"
+    MANUALLY_VERIFIED = "manually_verified"
+
+
+class Ingredient(BaseModel):
+    id: str
+    canonical_name: str
+    inci_name: Optional[str] = None
+    cas_number: Optional[str] = None
+    category: Optional[str] = None
+    safety_rating: Optional[str] = None
+    aliases: list[str] = []
+
+
+class Claim(BaseModel):
+    id: str
+    canonical_name: str
+    display_name: Optional[str] = None
+    category: Optional[str] = None
+    aliases: list[str] = []
+
+
+class ProductIngredientDetail(BaseModel):
+    ingredient: Ingredient
+    position: Optional[int] = None
+    raw_name: Optional[str] = None
+    validation_status: str = "raw"
+
+
+class ValidationComparison(BaseModel):
+    id: str
+    product_id: str
+    field_name: str
+    pass_1_value: Optional[str] = None
+    pass_2_value: Optional[str] = None
+    resolution: str = "pending"
+
+
+class ReviewQueueItem(BaseModel):
+    id: str
+    product_id: str
+    field_name: str
+    status: str = "pending"
+    reviewer_notes: Optional[str] = None
+    product_name: Optional[str] = None
+    brand_slug: Optional[str] = None
+    comparison: Optional[ValidationComparison] = None
