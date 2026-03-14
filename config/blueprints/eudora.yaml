@@ -1,0 +1,81 @@
+brand_slug: eudora
+brand_name: Eudora
+platform: vtex
+domain: www.eudora.com.br
+allowed_domains:
+- www.eudora.com.br
+entrypoints:
+- https://www.eudora.com.br/cabelos/shampoo/
+- https://www.eudora.com.br/cabelos/condicionador/
+- https://www.eudora.com.br/cabelos/tratamento/
+- https://www.eudora.com.br/cabelos/leave-in-e-creme-para-pentear/
+- https://www.eudora.com.br/cabelos/finalizador/
+- https://www.eudora.com.br/cabelos/modelador/
+- https://www.eudora.com.br/cabelos/kits-de-tratamento/
+- https://www.eudora.com.br/produtos-masculinos/cabelos/
+discovery:
+  strategy: dom_crawler
+  sitemap_urls: []
+  product_url_pattern: ^https://www\.eudora\.com\.br/[\w-]+/?$
+  max_pages: 500
+  pagination:
+    type: scroll
+    max_pages: 15
+  product_link_selector: .showcase-item a[href]
+extraction:
+  requires_js: true
+  headless: false
+  inci_selectors: []
+  name_selectors:
+  - h1
+  - .product-name
+  image_selectors:
+  - .swiper img[src*="cloudinary"]
+  - img[src*="cloudinary"]
+  - .product-image img
+  price_selectors:
+  - .item-price-value
+  - .price-holder
+  - '[class*="sellingPrice"]'
+  - .product-price
+  section_label_map:
+    description:
+      labels:
+      - detalhes
+      - sobre o produto
+      - descrição
+      - o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - conselho de aplicação
+    composition:
+      labels:
+      - composição
+      - fórmula
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - composição completa
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - ação / resultado
+      - benefícios
+      - resultado
+  wait_for_selector: .accordion-pdp-header
+  accordion_click_selector: button.js-ingredient
+  ingredient_container_selector: .product-ingredients
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: portuguese_names
+  waf: akamai
+  requires_headed_browser: true
+  brand_line: Siàge
+  parent_company: Grupo Boticário
+version: 1
