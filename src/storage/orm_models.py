@@ -108,3 +108,133 @@ class BrandCoverageORM(Base):
     last_run = Column(DateTime, nullable=True)
     blueprint_version = Column(Integer, nullable=False, default=1)
     coverage_report = Column(JSON, nullable=True)
+
+
+class IngredientORM(Base):
+    __tablename__ = "ingredients"
+    id = Column(String(36), primary_key=True, default=_uuid)
+    canonical_name = Column(Text, nullable=False, unique=True)
+
+    def __init__(self, **kwargs: object) -> None:
+        if "id" not in kwargs:
+            kwargs["id"] = _uuid()
+        super().__init__(**kwargs)
+    inci_name = Column(Text, nullable=True)
+    cas_number = Column(String(50), nullable=True)
+    category = Column(String(100), nullable=True)
+    safety_rating = Column(String(50), nullable=True)
+    created_at = Column(DateTime, nullable=False, default=_utcnow)
+    aliases = relationship("IngredientAliasORM", back_populates="ingredient", cascade="all, delete-orphan")
+    product_ingredients = relationship("ProductIngredientORM", back_populates="ingredient")
+
+
+class IngredientAliasORM(Base):
+    __tablename__ = "ingredient_aliases"
+    id = Column(String(36), primary_key=True, default=_uuid)
+    ingredient_id = Column(String(36), ForeignKey("ingredients.id"), nullable=False)
+    alias = Column(Text, nullable=False, unique=True)
+    language = Column(String(10), nullable=False, default="en")
+    ingredient = relationship("IngredientORM", back_populates="aliases")
+
+
+class ProductIngredientORM(Base):
+    __tablename__ = "product_ingredients"
+    __table_args__ = (UniqueConstraint("product_id", "ingredient_id"),)
+    id = Column(String(36), primary_key=True, default=_uuid)
+    product_id = Column(String(36), ForeignKey("products.id"), nullable=False, index=True)
+    ingredient_id = Column(String(36), ForeignKey("ingredients.id"), nullable=False, index=True)
+    position = Column(Integer, nullable=True)
+    raw_name = Column(Text, nullable=True)
+    validation_status = Column(String(50), nullable=False, default="raw")
+    created_at = Column(DateTime, nullable=False, default=_utcnow)
+    updated_at = Column(DateTime, nullable=False, default=_utcnow, onupdate=_utcnow)
+    product = relationship("ProductORM")
+    ingredient = relationship("IngredientORM", back_populates="product_ingredients")
+
+
+class ClaimORM(Base):
+    __tablename__ = "claims"
+    id = Column(String(36), primary_key=True, default=_uuid)
+    canonical_name = Column(Text, nullable=False, unique=True)
+    display_name = Column(Text, nullable=True)
+    category = Column(String(100), nullable=True)
+    created_at = Column(DateTime, nullable=False, default=_utcnow)
+    aliases = relationship("ClaimAliasORM", back_populates="claim", cascade="all, delete-orphan")
+
+
+class ClaimAliasORM(Base):
+    __tablename__ = "claim_aliases"
+    id = Column(String(36), primary_key=True, default=_uuid)
+    claim_id = Column(String(36), ForeignKey("claims.id"), nullable=False)
+    alias = Column(Text, nullable=False, unique=True)
+    language = Column(String(10), nullable=False, default="en")
+    claim = relationship("ClaimORM", back_populates="aliases")
+
+
+class ProductClaimORM(Base):
+    __tablename__ = "product_claims"
+    __table_args__ = (UniqueConstraint("product_id", "claim_id"),)
+    id = Column(String(36), primary_key=True, default=_uuid)
+    product_id = Column(String(36), ForeignKey("products.id"), nullable=False, index=True)
+    claim_id = Column(String(36), ForeignKey("claims.id"), nullable=False, index=True)
+    source = Column(String(50), nullable=True)
+    confidence_score = Column(Float, nullable=True)
+    evidence_text = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=_utcnow)
+    updated_at = Column(DateTime, nullable=False, default=_utcnow, onupdate=_utcnow)
+    product = relationship("ProductORM")
+    claim = relationship("ClaimORM")
+
+
+class ProductImageORM(Base):
+    __tablename__ = "product_images"
+    id = Column(String(36), primary_key=True, default=_uuid)
+    product_id = Column(String(36), ForeignKey("products.id"), nullable=False, index=True)
+    url = Column(Text, nullable=False)
+    image_type = Column(String(50), nullable=False, default="gallery")
+    position = Column(Integer, nullable=True)
+    width = Column(Integer, nullable=True)
+    height = Column(Integer, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=_utcnow)
+    updated_at = Column(DateTime, nullable=False, default=_utcnow, onupdate=_utcnow)
+    product = relationship("ProductORM")
+
+
+class ProductCompositionORM(Base):
+    __tablename__ = "product_compositions"
+    id = Column(String(36), primary_key=True, default=_uuid)
+    product_id = Column(String(36), ForeignKey("products.id"), nullable=False, index=True)
+    section_label = Column(Text, nullable=True)
+    content = Column(Text, nullable=False)
+    source_selector = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=_utcnow)
+    updated_at = Column(DateTime, nullable=False, default=_utcnow, onupdate=_utcnow)
+    product = relationship("ProductORM")
+
+
+class ValidationComparisonORM(Base):
+    __tablename__ = "validation_comparisons"
+    id = Column(String(36), primary_key=True, default=_uuid)
+    product_id = Column(String(36), ForeignKey("products.id"), nullable=False, index=True)
+    field_name = Column(String(100), nullable=False)
+    pass_1_value = Column(Text, nullable=True)
+    pass_2_value = Column(Text, nullable=True)
+    resolution = Column(String(50), nullable=False, default="pending")
+    resolved_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=_utcnow)
+    product = relationship("ProductORM")
+    review_queue_item = relationship("ReviewQueueORM", back_populates="comparison", uselist=False)
+
+
+class ReviewQueueORM(Base):
+    __tablename__ = "review_queue"
+    id = Column(String(36), primary_key=True, default=_uuid)
+    product_id = Column(String(36), ForeignKey("products.id"), nullable=False, index=True)
+    comparison_id = Column(String(36), ForeignKey("validation_comparisons.id"), nullable=True)
+    field_name = Column(String(100), nullable=False)
+    status = Column(String(20), nullable=False, default="pending")
+    reviewer_notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=_utcnow)
+    resolved_at = Column(DateTime, nullable=True)
+    product = relationship("ProductORM")
+    comparison = relationship("ValidationComparisonORM", back_populates="review_queue_item")

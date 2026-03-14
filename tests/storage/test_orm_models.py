@@ -144,3 +144,55 @@ class TestBrandCoverageORM:
         db_session.add(cov)
         db_session.commit()
         assert cov.id is not None
+
+
+def test_ingredient_orm_creation():
+    from src.storage.orm_models import IngredientORM
+    ing = IngredientORM(canonical_name="Dimethicone", category="silicone")
+    assert ing.canonical_name == "Dimethicone"
+    assert ing.id is not None
+
+def test_ingredient_alias_orm():
+    from src.storage.orm_models import IngredientAliasORM
+    alias = IngredientAliasORM(alias="DIMETHICONE", language="en")
+    assert alias.alias == "DIMETHICONE"
+
+def test_product_ingredient_orm():
+    from src.storage.orm_models import ProductIngredientORM
+    pi = ProductIngredientORM(position=1, raw_name="Dimethicone", validation_status="raw")
+    assert pi.validation_status == "raw"
+
+def test_claim_orm():
+    from src.storage.orm_models import ClaimORM
+    claim = ClaimORM(canonical_name="sulfate_free", display_name="Sulfate Free", category="seal")
+    assert claim.canonical_name == "sulfate_free"
+
+def test_product_claim_orm():
+    from src.storage.orm_models import ProductClaimORM
+    pc = ProductClaimORM(source="keyword", confidence_score=0.9)
+    assert pc.confidence_score == 0.9
+
+def test_product_image_orm():
+    from src.storage.orm_models import ProductImageORM
+    img = ProductImageORM(url="https://example.com/img.jpg", image_type="main", position=0)
+    assert img.image_type == "main"
+
+def test_product_composition_orm():
+    from src.storage.orm_models import ProductCompositionORM
+    comp = ProductCompositionORM(section_label="Composição", content="Water, Glycerin")
+    assert comp.section_label == "Composição"
+
+def test_validation_comparison_orm():
+    from src.storage.orm_models import ValidationComparisonORM
+    vc = ValidationComparisonORM(field_name="product_name", pass_1_value="Shampoo X", pass_2_value="Shampoo X", resolution="auto_matched")
+    assert vc.resolution == "auto_matched"
+
+def test_review_queue_orm():
+    from src.storage.orm_models import ReviewQueueORM
+    rq = ReviewQueueORM(field_name="inci_ingredients", status="pending")
+    assert rq.status == "pending"
+
+def test_claim_alias_orm():
+    from src.storage.orm_models import ClaimAliasORM
+    ca = ClaimAliasORM(alias="sem sulfato", language="pt")
+    assert ca.alias == "sem sulfato"
