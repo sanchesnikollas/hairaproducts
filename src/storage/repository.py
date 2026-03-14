@@ -7,7 +7,10 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from src.core.models import ProductExtraction, QAResult, QAStatus
-from src.storage.orm_models import ProductORM, ProductEvidenceORM, QuarantineDetailORM, BrandCoverageORM
+from src.storage.orm_models import (
+    ProductORM, ProductEvidenceORM, QuarantineDetailORM, BrandCoverageORM,
+    ProductIngredientORM, IngredientORM, ReviewQueueORM, ValidationComparisonORM,
+)
 
 
 class ProductRepository:
@@ -211,3 +214,69 @@ class ProductRepository:
         if product:
             product.product_labels = labels
             product.updated_at = datetime.now(timezone.utc)
+
+    def get_product_ingredients(self, product_id: str) -> list[ProductIngredientORM]:
+        return (
+            self._session.query(ProductIngredientORM)
+            .filter_by(product_id=product_id)
+            .order_by(ProductIngredientORM.position)
+            .all()
+        )
+
+    def search_ingredients(self, query: str, limit: int = 50) -> list[IngredientORM]:
+        return (
+            self._session.query(IngredientORM)
+            .filter(IngredientORM.canonical_name.ilike(f"%{query}%"))
+            .limit(limit)
+            .all()
+        )
+
+    def get_review_queue(
+        self, status: str | None = None, brand_slug: str | None = None, limit: int = 100,
+    ) -> list[ReviewQueueORM]:
+        q = self._session.query(ReviewQueueORM)
+        if status:
+            q = q.filter_by(status=status)
+        if brand_slug:
+            q = q.join(ProductORM, ReviewQueueORM.product_id == ProductORM.id)
+            q = q.filter(ProductORM.brand_slug == brand_slug)
+        return q.order_by(ReviewQueueORM.created_at.desc()).limit(limit).all()
+
+    def resolve_review_queue_item(
+        self, item_id: str, status: str, notes: str | None = None,
+    ) -> ReviewQueueORM | None:
+        item = self._session.get(ReviewQueueORM, item_id)
+        if not item:
+            return None
+        item.status = status
+        item.reviewer_notes = notes
+        item.resolved_at = datetime.now(timezone.utc)
+        self._session.commit()
+        return item
+
+    def save_validation_comparison(
+        self, product_id: str, field_name: str,
+        pass_1_value: str | None, pass_2_value: str | None,
+        resolution: str,
+    ) -> ValidationComparisonORM:
+        vc = ValidationComparisonORM(
+            product_id=product_id, field_name=field_name,
+            pass_1_value=pass_1_value, pass_2_value=pass_2_value,
+            resolution=resolution,
+        )
+        if resolution == "auto_matched":
+            vc.resolved_at = datetime.now(timezone.utc)
+        self._session.add(vc)
+        self._session.commit()
+        return vc
+
+    def create_review_queue_item(
+        self, product_id: str, comparison_id: str, field_name: str,
+    ) -> ReviewQueueORM:
+        rq = ReviewQueueORM(
+            product_id=product_id, comparison_id=comparison_id,
+            field_name=field_name, status="pending",
+        )
+        self._session.add(rq)
+        self._session.commit()
+        return rq

@@ -3,7 +3,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from src.storage.orm_models import Base
+from src.storage.orm_models import Base, IngredientORM, ProductIngredientORM, ValidationComparisonORM, ReviewQueueORM
 from src.storage.repository import ProductRepository
 from src.core.models import ProductExtraction, Evidence, GenderTarget, ExtractionMethod, QAResult, QAStatus
 
@@ -151,6 +151,145 @@ class TestTaxonomyFieldsInUpsert:
         evidence_rows = db_session.query(ProductEvidenceORM).filter_by(product_id=product_id).all()
         assert len(evidence_rows) == 1
         assert evidence_rows[0].source_section_label == "Composição"
+
+
+class TestGetProductIngredients:
+    def test_get_product_ingredients_ordered_by_position(self, repo, db_session):
+        extraction = _make_extraction()
+        qa = QAResult(status=QAStatus.CATALOG_ONLY, passed=True, checks_passed=["name_valid"])
+        product_id = repo.upsert_product(extraction, qa)
+        db_session.flush()
+
+        ing1 = IngredientORM(canonical_name="Aqua")
+        ing2 = IngredientORM(canonical_name="Glycerin")
+        db_session.add_all([ing1, ing2])
+        db_session.flush()
+
+        pi1 = ProductIngredientORM(product_id=product_id, ingredient_id=ing1.id, position=2, raw_name="Water")
+        pi2 = ProductIngredientORM(product_id=product_id, ingredient_id=ing2.id, position=1, raw_name="Glycerin")
+        db_session.add_all([pi1, pi2])
+        db_session.commit()
+
+        results = repo.get_product_ingredients(product_id)
+        assert len(results) == 2
+        assert results[0].position == 1
+        assert results[1].position == 2
+
+    def test_get_product_ingredients_empty(self, repo, db_session):
+        extraction = _make_extraction()
+        qa = QAResult(status=QAStatus.CATALOG_ONLY, passed=True, checks_passed=[])
+        product_id = repo.upsert_product(extraction, qa)
+        db_session.commit()
+
+        results = repo.get_product_ingredients(product_id)
+        assert results == []
+
+
+class TestSearchIngredients:
+    def test_search_by_partial_name(self, repo, db_session):
+        ing1 = IngredientORM(canonical_name="Sodium Laureth Sulfate")
+        ing2 = IngredientORM(canonical_name="Aqua")
+        db_session.add_all([ing1, ing2])
+        db_session.commit()
+
+        results = repo.search_ingredients("sodium")
+        assert len(results) == 1
+        assert results[0].canonical_name == "Sodium Laureth Sulfate"
+
+    def test_search_case_insensitive(self, repo, db_session):
+        ing = IngredientORM(canonical_name="Panthenol")
+        db_session.add(ing)
+        db_session.commit()
+
+        results = repo.search_ingredients("PANTHENOL")
+        assert len(results) == 1
+
+    def test_search_no_match_returns_empty(self, repo, db_session):
+        ing = IngredientORM(canonical_name="Aqua")
+        db_session.add(ing)
+        db_session.commit()
+
+        results = repo.search_ingredients("nonexistent")
+        assert results == []
+
+
+class TestGetReviewQueue:
+    def _make_product_and_comparison(self, repo, db_session, brand_slug="amend", field="inci_ingredients"):
+        extraction = _make_extraction(
+            brand_slug=brand_slug,
+            product_url=f"https://www.{brand_slug}.com.br/product-{field}",
+        )
+        qa = QAResult(status=QAStatus.CATALOG_ONLY, passed=True, checks_passed=[])
+        product_id = repo.upsert_product(extraction, qa)
+        db_session.flush()
+
+        vc = ValidationComparisonORM(
+            product_id=product_id, field_name=field,
+            pass_1_value="val1", pass_2_value="val2", resolution="conflict",
+        )
+        db_session.add(vc)
+        db_session.flush()
+
+        rq = ReviewQueueORM(
+            product_id=product_id, comparison_id=vc.id,
+            field_name=field, status="pending",
+        )
+        db_session.add(rq)
+        db_session.commit()
+        return product_id, vc.id, rq.id
+
+    def test_get_all_queue_items(self, repo, db_session):
+        self._make_product_and_comparison(repo, db_session)
+        results = repo.get_review_queue()
+        assert len(results) == 1
+
+    def test_filter_by_status(self, repo, db_session):
+        self._make_product_and_comparison(repo, db_session)
+        pending = repo.get_review_queue(status="pending")
+        assert len(pending) == 1
+
+        resolved = repo.get_review_queue(status="resolved")
+        assert len(resolved) == 0
+
+    def test_filter_by_brand_slug(self, repo, db_session):
+        self._make_product_and_comparison(repo, db_session, brand_slug="amend")
+        self._make_product_and_comparison(repo, db_session, brand_slug="wella", field="description")
+
+        amend_results = repo.get_review_queue(brand_slug="amend")
+        assert len(amend_results) == 1
+        assert amend_results[0].field_name == "inci_ingredients"
+
+
+class TestResolveReviewQueueItem:
+    def test_resolve_pending_item(self, repo, db_session):
+        extraction = _make_extraction()
+        qa = QAResult(status=QAStatus.CATALOG_ONLY, passed=True, checks_passed=[])
+        product_id = repo.upsert_product(extraction, qa)
+        db_session.flush()
+
+        vc = ValidationComparisonORM(
+            product_id=product_id, field_name="description",
+            pass_1_value="a", pass_2_value="b", resolution="conflict",
+        )
+        db_session.add(vc)
+        db_session.flush()
+
+        rq = ReviewQueueORM(
+            product_id=product_id, comparison_id=vc.id,
+            field_name="description", status="pending",
+        )
+        db_session.add(rq)
+        db_session.commit()
+
+        resolved = repo.resolve_review_queue_item(rq.id, status="approved", notes="looks good")
+        assert resolved is not None
+        assert resolved.status == "approved"
+        assert resolved.reviewer_notes == "looks good"
+        assert resolved.resolved_at is not None
+
+    def test_resolve_nonexistent_item_returns_none(self, repo):
+        result = repo.resolve_review_queue_item("nonexistent-id", status="approved")
+        assert result is None
 
 
 class TestBrandStats:
