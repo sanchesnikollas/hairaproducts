@@ -3,11 +3,12 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from src.storage.database import get_engine
 from src.storage.orm_models import ProductORM, QuarantineDetailORM
+from src.storage.repository import ProductRepository
 
 router = APIRouter(tags=["quarantine"])
 
@@ -69,6 +70,52 @@ def approve_quarantined(
 
     session.commit()
     return {"status": "approved", "quarantine_id": quarantine_id}
+
+
+@router.get("/review-queue")
+def get_review_queue(
+    status: str | None = Query("pending"),
+    brand_slug: str | None = Query(None),
+    limit: int = Query(100, le=500),
+    session: Session = Depends(_get_session),
+):
+    repo = ProductRepository(session)
+    items = repo.get_review_queue(status=status, brand_slug=brand_slug, limit=limit)
+    return [
+        {
+            "id": item.id,
+            "product_id": item.product_id,
+            "field_name": item.field_name,
+            "status": item.status,
+            "reviewer_notes": item.reviewer_notes,
+            "created_at": item.created_at.isoformat() if item.created_at else None,
+            "product_name": item.product.product_name if item.product else None,
+            "brand_slug": item.product.brand_slug if item.product else None,
+            "comparison": {
+                "pass_1_value": item.comparison.pass_1_value,
+                "pass_2_value": item.comparison.pass_2_value,
+                "resolution": item.comparison.resolution,
+            } if item.comparison else None,
+        }
+        for item in items
+    ]
+
+
+@router.post("/review-queue/{item_id}/resolve")
+def resolve_review_queue_item(
+    item_id: str,
+    body: dict,
+    session: Session = Depends(_get_session),
+):
+    repo = ProductRepository(session)
+    status = body.get("status", "approved")
+    notes = body.get("reviewer_notes")
+
+    item = repo.resolve_review_queue_item(item_id, status=status, notes=notes)
+    if not item:
+        raise HTTPException(status_code=404, detail="Review queue item not found")
+
+    return {"id": item.id, "status": item.status, "resolved_at": item.resolved_at.isoformat() if item.resolved_at else None}
 
 
 @router.post("/quarantine/{quarantine_id}/reject")

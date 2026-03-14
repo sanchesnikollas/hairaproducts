@@ -15,6 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from src.api.routes.products import router as products_router
 from src.api.routes.brands import router as brands_router
 from src.api.routes.quarantine import router as quarantine_router
+from src.api.routes.ingredients import router as ingredients_router
 
 logger = logging.getLogger("haira.api")
 
@@ -86,6 +87,7 @@ async def log_requests(request: Request, call_next):
 app.include_router(products_router, prefix="/api")
 app.include_router(brands_router, prefix="/api")
 app.include_router(quarantine_router, prefix="/api")
+app.include_router(ingredients_router, prefix="/api")
 
 
 @app.get("/health")

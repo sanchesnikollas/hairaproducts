@@ -240,6 +240,51 @@ def get_product(product_id: str, session: Session = Depends(_get_session)):
     }
 
 
+@router.get("/products/{product_id}/ingredients")
+def get_product_ingredients(product_id: str, session: Session = Depends(_get_session)):
+    repo = ProductRepository(session)
+    product = repo.get_product_by_id(product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    ingredients = repo.get_product_ingredients(product_id)
+    return [
+        {
+            "position": pi.position,
+            "raw_name": pi.raw_name,
+            "validation_status": pi.validation_status,
+            "ingredient": {
+                "id": pi.ingredient.id,
+                "canonical_name": pi.ingredient.canonical_name,
+                "category": pi.ingredient.category,
+            },
+        }
+        for pi in ingredients
+    ]
+
+
+@router.get("/validation/{product_id}")
+def get_validation_results(product_id: str, session: Session = Depends(_get_session)):
+    from src.storage.orm_models import ValidationComparisonORM
+    comparisons = (
+        session.query(ValidationComparisonORM)
+        .filter_by(product_id=product_id)
+        .order_by(ValidationComparisonORM.created_at.desc())
+        .all()
+    )
+    return [
+        {
+            "id": vc.id,
+            "field_name": vc.field_name,
+            "pass_1_value": vc.pass_1_value,
+            "pass_2_value": vc.pass_2_value,
+            "resolution": vc.resolution,
+            "created_at": vc.created_at.isoformat() if vc.created_at else None,
+        }
+        for vc in comparisons
+    ]
+
+
 @router.patch("/products/{product_id}")
 def update_product(product_id: str, body: ProductUpdate, session: Session = Depends(_get_session)):
     product = session.query(ProductORM).filter(ProductORM.id == product_id).first()
