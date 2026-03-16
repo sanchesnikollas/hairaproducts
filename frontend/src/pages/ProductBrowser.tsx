@@ -1,8 +1,8 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getProducts, getFocusBrand } from '@/lib/api';
+import { ArrowUpDown, ChevronLeft, ChevronRight, Package } from 'lucide-react';
+import { getProducts } from '@/lib/api';
 import { useAPI } from '@/hooks/useAPI';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
-import { ErrorState, EmptyState } from '@/components/LoadingState';
+import { ErrorState } from '@/components/LoadingState';
 import ProductFilters, { type StatusFilter } from '@/components/products/ProductFilters';
 import ProductSheet from '@/components/products/ProductSheet';
 import type { Product } from '@/types/api';
@@ -49,7 +49,7 @@ export default function ProductBrowser() {
   const [category, setCategory] = useState('');
   const [excludeKits, setExcludeKits] = useState(true);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [focusBrand, setFocusBrand] = useState<string | null>(null);
+  const focusBrand: string | null = null;
   const brandFilter = searchParams.get('brand') ?? '';
 
   // Pagination
@@ -73,61 +73,38 @@ export default function ProductBrowser() {
     return () => clearTimeout(debounceRef.current);
   }, [search]);
 
-  // Focus brand
-  useEffect(() => {
-    getFocusBrand()
-      .then(({ focus_brand }) => {
-        if (focus_brand) setFocusBrand(focus_brand);
-      })
-      .catch(() => {});
-  }, []);
-
   // Wrap filter setters to also reset page
   const handleStatusChange = useCallback((s: StatusFilter) => { setStatus(s); setPage(1); }, []);
   const handleCategoryChange = useCallback((c: string) => { setCategory(c); setPage(1); }, []);
   const handleExcludeKitsChange = useCallback((v: boolean) => { setExcludeKits(v); setPage(1); }, []);
   const handleVerifiedOnlyChange = useCallback((v: boolean) => { setVerifiedOnly(v); setPage(1); }, []);
 
+  // Compute effective verified_only: true if filter is 'verified_inci' or toggle is on
+  const effectiveVerifiedOnly = verifiedOnly || status === 'verified_inci';
+
   // Fetch products
   const fetcher = useCallback(
     () =>
       getProducts({
         brand: brandFilter || undefined,
-        verified_only: verifiedOnly || (status === 'verified_inci') || undefined,
+        verified_only: effectiveVerifiedOnly || undefined,
         exclude_kits: excludeKits || undefined,
         search: debouncedSearch || undefined,
         category: category || undefined,
         page,
         per_page: PER_PAGE,
       }),
-    [brandFilter, verifiedOnly, excludeKits, debouncedSearch, category, page, status]
+    [brandFilter, effectiveVerifiedOnly, excludeKits, debouncedSearch, category, page]
   );
 
   const { data: response, loading, error, refetch } = useAPI(
     fetcher,
-    [brandFilter, verifiedOnly, excludeKits, debouncedSearch, category, page, status]
+    [brandFilter, effectiveVerifiedOnly, excludeKits, debouncedSearch, category, page]
   );
 
   const products = useMemo(() => response?.items ?? [], [response]);
   const totalProducts = response?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalProducts / PER_PAGE));
-
-  // Filter by status client-side (API may not support status filter directly)
-  const filteredProducts = useMemo(() => {
-    if (status === 'all') return products;
-    return products.filter((p) => p.verification_status === status);
-  }, [products, status]);
-
-  // Status counts from current page data
-  const statusCounts = useMemo(
-    () => ({
-      all: products.length,
-      verified_inci: products.filter((p) => p.verification_status === 'verified_inci').length,
-      catalog_only: products.filter((p) => p.verification_status === 'catalog_only').length,
-      quarantined: products.filter((p) => p.verification_status === 'quarantined').length,
-    }),
-    [products]
-  );
 
   // Categories from data
   const categories = useMemo(() => {
@@ -140,7 +117,7 @@ export default function ProductBrowser() {
 
   // Sort
   const sortedProducts = useMemo(() => {
-    const sorted = [...filteredProducts];
+    const sorted = [...products];
     sorted.sort((a, b) => {
       let cmp = 0;
       switch (sortKey) {
@@ -163,7 +140,7 @@ export default function ProductBrowser() {
       return sortDir === 'asc' ? cmp : -cmp;
     });
     return sorted;
-  }, [filteredProducts, sortKey, sortDir]);
+  }, [products, sortKey, sortDir]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -186,7 +163,7 @@ export default function ProductBrowser() {
   if (error) return <ErrorState message={error} onRetry={refetch} />;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -226,7 +203,7 @@ export default function ProductBrowser() {
           verifiedOnly={verifiedOnly}
           onVerifiedOnlyChange={handleVerifiedOnlyChange}
           categories={categories}
-          statusCounts={statusCounts}
+          statusCounts={{ all: totalProducts, verified_inci: 0, catalog_only: 0, quarantined: 0 }}
         />
       </motion.div>
 
@@ -236,12 +213,12 @@ export default function ProductBrowser() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
-        <div className="rounded-xl border border-ink/8 bg-white overflow-x-auto">
+        <div className="rounded-xl border border-ink/8 bg-white shadow-sm">
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[52px]" />
-                <TableHead>
+              <TableRow className="hover:bg-transparent border-ink/8">
+                <TableHead className="w-[56px] pl-4" />
+                <TableHead className="min-w-[240px]">
                   <SortableHeader
                     label="Product Name"
                     sortKey="product_name"
@@ -250,7 +227,7 @@ export default function ProductBrowser() {
                     onClick={handleSort}
                   />
                 </TableHead>
-                <TableHead>
+                <TableHead className="min-w-[120px]">
                   <SortableHeader
                     label="Category"
                     sortKey="product_category"
@@ -259,7 +236,7 @@ export default function ProductBrowser() {
                     onClick={handleSort}
                   />
                 </TableHead>
-                <TableHead>
+                <TableHead className="min-w-[120px]">
                   <SortableHeader
                     label="Status"
                     sortKey="verification_status"
@@ -268,7 +245,7 @@ export default function ProductBrowser() {
                     onClick={handleSort}
                   />
                 </TableHead>
-                <TableHead className="text-right">
+                <TableHead className="text-right min-w-[80px]">
                   <SortableHeader
                     label="INCI"
                     sortKey="inci_count"
@@ -277,7 +254,7 @@ export default function ProductBrowser() {
                     onClick={handleSort}
                   />
                 </TableHead>
-                <TableHead className="text-right">
+                <TableHead className="text-right min-w-[80px] pr-4">
                   <SortableHeader
                     label="Quality"
                     sortKey="quality_score"
@@ -290,16 +267,19 @@ export default function ProductBrowser() {
             </TableHeader>
             <TableBody>
               {loading
-                ? Array.from({ length: 8 }).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell>
-                        <Skeleton className="h-10 w-10 rounded-md" />
+                ? Array.from({ length: 10 }).map((_, i) => (
+                    <TableRow key={i} className="border-ink/5">
+                      <TableCell className="pl-4">
+                        <Skeleton className="h-10 w-10 rounded-lg" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton className="h-4 w-48" />
+                        <div className="space-y-1.5">
+                          <Skeleton className="h-4 w-52" />
+                          <Skeleton className="h-3 w-24" />
+                        </div>
                       </TableCell>
                       <TableCell>
-                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-4 w-20" />
                       </TableCell>
                       <TableCell>
                         <Skeleton className="h-5 w-20 rounded-full" />
@@ -307,7 +287,7 @@ export default function ProductBrowser() {
                       <TableCell>
                         <Skeleton className="h-4 w-8 ml-auto" />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="pr-4">
                         <Skeleton className="h-4 w-8 ml-auto" />
                       </TableCell>
                     </TableRow>
@@ -315,16 +295,22 @@ export default function ProductBrowser() {
                 : sortedProducts.length === 0
                   ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-32">
-                        <EmptyState
-                          title="No products found"
-                          description="Try adjusting your filters"
-                        />
+                      <TableCell colSpan={6} className="h-48">
+                        <div className="flex flex-col items-center justify-center gap-3 text-center">
+                          <div className="rounded-full bg-cream p-3">
+                            <Package className="size-6 text-ink-faint" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-ink">No products found</p>
+                            <p className="text-xs text-ink-muted mt-1">Try adjusting your filters or search terms</p>
+                          </div>
+                        </div>
                       </TableCell>
                     </TableRow>
                   )
                   : sortedProducts.map((product) => {
                       const score = product.quality?.score;
+                      const inciCount = product.inci_ingredients?.length ?? 0;
                       const scoreColor =
                         score === undefined
                           ? 'text-ink-faint'
@@ -337,41 +323,49 @@ export default function ProductBrowser() {
                       return (
                         <TableRow
                           key={product.id}
-                          className="cursor-pointer hover:bg-cream-dark/30 transition-colors"
+                          className="cursor-pointer border-ink/5 hover:bg-cream/50 transition-colors group"
                           onClick={() => handleRowClick(product)}
                         >
-                          <TableCell>
+                          <TableCell className="pl-4">
                             {product.image_url_main ? (
                               <img
                                 src={product.image_url_main}
                                 alt=""
-                                className="h-10 w-10 rounded-md object-cover bg-cream"
+                                className="h-10 w-10 rounded-lg object-cover bg-cream border border-ink/5"
+                                loading="lazy"
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).style.display = 'none';
+                                  (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
                                 }}
                               />
-                            ) : (
-                              <div className="h-10 w-10 rounded-md bg-cream flex items-center justify-center text-ink-faint text-xs">
-                                --
-                              </div>
-                            )}
+                            ) : null}
+                            <div className={`h-10 w-10 rounded-lg bg-cream-dark/50 flex items-center justify-center text-ink-faint ${product.image_url_main ? 'hidden' : ''}`}>
+                              <Package className="size-4" />
+                            </div>
                           </TableCell>
-                          <TableCell className="max-w-[300px]">
-                            <span className="font-medium text-ink truncate block">
-                              {sanitizeText(product.product_name)}
-                            </span>
+                          <TableCell>
+                            <div className="min-w-0">
+                              <span className="font-medium text-ink text-sm leading-tight line-clamp-2 group-hover:text-champagne-dark transition-colors">
+                                {sanitizeText(product.product_name)}
+                              </span>
+                              {product.line_collection && (
+                                <span className="text-xs text-ink-faint block mt-0.5 truncate">
+                                  {product.line_collection}
+                                </span>
+                              )}
+                            </div>
                           </TableCell>
-                          <TableCell className="text-ink-muted">
+                          <TableCell className="text-sm text-ink-muted">
                             {product.product_category ?? '--'}
                           </TableCell>
                           <TableCell>
                             <StatusBadge status={product.verification_status} />
                           </TableCell>
-                          <TableCell className="text-right tabular-nums text-ink-muted">
-                            {product.inci_ingredients?.length ?? 0}
+                          <TableCell className="text-right tabular-nums text-sm text-ink-muted">
+                            {inciCount > 0 ? inciCount : '--'}
                           </TableCell>
-                          <TableCell className={`text-right tabular-nums font-medium ${scoreColor}`}>
-                            {score ?? '--'}
+                          <TableCell className={`text-right tabular-nums text-sm font-medium pr-4 ${scoreColor}`}>
+                            {score !== undefined ? score : '--'}
                           </TableCell>
                         </TableRow>
                       );
