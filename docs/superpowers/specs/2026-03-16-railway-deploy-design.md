@@ -43,7 +43,7 @@ CREATE TABLE brand_databases (
     id UUID PRIMARY KEY,
     brand_slug TEXT NOT NULL UNIQUE,
     brand_name TEXT NOT NULL,
-    database_url TEXT NOT NULL,        -- encrypted connection string
+    database_url TEXT NOT NULL,        -- connection string (Railway internal networking, not publicly exposed)
     is_active BOOLEAN DEFAULT true,
     product_count INTEGER DEFAULT 0,
     inci_rate FLOAT DEFAULT 0.0,
@@ -52,25 +52,7 @@ CREATE TABLE brand_databases (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Future: user profiles for AI recommendation
-CREATE TABLE users (
-    id UUID PRIMARY KEY,
-    email TEXT UNIQUE,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE TABLE user_profiles (
-    id UUID PRIMARY KEY,
-    user_id UUID REFERENCES users(id),
-    hair_type TEXT,                     -- liso, ondulado, cacheado, crespo
-    hair_porosity TEXT,                -- baixa, media, alta
-    scalp_type TEXT,                   -- normal, oleoso, seco
-    concerns TEXT[],                   -- frizz, queda, caspa, etc.
-    avoid_ingredients TEXT[],          -- silicones, sulfatos, etc.
-    preferred_seals TEXT[],            -- vegan, sulfate_free, etc.
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
+-- users and user_profiles deferred to AI recommendation phase (separate spec)
 ```
 
 ### Per-Brand Database Schema
@@ -87,9 +69,9 @@ All brand databases share identical schema — same Alembic migrations applied t
 ### Database Router
 
 ```
-Request: GET /api/products?brand=amend
-  → DatabaseRouter middleware extracts brand_slug
-  → Looks up connection string in central DB (cached in-memory, TTL 5min)
+Request: GET /api/brands/amend/products
+  → Route extracts brand_slug from path param
+  → db_router looks up connection string in central DB (cached in-memory, TTL 5min)
   → Returns SQLAlchemy session bound to brand's PostgreSQL
   → Route handler uses session normally via Depends()
 ```
@@ -97,9 +79,36 @@ Request: GET /api/products?brand=amend
 **Implementation:**
 - `src/storage/db_router.py` — new module
 - `get_brand_session(brand_slug)` — dependency injection function
-- Connection pools cached per slug in a dict (engine pool per brand)
-- Central DB has its own dedicated engine/session
-- Cross-brand queries: iterate over active brand databases, merge results
+- Two dependency variants:
+  - `get_brand_db_from_path(slug: str)` — for `/brands/{slug}/...` routes
+  - `get_brand_db_from_query(brand: str = Query(...))` — for `/products?brand=...` routes
+- Connection pools cached per slug in a dict (engine pool per brand, `pool_size=3` per brand to stay within Railway limits — max ~33 connections across 11 DBs per worker)
+- Central DB has its own dedicated engine/session (`pool_size=5`)
+- `FOCUS_BRAND` env var deprecated — replaced by db_router brand selection
+
+### Cross-Brand Query Strategy
+
+Cross-brand queries (search, global stats) are **deferred to Phase 2**. In Phase 1:
+- `/api/search` is not implemented — search is per-brand only (within brand page)
+- `/api/stats` returns pre-computed stats from `brand_databases` table in central DB (no cross-DB queries)
+- Global ingredient search deferred — canonical ingredients are duplicated per brand DB, matched by `canonical_name` string when needed
+
+**Phase 2 approach (future):** A `product_index` table in the central DB with denormalized product summaries (id, brand_slug, name, seals, top ingredients) for fast cross-brand search without querying all DBs.
+
+### Alembic Multi-Database Strategy
+
+- **Central DB:** Separate Alembic environment at `src/storage/central_migrations/` with its own `env.py` pointing to `CENTRAL_DATABASE_URL`
+- **Brand DBs:** Existing Alembic environment at `src/storage/migrations/` — a new script `scripts/migrate_all_brands.py` programmatically runs `alembic.command.upgrade(config, "head")` for each brand, overriding `sqlalchemy.url` per iteration
+- **Partial failure:** If migration fails on one brand DB, log the error, skip that brand, continue with others. Failed brands marked `is_active=false` in central DB. Startup does NOT block on brand migration failures.
+- **Schema drift detection:** `migrate_all_brands.py` reports which brands are at which Alembic revision — mismatches flagged in logs
+
+### Connection Pool Limits
+
+Railway Starter PostgreSQL allows ~20 concurrent connections. With `--workers 2`:
+- Per-brand engine: `pool_size=3, max_overflow=2` = max 5 connections per brand per worker
+- Central engine: `pool_size=5, max_overflow=3`
+- Lazy engine creation: brand engines created on first request, not at startup
+- Idle connections recycled after 300s (`pool_recycle=300`)
 
 ### Migration Script
 
@@ -125,8 +134,7 @@ python3 scripts/migrate_to_railway.py --all
 | `/` | Home | Hero stats, featured brands grid |
 | `/brands` | Brand Catalog | Cards with logo, counts, INCI rate, top seals |
 | `/brands/:slug` | Brand Page | Brand header + product grid with filters |
-| `/products/:id` | Product Detail | Image, INCI list, seals, composition, usage |
-| `/search` | Global Search | Cross-brand search by product name, ingredient, seal |
+| `/brands/:slug/products/:id` | Product Detail | Image, INCI list, seals, composition, usage |
 | `/admin` | Admin Dashboard | Operational dashboard (existing) |
 | `/admin/quarantine` | Quarantine Review | Existing quarantine page |
 | `/admin/review-queue` | Review Queue | Existing review queue page |
@@ -151,7 +159,7 @@ python3 scripts/migrate_to_railway.py --all
 - Product grid: ProductCards with image, name, seal badges
 - Sort by: name, seal count
 
-#### Product Detail (`/products/:id`)
+#### Product Detail (`/brands/:slug/products/:id`)
 - 2-column layout: image (left), data (right)
 - Product name, brand link, verification status badge
 - INCI ingredient list: numbered by position, highlight silicones (orange) and sulfates (red)
@@ -159,10 +167,8 @@ python3 scripts/migrate_to_railway.py --all
 - Accordions: Composição, Modo de Uso, Descrição
 - Evidence trail (collapsible): extraction method, selectors used, timestamps
 
-#### Global Search (`/search`)
-- Single search bar with type selector (product, ingredient, seal)
-- Results grouped by brand
-- Cross-brand ingredient search: "find all products containing Dimethicone"
+#### Global Search (Phase 2 — deferred)
+Cross-brand search deferred to Phase 2. In Phase 1, search is available within each brand page only.
 
 ### Component Library
 
@@ -192,8 +198,7 @@ Built on existing Shadcn UI installation:
 | GET | `/api/brands` | List all brands with stats (from central DB) |
 | GET | `/api/brands/:slug` | Brand detail with full stats |
 | GET | `/api/brands/:slug/products` | Products for a brand (from brand DB) |
-| GET | `/api/products/:id` | Product detail with INCI, seals, evidence |
-| GET | `/api/search` | Cross-brand search (products, ingredients, seals) |
+| GET | `/api/brands/:slug/products/:id` | Product detail with INCI, seals, evidence |
 | GET | `/api/stats` | Global stats (total products, brands, ingredients) |
 
 ### Modified Endpoints
@@ -206,16 +211,44 @@ Existing endpoints adapted to work with multi-database:
 ### Database Router Dependency
 
 ```python
-# New dependency pattern
-async def get_brand_db(brand: str = Query(...)) -> Session:
-    return db_router.get_session(brand)
+# Path-based dependency (for /brands/{slug}/... routes)
+def get_brand_db_from_path(slug: str) -> Generator[Session, None, None]:
+    session = db_router.get_session(slug)
+    try:
+        yield session
+    finally:
+        session.close()
+
+# Query-based dependency (for /products?brand=... routes)
+def get_brand_db_from_query(brand: str = Query(...)) -> Generator[Session, None, None]:
+    session = db_router.get_session(brand)
+    try:
+        yield session
+    finally:
+        session.close()
 
 # Route usage
 @router.get("/brands/{slug}/products")
-async def get_brand_products(slug: str, session: Session = Depends(get_brand_db)):
+async def get_brand_products(slug: str, session: Session = Depends(get_brand_db_from_path)):
     repo = ProductRepository(session)
     return repo.get_products()
 ```
+
+### Existing Endpoint Migration
+
+- `GET /api/brands` — reads from central DB `brand_databases` table (replaces existing single-DB query)
+- `GET /api/brands/{slug}/coverage` — kept for backwards compatibility, reads from brand DB
+- `GET /api/products` — requires `brand` query param, routed to brand DB
+- `GET /api/quarantine` — requires `brand` query param, routed to brand DB
+- `GET /api/ingredients` — requires `brand` query param, routed to brand DB
+- `FOCUS_BRAND` env var — deprecated, removed from all routes
+
+### Error Handling for Database Unavailability
+
+- If a brand PostgreSQL is unreachable, `db_router.get_session()` raises `BrandDatabaseUnavailable`
+- `GET /api/brands` returns all brands from central DB, with an `is_available` boolean per brand (checked via lightweight ping)
+- Brand-specific routes return 503 with message "Brand database temporarily unavailable"
+- Home page stats come from central DB only (pre-computed) — never blocked by brand DB issues
 
 ## 5. Deploy Configuration
 
@@ -232,14 +265,15 @@ async def get_brand_products(slug: str, session: Session = Depends(get_brand_db)
 
 - Already multi-stage (Node build → Python runtime)
 - Add: install `psycopg2-binary` for PostgreSQL support (may already be in deps)
+- Add: copy `scripts/` directory (currently not copied)
 - Entrypoint updated: migrate central DB + all brand DBs on startup
 
 ### Startup Flow
 
 ```
 entrypoint.sh:
-  1. alembic upgrade head (central DB)
-  2. python3 scripts/migrate_all_brands.py (run migrations on all brand DBs)
+  1. ALEMBIC_DATABASE_URL=$CENTRAL_DATABASE_URL alembic -c alembic_central.ini upgrade head
+  2. python3 scripts/migrate_all_brands.py  # runs alembic on each brand DB, non-blocking on failure
   3. uvicorn src.api.main:app --workers 2 --port $PORT
 ```
 
@@ -272,7 +306,7 @@ entrypoint.sh:
 
 **Cross-brand tables (central DB only):**
 - brand_databases (manually populated with connection strings)
-- users, user_profiles (empty, for future use)
+- users, user_profiles (deferred to AI phase)
 
 ### Validation
 
@@ -288,10 +322,13 @@ python3 scripts/validate_migration.py --brand amend
 
 - AI recommendation engine (future — separate spec)
 - User authentication/login
+- Users and user_profiles tables (deferred to AI phase)
+- Cross-brand global search (Phase 2 — requires product_index in central DB)
 - Pipeline monitor real-time page
 - L'Oréal inside-our-products.loreal.com INCI scraping
 - Brand logo upload/management (use placeholder icons for now)
 - PWA/mobile app
+- CLI pipeline commands (`haira scrape`, `haira labels`) multi-database support (keep using local SQLite for pipeline, migrate results to Railway after)
 
 ---
 
@@ -315,8 +352,7 @@ src/api/
   main.py              — MODIFIED: add central DB init, new routes
   routes/brands.py     — MODIFIED: use db_router for brand-specific queries
   routes/products.py   — MODIFIED: use db_router
-  routes/search.py     — NEW: cross-brand search endpoint
-  routes/stats.py      — NEW: global stats endpoint
+  routes/stats.py      — NEW: global stats endpoint (reads from central DB)
 
 frontend/src/
   pages/
@@ -324,7 +360,6 @@ frontend/src/
     BrandCatalog.tsx   — NEW: replaces BrandsDashboard for public view
     BrandPage.tsx      — NEW: brand detail with product grid + filters
     ProductDetail.tsx  — NEW: full product page with INCI/seals
-    Search.tsx         — NEW: cross-brand search
     admin/             — NEW directory: move existing operational pages here
   components/
     BrandCard.tsx      — NEW
