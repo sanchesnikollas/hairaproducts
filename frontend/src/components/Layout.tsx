@@ -6,13 +6,26 @@ import { Badge } from '@/components/ui/badge';
 import { getQuarantine } from '@/lib/api';
 import GlobalSearch from '@/components/GlobalSearch';
 
-const navItems = [
-  { to: '/', label: 'Dashboard', icon: dashboardIcon },
+const mainNavItems = [
+  { to: '/', label: 'Home', icon: homeIcon },
   { to: '/brands', label: 'Brands', icon: brandsIcon },
-  { to: '/products', label: 'Products', icon: productIcon },
-  { to: '/quarantine', label: 'Quarantine', icon: quarantineIcon },
-  { to: '/review-queue', label: 'Review Queue', icon: reviewQueueIcon },
 ];
+
+const adminNavItems = [
+  { to: '/admin', label: 'Dashboard', icon: dashboardIcon },
+  { to: '/admin/products', label: 'Products', icon: productIcon },
+  { to: '/admin/quarantine', label: 'Quarantine', icon: quarantineIcon },
+  { to: '/admin/review-queue', label: 'Review Queue', icon: reviewQueueIcon },
+];
+
+function homeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
+    </svg>
+  );
+}
 
 function dashboardIcon() {
   return (
@@ -122,7 +135,8 @@ export default function Layout() {
           </motion.div>
 
           <nav className="flex items-center gap-0">
-            {navItems.map((item, i) => (
+            {/* Main nav */}
+            {mainNavItems.map((item, i) => (
               <motion.div
                 key={item.to}
                 initial={{ opacity: 0, y: -8 }}
@@ -145,7 +159,47 @@ export default function Layout() {
                     <>
                       <item.icon />
                       <span>{item.label}</span>
-                      {item.to === '/quarantine' && quarantineCount > 0 && (
+                      {isActive && (
+                        <motion.div
+                          layoutId="nav-underline"
+                          className="absolute bottom-0 left-2 right-2 h-0.5 bg-champagne rounded-full"
+                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                        />
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              </motion.div>
+            ))}
+
+            {/* Separator */}
+            <div className="w-px h-5 bg-ink/10 mx-1" />
+
+            {/* Admin nav */}
+            {adminNavItems.map((item, i) => (
+              <motion.div
+                key={item.to}
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 + i * 0.05 }}
+              >
+                <NavLink
+                  to={item.to}
+                  end={item.to === '/admin'}
+                  className={({ isActive }) =>
+                    cn(
+                      'relative flex items-center gap-2 px-3 py-2 text-sm transition-colors duration-200',
+                      isActive
+                        ? 'text-champagne-dark font-medium'
+                        : 'text-ink-faint hover:text-ink-muted'
+                    )
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <item.icon />
+                      <span className="hidden xl:inline">{item.label}</span>
+                      {item.to === '/admin/quarantine' && quarantineCount > 0 && (
                         <Badge variant="destructive" className="ml-1 h-4 px-1.5 text-[10px] leading-none">
                           {quarantineCount}
                         </Badge>
