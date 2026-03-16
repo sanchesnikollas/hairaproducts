@@ -1,4 +1,4 @@
-import type { BrandCoverage, IngredientSummary, PaginatedResponse, Product, ProductIngredient, QuarantineItem, ReviewQueueItem } from '../types/api';
+import type { BrandCoverage, BrandSummary, GlobalStats, IngredientSummary, PaginatedResponse, Product, ProductIngredient, QuarantineItem, ReviewQueueItem } from '../types/api';
 
 const BASE_URL = '/api';
 
@@ -69,10 +69,36 @@ export async function updateProduct(id: string, data: Partial<Product>): Promise
   });
 }
 
-// ── Config ──
+// ── Global Stats ──
 
-export async function getFocusBrand(): Promise<{ focus_brand: string | null }> {
-  return fetchJSON<{ focus_brand: string | null }>('/config/focus-brand');
+export async function getGlobalStats(): Promise<GlobalStats> {
+  return fetchJSON<GlobalStats>('/stats');
+}
+
+// ── Brand Summaries ──
+
+export async function getBrandSummaries(): Promise<BrandSummary[]> {
+  return fetchJSON<BrandSummary[]>('/brands');
+}
+
+export async function getBrandProducts(
+  slug: string,
+  filters: Omit<ProductFilters, 'brand'> = {}
+): Promise<PaginatedResponse<Product>> {
+  const params = new URLSearchParams();
+  if (filters.verified_only !== undefined) params.set('verified_only', String(filters.verified_only));
+  if (filters.exclude_kits !== undefined) params.set('exclude_kits', String(filters.exclude_kits));
+  if (filters.search) params.set('search', filters.search);
+  if (filters.category) params.set('category', filters.category);
+  const perPage = filters.per_page ?? 100;
+  params.set('limit', String(perPage));
+  if (filters.page) params.set('offset', String(((filters.page ?? 1) - 1) * perPage));
+  const qs = params.toString();
+  return fetchJSON<PaginatedResponse<Product>>(`/brands/${slug}/products${qs ? `?${qs}` : ''}`);
+}
+
+export async function getBrandProduct(slug: string, productId: string): Promise<Product> {
+  return fetchJSON<Product>(`/brands/${slug}/products/${productId}`);
 }
 
 // ── Quarantine ──
