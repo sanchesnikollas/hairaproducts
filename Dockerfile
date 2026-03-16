@@ -20,6 +20,8 @@ COPY pyproject.toml ./
 COPY src/ ./src/
 COPY config/ ./config/
 COPY alembic.ini ./
+COPY alembic_central.ini ./
+COPY scripts/ ./scripts/
 COPY entrypoint.sh ./
 
 # Install Python package
