@@ -143,3 +143,19 @@ export interface ReviewQueueItem {
     resolution: string;
   } | null;
 }
+
+export interface BrandSummary {
+  brand_slug: string;
+  brand_name: string;
+  product_count: number;
+  inci_rate: number;
+  platform: string | null;
+  is_active: boolean;
+}
+
+export interface GlobalStats {
+  total_brands: number;
+  total_products: number;
+  avg_inci_rate: number;
+  platforms: string[];
+}
