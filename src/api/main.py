@@ -16,21 +16,9 @@ from src.api.routes.products import router as products_router
 from src.api.routes.brands import router as brands_router
 from src.api.routes.quarantine import router as quarantine_router
 from src.api.routes.ingredients import router as ingredients_router
+from src.api.routes.stats import router as stats_router
 
 logger = logging.getLogger("haira.api")
-
-# ── Env validation ──
-
-_REQUIRED_ENV = ["DATABASE_URL"]
-
-
-def _validate_env() -> None:
-    missing = [v for v in _REQUIRED_ENV if not os.environ.get(v)]
-    if missing:
-        logger.warning("Missing environment variables: %s", ", ".join(missing))
-
-
-_validate_env()
 
 # ── Rate limiter (in-memory, per-IP) ──
 
@@ -88,6 +76,30 @@ app.include_router(products_router, prefix="/api")
 app.include_router(brands_router, prefix="/api")
 app.include_router(quarantine_router, prefix="/api")
 app.include_router(ingredients_router, prefix="/api")
+app.include_router(stats_router, prefix="/api")
+
+
+@app.on_event("startup")
+def _init_multi_db() -> None:
+    """Initialise multi-database routing if CENTRAL_DATABASE_URL is set."""
+    central_url = os.environ.get("CENTRAL_DATABASE_URL", "").strip()
+    if central_url:
+        from sqlalchemy import create_engine
+        from src.api.dependencies import init_router
+
+        if central_url.startswith("postgres://"):
+            central_url = central_url.replace("postgres://", "postgresql://", 1)
+        central_engine = create_engine(
+            central_url,
+            pool_size=3,
+            max_overflow=2,
+            pool_pre_ping=True,
+            pool_recycle=300,
+        )
+        init_router(central_engine)
+        logger.info("Multi-database mode enabled (CENTRAL_DATABASE_URL set)")
+    else:
+        logger.info("Single-database mode (CENTRAL_DATABASE_URL not set)")
 
 
 @app.get("/health")

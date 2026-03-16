@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import csv
 import io
-import os
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -57,22 +56,12 @@ class ProductUpdate(BaseModel):
     verification_status: Optional[str] = None
     product_labels: Optional[dict] = None
 
-# If FOCUS_BRAND is set, default brand_slug filter to that brand
-_FOCUS_BRAND = os.environ.get("FOCUS_BRAND", "").strip() or None
-
-
 def _get_session():
     from sqlalchemy.orm import Session as SASession
     from src.storage.database import get_engine
     engine = get_engine()
     with SASession(engine) as session:
         yield session
-
-
-@router.get("/config/focus-brand")
-def get_focus_brand():
-    """Return the current focus brand (if set via FOCUS_BRAND env var)."""
-    return {"focus_brand": _FOCUS_BRAND}
 
 
 def _serialize_product_list_item(p: ProductORM) -> dict:
@@ -112,11 +101,9 @@ def list_products(
     offset: int = Query(default=0, ge=0),
     session: Session = Depends(_get_session),
 ):
-    # Apply focus brand default if no brand filter specified
-    effective_brand = brand_slug if brand_slug is not None else _FOCUS_BRAND
     repo = ProductRepository(session)
     products = repo.get_products(
-        brand_slug=effective_brand,
+        brand_slug=brand_slug,
         verified_only=verified_only,
         search=search,
         category=category,
@@ -125,7 +112,7 @@ def list_products(
         offset=offset,
     )
     total = repo.count_products(
-        brand_slug=effective_brand,
+        brand_slug=brand_slug,
         verified_only=verified_only,
         search=search,
         category=category,
@@ -152,10 +139,9 @@ def export_products(
     format: str = Query(default="csv", pattern="^(csv|json)$"),
     session: Session = Depends(_get_session),
 ):
-    effective_brand = brand_slug if brand_slug is not None else _FOCUS_BRAND
     repo = ProductRepository(session)
     products = repo.get_products(
-        brand_slug=effective_brand,
+        brand_slug=brand_slug,
         verified_only=verified_only,
         search=search,
         limit=10000,
@@ -188,12 +174,8 @@ def export_products(
     )
 
 
-@router.get("/products/{product_id}")
-def get_product(product_id: str, session: Session = Depends(_get_session)):
-    repo = ProductRepository(session)
-    product = repo.get_product_by_id(product_id)
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
+def _serialize_product_detail(product: ProductORM) -> dict:
+    """Serialise a product with full detail including evidence rows."""
     return {
         "id": product.id,
         "brand_slug": product.brand_slug,
@@ -238,6 +220,15 @@ def get_product(product_id: str, session: Session = Depends(_get_session)):
             for e in product.evidence
         ],
     }
+
+
+@router.get("/products/{product_id}")
+def get_product(product_id: str, session: Session = Depends(_get_session)):
+    repo = ProductRepository(session)
+    product = repo.get_product_by_id(product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return _serialize_product_detail(product)
 
 
 @router.get("/products/{product_id}/ingredients")
