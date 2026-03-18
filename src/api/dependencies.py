@@ -42,10 +42,24 @@ def is_multi_db() -> bool:
 
 
 def get_brand_db_from_path(request: Request) -> Generator[Session, None, None]:
-    """Yield a brand-specific DB session using the ``slug`` path parameter."""
+    """Yield a brand-specific DB session using the ``slug`` path parameter.
+
+    Falls back to the default single-DB session when multi-DB is not active.
+    """
     slug: str = request.path_params.get("slug", "")
     if not slug:
         raise HTTPException(status_code=400, detail="Missing brand slug in path")
+
+    if not is_multi_db():
+        # Single-DB fallback
+        from src.storage.database import get_engine
+        engine = get_engine()
+        session = Session(bind=engine)
+        try:
+            yield session
+        finally:
+            session.close()
+        return
 
     router = get_router()
     session: Session | None = None
@@ -86,3 +100,18 @@ def get_central_db() -> Generator[Session, None, None]:
     finally:
         if session is not None:
             session.close()
+
+
+from src.storage.ops_models import UserORM  # noqa: ensure tables are created
+
+
+def get_ops_session() -> Generator[Session, None, None]:
+    """Session for ops tables (users, revision_history). Uses primary DB (not brand-specific).
+    In multi-DB mode: uses central DB. In single-DB mode: uses the default engine."""
+    if is_multi_db():
+        engine = _router._central_engine
+    else:
+        from src.storage.database import get_engine
+        engine = get_engine()
+    with Session(engine) as session:
+        yield session
