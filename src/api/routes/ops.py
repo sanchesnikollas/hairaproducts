@@ -147,6 +147,30 @@ def ops_batch_update(
     return {"status": "ok", "updated": len(products)}
 
 
+@router.get("/products/{product_id}")
+def ops_get_product(
+    product_id: str,
+    user: dict = Depends(get_current_user),
+    session: Session = Depends(get_ops_session),
+):
+    product = session.query(ProductORM).filter(ProductORM.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return {
+        "id": product.id, "product_name": product.product_name, "brand_slug": product.brand_slug,
+        "description": product.description, "usage_instructions": product.usage_instructions,
+        "product_category": product.product_category, "verification_status": product.verification_status,
+        "inci_ingredients": product.inci_ingredients, "image_url_main": product.image_url_main,
+        "status_operacional": product.status_operacional, "status_editorial": product.status_editorial,
+        "status_publicacao": product.status_publicacao, "confidence": product.confidence,
+        "confidence_factors": product.confidence_factors,
+        "interpretation_data": product.interpretation_data,
+        "application_data": product.application_data,
+        "decision_data": product.decision_data,
+        "assigned_to": product.assigned_to,
+    }
+
+
 @router.get("/products/{product_id}/history")
 def ops_product_history(
     product_id: str,
