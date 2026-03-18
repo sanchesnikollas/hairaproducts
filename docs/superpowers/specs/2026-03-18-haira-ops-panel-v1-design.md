@@ -58,17 +58,21 @@
 status_operacional   VARCHAR   -- fase do pipeline: bruto, extraido, normalizado, parseado, validado
 status_editorial     VARCHAR   -- revisao humana: pendente, em_revisao, aprovado, corrigido, rejeitado
 status_publicacao    VARCHAR   -- visibilidade: rascunho, publicado, despublicado, arquivado
-confidence_score     FLOAT     -- score 0-100 calculado
+assigned_to          UUID FK   -- reviewer atualmente responsavel (nullable)
 confidence_factors   JSONB     -- {completude: 0.8, parsing: 0.9, validacao_humana: 0.0}
 interpretation_data  JSONB     -- camada 2: analise funcional da formula
 application_data     JSONB     -- camada 3: contexto de uso
 decision_data        JSONB     -- camada 4: sintese, confianca, alertas
 ```
 
+**Nota sobre `confidence_score`**: O ProductORM ja possui uma coluna `confidence` (Float, default 0.0). A migration renomeia essa coluna para `confidence_score` e atualiza o calculo conforme Secao 8. Nao serao criadas duas colunas de confianca.
+
 **Migration strategy**: Os 3 campos de status comecam com valores derivados do `verification_status` atual:
 - `verified_inci` -> operacional=`validado`, editorial=`aprovado`, publicacao=`publicado`
 - `catalog_only` -> operacional=`extraido`, editorial=`pendente`, publicacao=`rascunho`
-- `quarantined` -> operacional=`extraido`, editorial=`rejeitado`, publicacao=`rascunho`
+- `quarantined` -> operacional=`extraido`, editorial=`pendente`, publicacao=`rascunho`
+
+**Nota**: Produtos quarantined migram como `editorial=pendente` (nao `rejeitado`), pois foram rejeitados pelo pipeline QA gate, nao por revisao humana. O status `rejeitado` e reservado para decisoes humanas explicitas.
 
 O campo `verification_status` antigo permanece por compatibilidade ate o frontend migrar completamente.
 
@@ -91,10 +95,11 @@ created_at           TIMESTAMP
 
 ```
 user_id              UUID PK
-email                VARCHAR UNIQUE
+email                VARCHAR UNIQUE NOT NULL
+password_hash        VARCHAR NOT NULL  -- bcrypt hash
 name                 VARCHAR
 role                 VARCHAR     -- 'admin' ou 'reviewer'
-is_active            BOOLEAN
+is_active            BOOLEAN DEFAULT true
 created_at           TIMESTAMP
 last_login_at        TIMESTAMP
 ```
@@ -136,9 +141,17 @@ class DecisionData(BaseModel):
 
 - `IngredientORM`, `ClaimORM`, `ProductIngredientORM`, `ProductClaimORM` -- ja existem e estao bem modelados
 - `ProductEvidenceORM` -- continua como esta
-- `QuarantineDetailORM` -- continua, mas o painel usa `status_editorial` como fonte primaria
 - `BrandCoverageORM` -- continua sendo recalculado pelo pipeline
 - Multi-DB architecture -- intocada
+
+### 2.6 Tabelas existentes deprecadas
+
+- **`ReviewQueueORM`** e **`ValidationComparisonORM`** -- existem hoje para field-level comparison de quarentena. O novo fluxo de revisao (Secao 5) substitui completamente essa funcionalidade via `status_editorial` + `assigned_to` + `RevisionHistory`. Estas tabelas sao mantidas durante a transicao e removidas quando o novo fluxo estiver estavel. O endpoint existente `GET /api/review-queue` tambem e deprecado em favor de `GET /api/ops/review-queue`.
+- **`QuarantineDetailORM`** -- continua existindo como registro do pipeline QA gate, mas o painel usa `status_editorial` como fonte primaria para decidir o que precisa de revisao.
+
+### 2.7 Nota sobre DecisionData.confidence_score
+
+O campo `confidence_score` dentro de `DecisionData` (Pydantic) e distinto do `confidence_score` top-level no ProductORM. O top-level e calculado pela formula da Secao 8 (Fase 1). O `DecisionData.confidence_score` sera preenchido pela Moon (Fase 2) como a avaliacao da IA sobre o produto -- quando disponivel, podera ser incorporado como fator adicional na formula.
 
 ---
 
@@ -163,7 +176,7 @@ class DecisionData(BaseModel):
 
 - **Fila prioritaria**: Top 10 produtos com `requires_human_review = true` ordenados por confidence_score ASC (pior primeiro)
 - **Inconsistencias**: Produtos onde `confidence_score < 50` agrupados por tipo de problema (INCI incompleto, categoria ausente, etc.)
-- **Reformulacao suspeita**: Produtos com `status_operacional = 'reformulado_suspeito'` (Fase 2, mas o campo ja existe)
+- **Reformulacao suspeita**: (Fase 2 -- bloco aparece quando deteccao de reformulacao for implementada)
 - **Atividade recente**: Ultimas 20 entradas em RevisionHistory com avatar do autor
 
 ### 3.3 API necessaria
@@ -173,7 +186,7 @@ GET /api/ops/dashboard
 Response: {
   kpis: { total_products, inci_coverage, pending_review, quarantined, published, avg_confidence },
   priority_queue: Product[],         // top 10 requires_human_review
-  low_confidence: Product[],         // confidence < 50
+  low_confidence: Product[],         // confidence < 50, limit 20
   recent_activity: RevisionHistory[] // last 20
 }
 ```
@@ -253,14 +266,18 @@ Ao clicar em qualquer campo editavel:
 ### 4.4 APIs necessarias
 
 ```
-PATCH /api/products/{id}
-  -- ja existe, mas passa a gerar RevisionHistory automaticamente
+PATCH /api/ops/products/{id}
+  -- endpoint ops com auth obrigatoria. Gera RevisionHistory com changed_by do JWT.
+  -- change_source = 'human'
+  -- O endpoint publico existente PATCH /api/products/{id} continua para uso do pipeline
+  -- (change_source = 'pipeline', changed_by = null)
 
-PATCH /api/products/batch
+PATCH /api/ops/products/batch
   -- novo: altera status_editorial ou status_publicacao de multiplos IDs
   Body: { product_ids: [], status_editorial?: string, status_publicacao?: string }
+  -- Transacao atomica: ou todos atualizam ou nenhum. Retorna 400 se algum ID invalido.
 
-GET /api/products/{id}/history
+GET /api/ops/products/{id}/history
   -- novo: retorna RevisionHistory[] para o produto
   Response: { revisions: [{ field_name, old_value, new_value, changed_by, change_source, created_at }] }
 ```
@@ -329,7 +346,9 @@ GET /api/ops/review-queue
   -- agrega as 4 fontes numa unica query ordenada por prioridade
 
 POST /api/ops/review-queue/{product_id}/start
-  -- marca status_editorial = 'em_revisao', registra reviewer
+  -- marca status_editorial = 'em_revisao', assigned_to = user_id do JWT
+  -- Se ja tem assigned_to != null e != user atual, retorna 409 Conflict
+  -- Items em 'em_revisao' ha mais de 1h sem resolucao sao liberados automaticamente
 
 POST /api/ops/review-queue/{product_id}/resolve
   Body: { decision: 'approve' | 'correct' | 'reject', notes?: string, corrections?: Record<string, any> }
@@ -464,7 +483,7 @@ confidence_score = (
 
 **Parsing INCI** (0.0 - 1.0):
 - 0.0 se `inci_ingredients` e null ou vazio
-- 0.5 se tem INCI mas nenhum match em ProductIngredient com `validation_status = 'validated'`
+- Proporcional: `validated_count / total_ingredient_count` se tem INCI e ao menos 1 ProductIngredient
 - 1.0 se tem INCI e todos os ingredientes estao mapeados e validados
 
 **Validacao humana** (0.0 - 1.0):
