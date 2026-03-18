@@ -6,6 +6,9 @@ echo "PORT: ${PORT:-8000}"
 echo "DATABASE_URL set: $([ -n "$DATABASE_URL" ] && echo 'yes' || echo 'NO')"
 echo "CENTRAL_DATABASE_URL set: $([ -n "$CENTRAL_DATABASE_URL" ] && echo 'yes' || echo 'NO')"
 
+# Ensure src package is importable
+export PYTHONPATH="/app:${PYTHONPATH}"
+
 if [ -n "$CENTRAL_DATABASE_URL" ]; then
     echo "Running central DB migrations..."
     python -m alembic -c alembic_central.ini upgrade head 2>&1 || echo "WARNING: central migrations failed"
