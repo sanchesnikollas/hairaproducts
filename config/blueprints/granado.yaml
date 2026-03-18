@@ -1,0 +1,84 @@
+brand_slug: granado
+brand_name: Granado
+platform: custom
+domain: www.granado.com.br
+allowed_domains:
+- www.granado.com.br
+entrypoints:
+- https://www.granado.com.br/granado/corpo-e-banho/cabelos
+- https://www.granado.com.br/granado/corpo-e-banho/cabelos/shampoo
+- https://www.granado.com.br/granado/corpo-e-banho/cabelos/condicionador
+- https://www.granado.com.br/granado/bebe/cabelos
+- https://www.granado.com.br/granado/bebe/cabelos/shampoo
+- https://www.granado.com.br/granado/bebe/cabelos/condicionador
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.granado.com.br/sitemap.xml
+  product_url_pattern: ^https://www\.granado\.com\.br/granado/[\w%-]+-\d+ml$
+  max_pages: 100
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: true
+  headless: true
+  delay_seconds: 3
+  inci_selectors: []
+  name_selectors:
+  - h1
+  - '[class*="productName"]'
+  - '[class*="product-name"]'
+  - .product-title
+  image_selectors:
+  - img[src*="decocache.com"]
+  - img[src*="deco-assets"]
+  - img[src*="vtexassets"]
+  - img[src*="vteximg"]
+  - .product-image img
+  price_selectors:
+  - '[class*="price"]'
+  - '[class*="Price"]'
+  - .product-price
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+      - o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o completa"
+      - "composi\xE7\xE3o"
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: portuguese_names
+  platform_detail: deco_cx_vtex_backend
+  inci_available: true
+  inci_note: "INCI lists are published on all product pages. Site uses deco.cx headless frontend with VTEX backend. Content is JS-rendered via Fresh/Deno partials. Requires Playwright for extraction. 100% INCI extraction rate confirmed."
+  parent_brand: Granado Pharmácias (founded 1870)
+  sub_brands: "Phebo (excluded from this extraction)"
+  product_focus: personal_care_haircare_baby
+  hair_lines: "Terrapeutics, Carioca, Bebê, Barbearia"
+  waf: cloudflare
+version: 1

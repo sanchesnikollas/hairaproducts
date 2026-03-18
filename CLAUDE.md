@@ -100,3 +100,42 @@ React 19 + TypeScript + Vite + Tailwind CSS 4. Key libraries: `recharts` (charts
 Terminal 1: `uvicorn src.api.main:app --reload --port 8000`
 Terminal 2: `cd frontend && npm run dev`
 Open: `http://localhost:5173`
+
+## Agent Ecosystem
+
+Custom agents in `.claude/agents/` for tarefas recorrentes do projeto. Acione via `/agents` ou pela flag `--agent`.
+
+### pipeline-doctor
+**Quando:** Um comando do pipeline falha (`haira scrape`, `haira labels`, `haira enrich`), taxa de verificacao cai, ou dados extraidos estao errados.
+**Output:** Diagnostico da causa raiz + fix aplicado ou proposta.
+**Nao use para:** Problemas de frontend ou deploy.
+
+### brand-onboarding
+**Quando:** Adicionar uma nova marca ao HAIRA — do registro em `brands.json` ate o primeiro scrape completo com cobertura validada.
+**Output:** Marca configurada com blueprint, discovery testado e primeiro batch extraido.
+**Nao use para:** Marcas ja configuradas ou debug de marcas existentes (use pipeline-doctor).
+
+### data-quality-auditor
+**Quando:** Precisa auditar qualidade dos dados — cobertura INCI, labels, campos faltantes, inconsistencias.
+**Output:** Relatorio de qualidade com metricas e problemas priorizados.
+**Nao use para:** Corrigir bugs no codigo ou problemas de UI.
+
+### frontend-reviewer
+**Quando:** Interface tem problemas visuais, componentes quebrados, z-index conflitantes, layout responsivo errado.
+**Output:** Lista de problemas com fixes aplicados e build verificado.
+**Nao use para:** Features novas ou mudancas de design (use brainstorming antes).
+
+### deploy-operator
+**Quando:** Precisa fazer build, rodar migrations e deploy no Railway, ou diagnosticar falha de deploy.
+**Output:** Deploy bem-sucedido com URL de producao verificada.
+**Nao use para:** Mudancas de codigo — faca as mudancas primeiro, depois acione este agente.
+
+### Fluxo tipico
+
+```
+Problema no pipeline?     -> pipeline-doctor
+Nova marca?               -> brand-onboarding
+Dados estao corretos?     -> data-quality-auditor
+UI quebrada?              -> frontend-reviewer
+Tudo pronto, subir?       -> deploy-operator
+```

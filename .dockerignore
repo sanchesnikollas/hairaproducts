@@ -12,7 +12,6 @@ frontend/dist
 .git
 .claude
 data/
-scripts/
 tests/
 docs/
 *.md

@@ -1,0 +1,26 @@
+# Johnson's Baby - Hair-relevant product URLs
+# Source: https://www.johnsonsbaby.com.br/sitemap.xml
+# Extracted: 2026-03-15
+# Categories: shampoo, condicionador, creme-para-pentear
+
+# Shampoos
+https://www.johnsonsbaby.com.br/produtos/shampoo/johnsons-baby-shampoo-2-em-1
+https://www.johnsonsbaby.com.br/produtos/shampoo/johnsons-baby-shampoo-cachos-dos-sonhos
+https://www.johnsonsbaby.com.br/produtos/shampoo/johnsons-baby-shampoo-cheirinho-prolongado
+https://www.johnsonsbaby.com.br/produtos/shampoo/johnsons-baby-shampoo-de-glicerina
+https://www.johnsonsbaby.com.br/produtos/shampoo/johnsons-baby-shampoo-gotas-de-brilho
+https://www.johnsonsbaby.com.br/produtos/shampoo/johnsons-baby-shampoo-para-cabelos-claros
+https://www.johnsonsbaby.com.br/produtos/shampoo/sabonete-nutritivo-derma-protectjohnsons-baby
+https://www.johnsonsbaby.com.br/produtos/shampoo/shampoo-infantil-para-cabelos-crespos-johnsons-blackinho-poderoso
+
+# Condicionadores
+https://www.johnsonsbaby.com.br/produtos/condicionador/condicionador-e-mascara-infantil-para-cabelos-crespos-johnsons-blackinho-poderoso
+https://www.johnsonsbaby.com.br/produtos/condicionador/condicionador-infantil-johnsons-cheirinho-prolongado
+https://www.johnsonsbaby.com.br/produtos/condicionador/johnsons-baby-condicionador-cachos-dos-sonhos
+https://www.johnsonsbaby.com.br/produtos/condicionador/johnsons-baby-condicionador-de-glicerina
+https://www.johnsonsbaby.com.br/produtos/condicionador/johnsons-baby-condicionador-gotas-de-brilho
+https://www.johnsonsbaby.com.br/produtos/condicionador/johnsons-baby-condicionador-para-cabelos-claros
+
+# Cremes para pentear
+https://www.johnsonsbaby.com.br/produtos/creme-para-pentear/creme-para-pentear-infantil-para-cabelos-crespos-johnsons-blackinho-poderoso
+https://www.johnsonsbaby.com.br/produtos/creme-para-pentear/johnsons-baby-creme-para-pentear-cachos-dos-sonhos

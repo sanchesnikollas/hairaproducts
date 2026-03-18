@@ -1,0 +1,71 @@
+brand_slug: avatim
+brand_name: Avatim
+platform: vnda
+domain: www.avatim.com.br
+allowed_domains:
+- www.avatim.com.br
+entrypoints:
+- https://www.avatim.com.br/cabelo
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.avatim.com.br/sitemap.xml
+  product_url_pattern: ^https://www\.avatim\.com\.br/produto/[\w%-]+-\d+$
+  max_pages: 100
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: true
+  delay_seconds: 3
+  inci_selectors: []
+  name_selectors:
+  - h1
+  - .product-name
+  image_selectors:
+  - img[src*="cdn.vnda.com.br"]
+  - .product-images img
+  price_selectors:
+  - '[data-price]'
+  - .product-price
+  section_label_map:
+    description:
+      labels:
+      - sobre o produto
+      - "descri\xE7\xE3o"
+      - detalhes
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+    ingredients_inci:
+      labels:
+      - "composi\xE7\xE3o"
+      - ingredientes
+      - ingredients
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+      - sustentabilidade
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: inci_standard
+  platform_detail: vnda
+  inci_available: true
+  inci_note: "INCI lists are published in the 'MAIS INFORMACOES' tab under 'COMPOSICAO' label. Standard INCI nomenclature. Content is in HTML source (no JS rendering needed)."
+  parent_brand: Avatim Cheiros da Terra
+  product_focus: natural_cosmetics_perfumery_haircare
+  hair_products_limited: true
+  hair_lines: "Reserva (Muru Muru & Pataua), Curumim, Verbena & Bambu, Bonissimo, Seleto"
+version: 1

@@ -1,0 +1,19 @@
+# L'Occitane au Brasil hair product URLs discovered at 2026-03-14T14:17:29.652285+00:00
+# Total: 14 products
+# Source: sitemap at https://br.loccitane.com/pt-br/sitemap_0-product.xml
+# Note: INCI not available on site, products will be catalog_only
+
+https://br.loccitane.com/pt-br/condicionador-aromacologia-equilibrio-natural-250ml/17AS250E19.html
+https://br.loccitane.com/pt-br/condicionador-verbena-citrus-35ml/98BBAS035VA0.html
+https://br.loccitane.com/pt-br/condicionador-verbena-citrus-50ml/98BBAS050VA3.html
+https://br.loccitane.com/pt-br/esfoliante-capilar-aromacologia-refrescante-150ml/11CS150P23.html
+https://br.loccitane.com/pt-br/purificante-shampoo-em-barra-cabelos-60g/17SH060SP21.html
+https://br.loccitane.com/pt-br/refil-condicionador-aromacologia-equilibrio-natural/17RC500E20.html
+https://br.loccitane.com/pt-br/sabonete-liquido-corpo-cabelo-cap-cedrat-250ml/20GD250HC20.html
+https://br.loccitane.com/pt-br/sabonete-liquido-corpo-cabelo-cedrat-75ml/20GD075HC20.html
+https://br.loccitane.com/pt-br/sabonete-liquido-corpo-cabelo-eau-de-cedrat-250ml/20GD250CD20.html
+https://br.loccitane.com/pt-br/sabonete-liquido-corpo-cabelo-eav-des-baux-250ml/20GD250BX20.html
+https://br.loccitane.com/pt-br/sabonete-liquido-corpo-cabelo-loccitan-250ml/20GD250OC20.html
+https://br.loccitane.com/pt-br/shampoo-a-seco-aromacologia-refrescante-80ml/11SH080DP23.html
+https://br.loccitane.com/pt-br/shampoo-barra-aromacologia-equilibrio-natural-60g/17SH060SE21.html
+https://br.loccitane.com/pt-br/shampoo-barra-aromacologia-reparacao-intensiva-60g/17SH060SG21.html

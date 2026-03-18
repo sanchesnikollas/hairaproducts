@@ -1,0 +1,79 @@
+brand_slug: loreal-professionel
+brand_name: "L'Or\xE9al Professionnel"
+platform: custom
+domain: www.lorealprofessionnel.com.br
+allowed_domains:
+- www.lorealprofessionnel.com.br
+entrypoints:
+- https://www.lorealprofessionnel.com.br/todos-produtos
+- https://www.lorealprofessionnel.com.br/todos-produtos/hair-care
+- https://www.lorealprofessionnel.com.br/todos-produtos/hair-color
+- https://www.lorealprofessionnel.com.br/todos-produtos/hair-device
+- https://www.lorealprofessionnel.com.br/todos-produtos/hair-styling
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.lorealprofessionnel.com.br/sitemap.xml
+  product_url_pattern: ^https://www\.lorealprofessionnel\.com\.br/todos-produtos/hair-(care|color|device|styling)/[\w%-]+$
+  max_pages: 200
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: true
+  delay_seconds: 3
+  inci_selectors: []
+  name_selectors:
+  - .product-details__name
+  - h1
+  - .product-title
+  image_selectors: []
+  price_selectors: []
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+    care_usage:
+      labels:
+      - "instru\xE7\xE3o de uso"
+      - "instru\xE7\xF5es de uso"
+      - como usar
+      - modo de uso
+    composition:
+      labels:
+      - "tecnologia patenteada"
+      - tecnologia inovadora
+      - descoberta
+      - "f\xF3rmula"
+      - "composi\xE7\xE3o"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o completa"
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: marketing_names_only
+  platform_detail: loreal_custom_sitecore_vue2
+  inci_available: false
+  inci_note: "INCI lists are NOT published on product pages. The 'Ingredientes' accordion section contains only marketing ingredient names (e.g., 'Peptides bonder + 5 Aminoacidos') and a link to inside-our-products.loreal.com. Actual INCI is not available. Products will be catalog_only."
+  parent_brand: "L'Or\xE9al Groupe"
+  product_focus: professional_haircare
+  hair_lines: "Absolut Repair, Absolut Repair Molecular, Blondifier, Chroma Creme, Curl Expression, Inforcer, Metal Detox, Pro Longer, Scalp Advanced, Serioxyl Advanced, Silver, Vitamino Color, Vitamino Color Spectrum, Tecni Art"
+  page_type_filter: "Only 'product detail page' pages should be extracted. 'product selector page' are range/category pages and must be excluded. Check via pageCategory in page-level JS data."
+  total_products_discovered: 82
+  categories: "hair-care (55 products), hair-color (15 products), hair-device (3 products), hair-styling (9 products)"
+version: 1

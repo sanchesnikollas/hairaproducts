@@ -1503,10 +1503,17 @@
     "country": "Brasil",
     "priority": 36,
     "catalog_entrypoints": [
-      "https://www.eudora.com.br/cabelos/"
+      "https://www.eudora.com.br/cabelos/shampoo/",
+      "https://www.eudora.com.br/cabelos/condicionador/",
+      "https://www.eudora.com.br/cabelos/tratamento/",
+      "https://www.eudora.com.br/cabelos/leave-in-e-creme-para-pentear/",
+      "https://www.eudora.com.br/cabelos/finalizador/",
+      "https://www.eudora.com.br/cabelos/modelador/",
+      "https://www.eudora.com.br/cabelos/kits-de-tratamento/",
+      "https://www.eudora.com.br/produtos-masculinos/cabelos/"
     ],
     "status": "active",
-    "notes": "inci_on_site=sim"
+    "notes": "inci_on_site=sim, platform=vtex, waf=akamai, headed_browser=true, ingredients_lang=pt-BR"
   },
   {
     "brand_name": "Everlong",
@@ -6963,15 +6970,19 @@
   },
   {
     "brand_name": "L'Occitane au Brasil",
-    "brand_slug": "l-occitane-au-brasil",
-    "official_url_root": "https://br.loccitaneaubresil.com/pt-br/cabelos.html",
-    "country": null,
-    "priority": 35,
+    "brand_slug": "loccitane",
+    "official_url_root": "https://br.loccitane.com/",
+    "country": "Brasil",
+    "priority": 4,
     "catalog_entrypoints": [
-      "https://br.loccitaneaubresil.com/pt-br/cabelos.html"
+      "https://br.loccitane.com/pt-br/tipos-de-cabelos",
+      "https://br.loccitane.com/pt-br/aromacologia.html",
+      "https://br.loccitane.com/pt-br/shampoo-com-ingredientes-naturais",
+      "https://br.loccitane.com/pt-br/condicionador-para-cabelo",
+      "https://br.loccitane.com/pt-br/produtos-masculinos-para-cabelo-e-banho"
     ],
     "status": "active",
-    "notes": null
+    "notes": "platform=sfcc_demandware, inci_on_site=nao"
   },
   {
     "brand_name": "Colgate-Palmolive",
