@@ -1,5 +1,4 @@
 from __future__ import annotations
-import pytest
 from src.api.auth import create_access_token, verify_token
 
 

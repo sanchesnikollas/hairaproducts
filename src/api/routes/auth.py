@@ -2,6 +2,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import bcrypt
 from fastapi import APIRouter, Depends, HTTPException
+from typing import Literal
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from src.api.auth import create_access_token, get_current_user, require_admin
@@ -20,12 +21,12 @@ class CreateUserRequest(BaseModel):
     email: str
     password: str
     name: str
-    role: str = "reviewer"
+    role: Literal["admin", "reviewer"] = "reviewer"
 
 
 class UpdateUserRequest(BaseModel):
     name: str | None = None
-    role: str | None = None
+    role: Literal["admin", "reviewer"] | None = None
     is_active: bool | None = None
 
 

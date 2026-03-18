@@ -19,7 +19,7 @@ def create_access_token(user_id: str, role: str, expires_minutes: int = DEFAULT_
 def verify_token(token: str) -> dict[str, Any] | None:
     try:
         return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except (jwt.InvalidTokenError, jwt.ExpiredSignatureError):
+    except jwt.InvalidTokenError:
         return None
 
 
