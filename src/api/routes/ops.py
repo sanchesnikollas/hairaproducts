@@ -188,3 +188,103 @@ def ops_patch_product(
     create_revisions(session, "product", product_id, old_values, updates, user["sub"], "human")
     session.commit()
     return {"status": "ok", "product_id": product_id}
+
+
+class ResolveRequest(BaseModel):
+    decision: str  # approve | correct | reject
+    notes: str | None = None
+    corrections: dict | None = None
+
+
+@router.get("/review-queue")
+def get_review_queue(
+    type: str | None = None,
+    brand: str | None = None,
+    page: int = 1,
+    per_page: int = 20,
+    user: dict = Depends(get_current_user),
+    session: Session = Depends(get_ops_session),
+):
+    q = session.query(ProductORM).filter(
+        or_(
+            ProductORM.status_editorial.in_(["pendente", "rejeitado"]),
+            ProductORM.confidence < 50,
+        )
+    )
+    if brand:
+        q = q.filter(ProductORM.brand_slug == brand)
+    total = q.count()
+    items = q.order_by(ProductORM.confidence.asc()).offset((page - 1) * per_page).limit(per_page).all()
+    return {
+        "items": [
+            {
+                "id": p.id, "product_name": p.product_name, "brand_slug": p.brand_slug,
+                "status_editorial": p.status_editorial, "confidence": p.confidence,
+                "verification_status": p.verification_status,
+                "assigned_to": p.assigned_to,
+                "created_at": str(p.created_at) if p.created_at else None,
+            }
+            for p in items
+        ],
+        "total": total, "page": page, "per_page": per_page,
+    }
+
+
+@router.post("/review-queue/{product_id}/start")
+def start_review(
+    product_id: str,
+    user: dict = Depends(get_current_user),
+    session: Session = Depends(get_ops_session),
+):
+    product = session.query(ProductORM).filter(ProductORM.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    if product.assigned_to and product.assigned_to != user["sub"]:
+        raise HTTPException(status_code=409, detail="Product already assigned to another reviewer")
+    old_values = {"status_editorial": product.status_editorial, "assigned_to": product.assigned_to}
+    product.status_editorial = "em_revisao"
+    product.assigned_to = user["sub"]
+    create_revisions(session, "product", product_id, old_values,
+                     {"status_editorial": "em_revisao", "assigned_to": user["sub"]},
+                     user["sub"], "human")
+    session.commit()
+    return {"status": "ok", "product_id": product_id}
+
+
+@router.post("/review-queue/{product_id}/resolve")
+def resolve_review(
+    product_id: str,
+    body: ResolveRequest,
+    user: dict = Depends(get_current_user),
+    session: Session = Depends(get_ops_session),
+):
+    product = session.query(ProductORM).filter(ProductORM.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    old_values = {"status_editorial": product.status_editorial, "status_publicacao": product.status_publicacao}
+    if body.decision == "approve":
+        product.status_editorial = "aprovado"
+        product.status_publicacao = "publicado"
+    elif body.decision == "correct":
+        product.status_editorial = "corrigido"
+        if body.corrections:
+            correction_old = {}
+            correction_new = {}
+            for field, value in body.corrections.items():
+                if hasattr(product, field):
+                    correction_old[field] = getattr(product, field)
+                    correction_new[field] = value
+                    setattr(product, field, value)
+            if correction_old:
+                create_revisions(session, "product", product_id, correction_old, correction_new,
+                                 user["sub"], "human", change_reason=body.notes)
+    elif body.decision == "reject":
+        product.status_editorial = "rejeitado"
+    else:
+        raise HTTPException(status_code=400, detail="Invalid decision")
+    product.assigned_to = None
+    new_values = {"status_editorial": product.status_editorial, "status_publicacao": product.status_publicacao}
+    create_revisions(session, "product", product_id, old_values, new_values, user["sub"], "human",
+                     change_reason=body.notes)
+    session.commit()
+    return {"status": "ok", "product_id": product_id, "decision": body.decision}

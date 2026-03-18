@@ -110,3 +110,53 @@ class TestOpsProducts:
         )
         assert r.status_code == 200
         assert r.json()["updated"] == 3
+
+
+class TestReviewQueue:
+    def setup_method(self):
+        self.engine = _setup()
+        admin_id = _seed_data(self.engine)
+        self.token = create_access_token(user_id=admin_id, role="admin")
+        def override():
+            with Session(self.engine) as s:
+                yield s
+        from src.api.dependencies import get_ops_session
+        app.dependency_overrides[get_ops_session] = override
+        self.client = TestClient(app)
+
+    def teardown_method(self):
+        app.dependency_overrides.clear()
+
+    def test_get_review_queue_returns_pending_items(self):
+        r = self.client.get("/api/ops/review-queue", headers={"Authorization": f"Bearer {self.token}"})
+        assert r.status_code == 200
+        items = r.json()["items"]
+        assert len(items) >= 2
+
+    def test_start_review_assigns_product(self):
+        r = self.client.get("/api/ops/review-queue", headers={"Authorization": f"Bearer {self.token}"})
+        pid = r.json()["items"][0]["id"]
+        r2 = self.client.post(
+            f"/api/ops/review-queue/{pid}/start",
+            headers={"Authorization": f"Bearer {self.token}"},
+        )
+        assert r2.status_code == 200
+        with Session(self.engine) as s:
+            p = s.query(ProductORM).filter(ProductORM.id == pid).first()
+            assert p.status_editorial == "em_revisao"
+            assert p.assigned_to is not None
+
+    def test_resolve_review_approve(self):
+        r = self.client.get("/api/ops/review-queue", headers={"Authorization": f"Bearer {self.token}"})
+        pid = r.json()["items"][0]["id"]
+        self.client.post(f"/api/ops/review-queue/{pid}/start", headers={"Authorization": f"Bearer {self.token}"})
+        r3 = self.client.post(
+            f"/api/ops/review-queue/{pid}/resolve",
+            json={"decision": "approve"},
+            headers={"Authorization": f"Bearer {self.token}"},
+        )
+        assert r3.status_code == 200
+        with Session(self.engine) as s:
+            p = s.query(ProductORM).filter(ProductORM.id == pid).first()
+            assert p.status_editorial == "aprovado"
+            assert p.status_publicacao == "publicado"
