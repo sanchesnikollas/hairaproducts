@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 import bcrypt
-from src.storage.orm_models import Base, ProductORM
+from src.storage.orm_models import Base, ProductORM, IngredientORM, ProductIngredientORM
 from src.storage.ops_models import UserORM
 from src.api.main import app
 from src.api.auth import create_access_token
@@ -160,3 +160,47 @@ class TestReviewQueue:
             p = s.query(ProductORM).filter(ProductORM.id == pid).first()
             assert p.status_editorial == "aprovado"
             assert p.status_publicacao == "publicado"
+
+
+class TestOpsIngredients:
+    def setup_method(self):
+        self.engine = _setup()
+        admin_id = _seed_data(self.engine)
+        self.token = create_access_token(user_id=admin_id, role="admin")
+        with Session(self.engine) as s:
+            ing = IngredientORM(canonical_name="Water", inci_name="Aqua")
+            s.add(ing)
+            s.commit()
+            self.ingredient_id = ing.id
+        def override():
+            with Session(self.engine) as s:
+                yield s
+        from src.api.dependencies import get_ops_session
+        app.dependency_overrides[get_ops_session] = override
+        self.client = TestClient(app)
+
+    def teardown_method(self):
+        app.dependency_overrides.clear()
+
+    def test_patch_ingredient(self):
+        r = self.client.patch(
+            f"/api/ops/ingredients/{self.ingredient_id}",
+            json={"category": "solvent"},
+            headers={"Authorization": f"Bearer {self.token}"},
+        )
+        assert r.status_code == 200
+
+    def test_get_gaps(self):
+        r = self.client.get("/api/ops/ingredients/gaps", headers={"Authorization": f"Bearer {self.token}"})
+        assert r.status_code == 200
+        data = r.json()
+        assert "uncategorized" in data
+
+    def test_requires_admin(self):
+        reviewer_token = create_access_token(user_id="rev-1", role="reviewer")
+        r = self.client.patch(
+            f"/api/ops/ingredients/{self.ingredient_id}",
+            json={"category": "solvent"},
+            headers={"Authorization": f"Bearer {reviewer_token}"},
+        )
+        assert r.status_code == 403
