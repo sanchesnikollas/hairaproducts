@@ -1,5 +1,4 @@
 from __future__ import annotations
-import pytest
 from src.core.ops_schemas import InterpretationData, ApplicationData, DecisionData
 
 
