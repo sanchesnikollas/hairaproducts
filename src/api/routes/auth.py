@@ -1,0 +1,88 @@
+from __future__ import annotations
+from datetime import datetime, timezone
+import bcrypt
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+from src.api.auth import create_access_token, get_current_user, require_admin
+from src.api.dependencies import get_ops_session
+from src.storage.ops_models import UserORM
+
+router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class CreateUserRequest(BaseModel):
+    email: str
+    password: str
+    name: str
+    role: str = "reviewer"
+
+
+class UpdateUserRequest(BaseModel):
+    name: str | None = None
+    role: str | None = None
+    is_active: bool | None = None
+
+
+@router.post("/login")
+def login(body: LoginRequest, session: Session = Depends(get_ops_session)):
+    user = session.query(UserORM).filter(UserORM.email == body.email, UserORM.is_active.is_(True)).first()
+    if not user or not bcrypt.checkpw(body.password.encode(), user.password_hash.encode()):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    user.last_login_at = datetime.now(timezone.utc)
+    session.commit()
+    token = create_access_token(user_id=user.user_id, role=user.role)
+    return {
+        "token": token,
+        "user": {"id": user.user_id, "name": user.name, "email": user.email, "role": user.role},
+    }
+
+
+@router.get("/me")
+def me(user: dict = Depends(get_current_user), session: Session = Depends(get_ops_session)):
+    db_user = session.query(UserORM).filter(UserORM.user_id == user["sub"]).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"id": db_user.user_id, "name": db_user.name, "email": db_user.email, "role": db_user.role}
+
+
+@router.post("/users", status_code=201)
+def create_user(body: CreateUserRequest, admin: dict = Depends(require_admin), session: Session = Depends(get_ops_session)):
+    existing = session.query(UserORM).filter(UserORM.email == body.email).first()
+    if existing:
+        raise HTTPException(status_code=409, detail="Email already registered")
+    pw_hash = bcrypt.hashpw(body.password.encode(), bcrypt.gensalt()).decode()
+    user = UserORM(email=body.email, password_hash=pw_hash, name=body.name, role=body.role)
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return {"id": user.user_id, "name": user.name, "email": user.email, "role": user.role}
+
+
+@router.get("/users")
+def list_users(admin: dict = Depends(require_admin), session: Session = Depends(get_ops_session)):
+    users = session.query(UserORM).order_by(UserORM.created_at).all()
+    return [
+        {"id": u.user_id, "name": u.name, "email": u.email, "role": u.role, "is_active": u.is_active}
+        for u in users
+    ]
+
+
+@router.patch("/users/{user_id}")
+def update_user(user_id: str, body: UpdateUserRequest, admin: dict = Depends(require_admin), session: Session = Depends(get_ops_session)):
+    user = session.query(UserORM).filter(UserORM.user_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if body.name is not None:
+        user.name = body.name
+    if body.role is not None:
+        user.role = body.role
+    if body.is_active is not None:
+        user.is_active = body.is_active
+    session.commit()
+    return {"id": user.user_id, "name": user.name, "email": user.email, "role": user.role, "is_active": user.is_active}
