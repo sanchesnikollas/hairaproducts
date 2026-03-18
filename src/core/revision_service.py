@@ -52,6 +52,7 @@ def get_entity_history(
     entity_id: str,
     field_name: str | None = None,
     limit: int = 100,
+    offset: int = 0,
 ) -> list[RevisionHistoryORM]:
     """Return revision history for an entity, ordered by created_at."""
     q = session.query(RevisionHistoryORM).filter(
@@ -60,4 +61,17 @@ def get_entity_history(
     )
     if field_name:
         q = q.filter(RevisionHistoryORM.field_name == field_name)
-    return q.order_by(RevisionHistoryORM.created_at.asc()).limit(limit).all()
+    return q.order_by(RevisionHistoryORM.created_at.asc()).offset(offset).limit(limit).all()
+
+
+def count_entity_history(
+    session: Session,
+    entity_type: str,
+    entity_id: str,
+) -> int:
+    """Return total revision count for an entity."""
+    from sqlalchemy import func
+    return session.query(func.count(RevisionHistoryORM.revision_id)).filter(
+        RevisionHistoryORM.entity_type == entity_type,
+        RevisionHistoryORM.entity_id == entity_id,
+    ).scalar() or 0

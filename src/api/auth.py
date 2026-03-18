@@ -4,6 +4,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 import jwt
 from fastapi import Depends, HTTPException, Request
+from sqlalchemy.orm import Session
+from src.api.dependencies import get_ops_session
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "haira-ops-dev-secret-change-in-prod")
 ALGORITHM = "HS256"
@@ -23,8 +25,8 @@ def verify_token(token: str) -> dict[str, Any] | None:
         return None
 
 
-def get_current_user(request: Request) -> dict[str, Any]:
-    """FastAPI dependency: extracts and validates JWT from Authorization header."""
+def _extract_token_payload(request: Request) -> dict[str, Any]:
+    """Extract and validate JWT from Authorization header."""
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing or invalid token")
@@ -32,6 +34,19 @@ def get_current_user(request: Request) -> dict[str, Any]:
     payload = verify_token(token)
     if payload is None:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
+    return payload
+
+
+def get_current_user(
+    request: Request,
+    session: Session = Depends(get_ops_session),
+) -> dict[str, Any]:
+    """FastAPI dependency: extracts JWT and verifies user is still active in DB."""
+    payload = _extract_token_payload(request)
+    from src.storage.ops_models import UserORM
+    user = session.query(UserORM).filter(UserORM.user_id == payload["sub"]).first()
+    if not user or not user.is_active:
+        raise HTTPException(status_code=401, detail="User account deactivated")
     return payload
 
 

@@ -15,6 +15,16 @@ import OpsReview from './pages/ops/OpsReview'
 import OpsIngredients from './pages/ops/OpsIngredients'
 import OpsSettings from './pages/ops/OpsSettings'
 
+function NotFound() {
+  return (
+    <div className="flex flex-col items-center justify-center py-32 text-center">
+      <h1 className="text-4xl font-bold text-ink">404</h1>
+      <p className="mt-2 text-ink-muted">Página não encontrada</p>
+      <a href="/" className="mt-4 text-sm text-champagne-dark hover:underline">Voltar ao início</a>
+    </div>
+  );
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -44,6 +54,9 @@ function App() {
           <Route path="quarantine" element={<Navigate to="/" replace />} />
           <Route path="review-queue" element={<Navigate to="/" replace />} />
           <Route path="brand-detail/:slug" element={<Navigate to="/brands/:slug" replace />} />
+
+          {/* 404 catch-all */}
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </AuthProvider>

@@ -197,6 +197,11 @@ class TestOpsIngredients:
         assert "uncategorized" in data
 
     def test_requires_admin(self):
+        # Seed a reviewer user so the is_active check passes — expect 403 (not 401)
+        with Session(self.engine) as s:
+            reviewer = UserORM(user_id="rev-1", email="rev@h.com", password_hash="x", name="R", role="reviewer")
+            s.add(reviewer)
+            s.commit()
         reviewer_token = create_access_token(user_id="rev-1", role="reviewer")
         r = self.client.patch(
             f"/api/ops/ingredients/{self.ingredient_id}",

@@ -163,6 +163,28 @@ class ProductRepository:
         )
         return query.scalar()
 
+    def count_products_by_status(
+        self,
+        brand_slug: str | None = None,
+        search: str | None = None,
+        category: str | None = None,
+        exclude_kits: bool = False,
+    ) -> dict[str, int]:
+        """Return product counts grouped by verification_status."""
+        base = self._apply_filters(
+            self._session.query(ProductORM.verification_status, func.count(ProductORM.id)),
+            brand_slug=brand_slug, search=search, category=category, exclude_kits=exclude_kits,
+        )
+        rows = base.group_by(ProductORM.verification_status).all()
+        counts = {status: count for status, count in rows}
+        total = sum(counts.values())
+        return {
+            "all": total,
+            "verified_inci": counts.get("verified_inci", 0),
+            "catalog_only": counts.get("catalog_only", 0),
+            "quarantined": counts.get("quarantined", 0),
+        }
+
     def get_products_without_inci(self, brand_slug: str) -> list[ProductORM]:
         """Get catalog_only products without INCI ingredients for a brand."""
         return (

@@ -56,12 +56,25 @@ class ProductUpdate(BaseModel):
     verification_status: Optional[str] = None
     product_labels: Optional[dict] = None
 
-def _get_session():
-    from sqlalchemy.orm import Session as SASession
-    from src.storage.database import get_engine
-    engine = get_engine()
-    with SASession(engine) as session:
-        yield session
+def _get_session(brand_slug: str | None = Query(None)):
+    from src.api.dependencies import is_multi_db, get_router
+    if is_multi_db():
+        if not brand_slug:
+            raise HTTPException(
+                status_code=400,
+                detail="brand_slug query parameter required in multi-database mode",
+            )
+        router = get_router()
+        session = router.get_session(brand_slug)
+        try:
+            yield session
+        finally:
+            session.close()
+    else:
+        from sqlalchemy.orm import Session as SASession
+        engine = get_engine()
+        with SASession(engine) as session:
+            yield session
 
 
 def _serialize_product_list_item(p: ProductORM) -> dict:
@@ -118,8 +131,11 @@ def list_products(
         category=category,
         exclude_kits=exclude_kits,
     )
+    status_counts = repo.count_products_by_status(
+        brand_slug=brand_slug, search=search, category=category, exclude_kits=exclude_kits,
+    )
     items = [_serialize_product_list_item(p) for p in products]
-    return {"items": items, "total": total, "limit": limit, "offset": offset}
+    return {"items": items, "total": total, "limit": limit, "offset": offset, "status_counts": status_counts}
 
 
 _EXPORT_COLUMNS = [

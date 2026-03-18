@@ -2,7 +2,8 @@ import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ArrowUpDown, ChevronLeft, ChevronRight, Package } from 'lucide-react';
-import { getProducts } from '@/lib/api';
+import { getProducts, getBrands } from '@/lib/api';
+import type { BrandCoverage } from '@/types/api';
 import { useAPI } from '@/hooks/useAPI';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -49,8 +50,10 @@ export default function ProductBrowser() {
   const [category, setCategory] = useState('');
   const [excludeKits, setExcludeKits] = useState(true);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const focusBrand: string | null = null;
-  const brandFilter = searchParams.get('brand') ?? '';
+  const [brandFilter, setBrandFilter] = useState(searchParams.get('brand') ?? '');
+
+  // Fetch brands for the selector
+  const { data: brandsData } = useAPI<BrandCoverage[]>(getBrands);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -171,18 +174,24 @@ export default function ProductBrowser() {
         transition={{ duration: 0.5 }}
         className="flex items-center gap-3"
       >
-        <h1 className="font-display text-4xl font-semibold tracking-tight text-ink">
-          Products
+        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
+          Explorador
         </h1>
         <Badge variant="secondary" className="text-sm tabular-nums">
           {totalProducts}
         </Badge>
-        {focusBrand && (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-champagne/10 text-champagne-dark border border-champagne/15">
-            <span className="w-1.5 h-1.5 rounded-full bg-champagne" />
-            {formatBrandName(focusBrand)}
-          </span>
-        )}
+        <select
+          value={brandFilter}
+          onChange={(e) => { setBrandFilter(e.target.value); setPage(1); }}
+          className="ml-auto rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-900/10 transition-colors"
+        >
+          <option value="">Todas as marcas</option>
+          {(brandsData ?? []).map((b) => (
+            <option key={b.brand_slug} value={b.brand_slug}>
+              {formatBrandName(b.brand_slug)}
+            </option>
+          ))}
+        </select>
       </motion.div>
 
       {/* Filters */}
@@ -203,7 +212,7 @@ export default function ProductBrowser() {
           verifiedOnly={verifiedOnly}
           onVerifiedOnlyChange={handleVerifiedOnlyChange}
           categories={categories}
-          statusCounts={{ all: totalProducts, verified_inci: 0, catalog_only: 0, quarantined: 0 }}
+          statusCounts={response?.status_counts ?? { all: totalProducts, verified_inci: 0, catalog_only: 0, quarantined: 0 }}
         />
       </motion.div>
 
@@ -213,7 +222,7 @@ export default function ProductBrowser() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
-        <div className="rounded-xl border border-ink/8 bg-white shadow-sm">
+        <div className="rounded-xl border border-neutral-200/60 bg-white shadow-sm">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-ink/8">

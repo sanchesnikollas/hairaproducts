@@ -128,12 +128,15 @@ if _FRONTEND_DIST.is_dir():
     # Serve Vite-built assets (JS, CSS, images)
     app.mount("/assets", StaticFiles(directory=_FRONTEND_DIST / "assets"), name="assets")
 
-    # Catch-all: serve index.html for any non-API route (SPA routing)
-    @app.get("/{full_path:path}")
-    async def serve_spa(request: Request, full_path: str):
-        # Try to serve static file first
-        file_path = _FRONTEND_DIST / full_path
-        if full_path and file_path.is_file():
-            return FileResponse(file_path)
-        # Otherwise serve index.html (React Router handles the route)
-        return FileResponse(_FRONTEND_DIST / "index.html")
+    # SPA fallback via middleware — avoids catch-all route that causes 405 on API POST routes
+    @app.middleware("http")
+    async def spa_fallback(request: Request, call_next):
+        response = await call_next(request)
+        # If no API/health/asset route matched, serve index.html for SPA routing
+        if (
+            response.status_code == 404
+            and request.method == "GET"
+            and not request.url.path.startswith(("/api/", "/health", "/assets/", "/openapi", "/docs", "/redoc"))
+        ):
+            return FileResponse(_FRONTEND_DIST / "index.html")
+        return response

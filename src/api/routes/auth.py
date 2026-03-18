@@ -33,7 +33,13 @@ class UpdateUserRequest(BaseModel):
 @router.post("/login")
 def login(body: LoginRequest, session: Session = Depends(get_ops_session)):
     user = session.query(UserORM).filter(UserORM.email == body.email, UserORM.is_active.is_(True)).first()
-    if not user or not bcrypt.checkpw(body.password.encode(), user.password_hash.encode()):
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    try:
+        password_ok = bcrypt.checkpw(body.password.encode(), user.password_hash.encode())
+    except (ValueError, TypeError):
+        password_ok = False
+    if not password_ok:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     user.last_login_at = datetime.now(timezone.utc)
     session.commit()
@@ -72,6 +78,30 @@ def list_users(admin: dict = Depends(require_admin), session: Session = Depends(
         {"id": u.user_id, "name": u.name, "email": u.email, "role": u.role, "is_active": u.is_active}
         for u in users
     ]
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+@router.post("/change-password")
+def change_password(body: ChangePasswordRequest, user: dict = Depends(get_current_user), session: Session = Depends(get_ops_session)):
+    db_user = session.query(UserORM).filter(UserORM.user_id == user["sub"]).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not bcrypt.checkpw(body.current_password.encode(), db_user.password_hash.encode()):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    db_user.password_hash = bcrypt.hashpw(body.new_password.encode(), bcrypt.gensalt()).decode()
+    session.commit()
+    return {"status": "ok"}
+
+
+@router.post("/logout")
+def logout(user: dict = Depends(get_current_user)):
+    # JWT is stateless — logout is handled client-side by removing the token.
+    # This endpoint exists for API completeness and future token blacklisting.
+    return {"status": "ok"}
 
 
 @router.patch("/users/{user_id}")

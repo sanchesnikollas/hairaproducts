@@ -98,6 +98,12 @@ export interface PaginatedResponse<T> {
   total: number;
   limit: number;
   offset: number;
+  status_counts?: {
+    all: number;
+    verified_inci: number;
+    catalog_only: number;
+    quarantined: number;
+  };
 }
 
 export interface IngredientSummary {

@@ -2,6 +2,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from src.api.auth import require_admin
 from src.api.dependencies import get_ops_session
@@ -39,8 +40,11 @@ def get_gaps(
             ProductIngredientORM.raw_name,
             func.count(ProductIngredientORM.id).label("product_count"),
         )
-        .join(IngredientORM, ProductIngredientORM.ingredient_id == IngredientORM.id)
-        .filter(IngredientORM.category.is_(None))
+        .outerjoin(IngredientORM, ProductIngredientORM.ingredient_id == IngredientORM.id)
+        .filter(
+            (IngredientORM.id.is_(None)) | (IngredientORM.category.is_(None))
+        )
+        .filter(ProductIngredientORM.raw_name.isnot(None))
         .group_by(ProductIngredientORM.raw_name)
         .order_by(func.count(ProductIngredientORM.id).desc())
         .limit(100)
@@ -89,7 +93,11 @@ def add_alias(
         raise HTTPException(status_code=404, detail="Ingredient not found")
     alias = IngredientAliasORM(ingredient_id=ingredient_id, alias=body.alias, language=body.language)
     session.add(alias)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(status_code=409, detail="Alias already exists")
     return {"status": "ok", "alias_id": alias.id}
 
 

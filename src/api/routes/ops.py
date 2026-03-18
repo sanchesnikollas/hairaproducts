@@ -1,16 +1,32 @@
 from __future__ import annotations
+from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 from src.api.auth import get_current_user, require_admin
 from src.api.dependencies import get_ops_session
-from src.storage.orm_models import ProductORM
+from src.storage.orm_models import ProductORM, ProductIngredientORM
 from src.storage.ops_models import RevisionHistoryORM
-from src.core.revision_service import create_revisions, get_entity_history
-from src.core.confidence import calculate_confidence
+from src.core.revision_service import create_revisions, get_entity_history, count_entity_history
+from src.core.confidence import calculate_confidence, CRITICAL_FIELDS
 
 router = APIRouter(prefix="/ops", tags=["ops"])
+
+
+def _recalculate_confidence(session: Session, product: ProductORM) -> None:
+    """Recalculate and update a product's confidence score and factors."""
+    fields = {f: getattr(product, f, None) for f in CRITICAL_FIELDS}
+    total_ing = session.query(func.count(ProductIngredientORM.id)).filter(
+        ProductIngredientORM.product_id == product.id
+    ).scalar() or 0
+    validated_ing = session.query(func.count(ProductIngredientORM.id)).filter(
+        ProductIngredientORM.product_id == product.id,
+        ProductIngredientORM.validation_status == "validated",
+    ).scalar() or 0
+    score, factors = calculate_confidence(fields, validated_ing, total_ing, product.status_editorial)
+    product.confidence = score
+    product.confidence_factors = factors
 
 
 @router.get("/dashboard")
@@ -71,21 +87,26 @@ def dashboard(user: dict = Depends(get_current_user), session: Session = Depends
     }
 
 
+StatusOperacional = Literal["bruto", "extraido", "normalizado", "parseado", "validado"]
+StatusEditorial = Literal["pendente", "em_revisao", "aprovado", "corrigido", "rejeitado"]
+StatusPublicacao = Literal["rascunho", "publicado", "despublicado", "arquivado"]
+
+
 class OpsProductUpdate(BaseModel):
     product_name: str | None = None
     description: str | None = None
     usage_instructions: str | None = None
     inci_ingredients: str | None = None
     product_category: str | None = None
-    status_editorial: str | None = None
-    status_publicacao: str | None = None
-    status_operacional: str | None = None
+    status_editorial: StatusEditorial | None = None
+    status_publicacao: StatusPublicacao | None = None
+    status_operacional: StatusOperacional | None = None
 
 
 class BatchStatusUpdate(BaseModel):
     product_ids: list[str]
-    status_editorial: str | None = None
-    status_publicacao: str | None = None
+    status_editorial: StatusEditorial | None = None
+    status_publicacao: StatusPublicacao | None = None
 
 
 @router.get("/products")
@@ -143,6 +164,7 @@ def ops_batch_update(
         for field, value in updates.items():
             setattr(product, field, value)
         create_revisions(session, "product", product.id, old_values, updates, user["sub"], "human")
+        _recalculate_confidence(session, product)
     session.commit()
     return {"status": "ok", "updated": len(products)}
 
@@ -174,10 +196,13 @@ def ops_get_product(
 @router.get("/products/{product_id}/history")
 def ops_product_history(
     product_id: str,
+    page: int = 1,
+    per_page: int = 50,
     user: dict = Depends(get_current_user),
     session: Session = Depends(get_ops_session),
 ):
-    revisions = get_entity_history(session, "product", product_id)
+    total = count_entity_history(session, "product", product_id)
+    revisions = get_entity_history(session, "product", product_id, limit=per_page, offset=(page - 1) * per_page)
     return {
         "revisions": [
             {
@@ -191,7 +216,10 @@ def ops_product_history(
                 "created_at": str(r.created_at),
             }
             for r in revisions
-        ]
+        ],
+        "total": total,
+        "page": page,
+        "per_page": per_page,
     }
 
 
@@ -210,12 +238,13 @@ def ops_patch_product(
     for field, value in updates.items():
         setattr(product, field, value)
     create_revisions(session, "product", product_id, old_values, updates, user["sub"], "human")
+    _recalculate_confidence(session, product)
     session.commit()
-    return {"status": "ok", "product_id": product_id}
+    return {"status": "ok", "product_id": product_id, "confidence": product.confidence}
 
 
 class ResolveRequest(BaseModel):
-    decision: str  # approve | correct | reject
+    decision: Literal["approve", "correct", "reject"]
     notes: str | None = None
     corrections: dict | None = None
 
@@ -229,12 +258,19 @@ def get_review_queue(
     user: dict = Depends(get_current_user),
     session: Session = Depends(get_ops_session),
 ):
-    q = session.query(ProductORM).filter(
-        or_(
-            ProductORM.status_editorial.in_(["pendente", "rejeitado"]),
-            ProductORM.confidence < 50,
+    q = session.query(ProductORM)
+    if type == "low_confidence":
+        q = q.filter(ProductORM.confidence < 50)
+    elif type == "pending_editorial":
+        q = q.filter(ProductORM.status_editorial.in_(["pendente", "rejeitado"]))
+    else:
+        # Default: both low confidence and pending editorial
+        q = q.filter(
+            or_(
+                ProductORM.status_editorial.in_(["pendente", "rejeitado"]),
+                ProductORM.confidence < 50,
+            )
         )
-    )
     if brand:
         q = q.filter(ProductORM.brand_slug == brand)
     total = q.count()
@@ -285,30 +321,25 @@ def resolve_review(
     product = session.query(ProductORM).filter(ProductORM.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    old_values = {"status_editorial": product.status_editorial, "status_publicacao": product.status_publicacao}
+    # Collect all old values and new values in one pass to avoid duplicate revisions
+    all_old = {"status_editorial": product.status_editorial, "assigned_to": product.assigned_to}
     if body.decision == "approve":
         product.status_editorial = "aprovado"
         product.status_publicacao = "publicado"
+        all_old["status_publicacao"] = product.status_publicacao
     elif body.decision == "correct":
         product.status_editorial = "corrigido"
         if body.corrections:
-            correction_old = {}
-            correction_new = {}
             for field, value in body.corrections.items():
                 if hasattr(product, field):
-                    correction_old[field] = getattr(product, field)
-                    correction_new[field] = value
+                    all_old[field] = getattr(product, field)
                     setattr(product, field, value)
-            if correction_old:
-                create_revisions(session, "product", product_id, correction_old, correction_new,
-                                 user["sub"], "human", change_reason=body.notes)
     elif body.decision == "reject":
         product.status_editorial = "rejeitado"
-    else:
-        raise HTTPException(status_code=400, detail="Invalid decision")
     product.assigned_to = None
-    new_values = {"status_editorial": product.status_editorial, "status_publicacao": product.status_publicacao}
-    create_revisions(session, "product", product_id, old_values, new_values, user["sub"], "human",
+    all_new = {k: getattr(product, k) for k in all_old}
+    create_revisions(session, "product", product_id, all_old, all_new, user["sub"], "human",
                      change_reason=body.notes)
+    _recalculate_confidence(session, product)
     session.commit()
     return {"status": "ok", "product_id": product_id, "decision": body.decision}
