@@ -1,40 +1,52 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import Home from './pages/Home'
-import Dashboard from './pages/Dashboard'
 import BrandsDashboard from './pages/BrandsDashboard'
-import BrandDetail from './pages/BrandDetail'
 import BrandPage from './pages/BrandPage'
 import ProductDetail from './pages/ProductDetail'
 import ProductBrowser from './pages/ProductBrowser'
-import QuarantineReview from './pages/QuarantineReview'
-import ReviewQueue from './pages/ReviewQueue'
+import { AuthProvider } from './lib/auth'
+import Login from './pages/Login'
+import OpsLayout from './components/ops/OpsLayout'
+import OpsDashboard from './pages/ops/OpsDashboard'
+import OpsProducts from './pages/ops/OpsProducts'
+import OpsProductDetail from './pages/ops/OpsProductDetail'
+import OpsReview from './pages/ops/OpsReview'
+import OpsIngredients from './pages/ops/OpsIngredients'
+import OpsSettings from './pages/ops/OpsSettings'
 
 function App() {
   return (
-    <Routes>
-      <Route element={<Layout />}>
-        {/* Public */}
-        <Route index element={<Home />} />
-        <Route path="brands" element={<BrandsDashboard />} />
-        <Route path="brands/:slug" element={<BrandPage />} />
-        <Route path="brands/:slug/products/:productId" element={<ProductDetail />} />
+    <AuthProvider>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/ops" element={<OpsLayout />}>
+          <Route index element={<OpsDashboard />} />
+          <Route path="products" element={<OpsProducts />} />
+          <Route path="products/:id" element={<OpsProductDetail />} />
+          <Route path="review" element={<OpsReview />} />
+          <Route path="ingredients" element={<OpsIngredients />} />
+          <Route path="settings" element={<OpsSettings />} />
+        </Route>
+        <Route element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="brands" element={<BrandsDashboard />} />
+          <Route path="brands/:slug" element={<BrandPage />} />
+          <Route path="brands/:slug/products/:productId" element={<ProductDetail />} />
+          <Route path="explorer" element={<ProductBrowser />} />
 
-        {/* Admin */}
-        <Route path="admin" element={<Dashboard />} />
-        <Route path="admin/products" element={<ProductBrowser />} />
-        <Route path="admin/quarantine" element={<QuarantineReview />} />
-        <Route path="admin/review-queue" element={<ReviewQueue />} />
-
-        {/* Legacy redirects */}
-        <Route path="products" element={<ProductBrowser />} />
-        <Route path="quarantine" element={<QuarantineReview />} />
-        <Route path="review-queue" element={<ReviewQueue />} />
-
-        {/* Legacy brand detail */}
-        <Route path="brand-detail/:slug" element={<BrandDetail />} />
-      </Route>
-    </Routes>
+          {/* Redirects from old routes */}
+          <Route path="admin" element={<Navigate to="/" replace />} />
+          <Route path="admin/products" element={<Navigate to="/explorer" replace />} />
+          <Route path="admin/quarantine" element={<Navigate to="/" replace />} />
+          <Route path="admin/review-queue" element={<Navigate to="/" replace />} />
+          <Route path="products" element={<Navigate to="/explorer" replace />} />
+          <Route path="quarantine" element={<Navigate to="/" replace />} />
+          <Route path="review-queue" element={<Navigate to="/" replace />} />
+          <Route path="brand-detail/:slug" element={<Navigate to="/brands/:slug" replace />} />
+        </Route>
+      </Routes>
+    </AuthProvider>
   )
 }
 
