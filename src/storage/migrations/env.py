@@ -8,6 +8,7 @@ from alembic import context
 import os, sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[3]))
 from src.storage.orm_models import Base
+from src.storage.ops_models import UserORM, RevisionHistoryORM  # noqa
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
