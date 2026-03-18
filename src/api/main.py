@@ -18,6 +18,7 @@ from src.api.routes.quarantine import router as quarantine_router
 from src.api.routes.ingredients import router as ingredients_router
 from src.api.routes.stats import router as stats_router
 from src.api.routes.auth import router as auth_router
+from src.api.routes.ops import router as ops_router
 
 logger = logging.getLogger("haira.api")
 
@@ -79,6 +80,7 @@ app.include_router(quarantine_router, prefix="/api")
 app.include_router(ingredients_router, prefix="/api")
 app.include_router(stats_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
+app.include_router(ops_router, prefix="/api")
 
 
 @app.on_event("startup")
