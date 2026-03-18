@@ -63,3 +63,50 @@ class TestDashboard:
     def test_dashboard_requires_auth(self):
         r = self.client.get("/api/ops/dashboard")
         assert r.status_code == 401
+
+
+class TestOpsProducts:
+    def setup_method(self):
+        self.engine = _setup()
+        admin_id = _seed_data(self.engine)
+        self.token = create_access_token(user_id=admin_id, role="admin")
+        def override():
+            with Session(self.engine) as s:
+                yield s
+        from src.api.dependencies import get_ops_session
+        app.dependency_overrides[get_ops_session] = override
+        self.client = TestClient(app)
+
+    def teardown_method(self):
+        app.dependency_overrides.clear()
+
+    def test_patch_product_creates_revision(self):
+        with Session(self.engine) as s:
+            p = s.query(ProductORM).first()
+            pid = p.id
+        r = self.client.patch(
+            f"/api/ops/products/{pid}",
+            json={"product_name": "Updated Name"},
+            headers={"Authorization": f"Bearer {self.token}"},
+        )
+        assert r.status_code == 200
+        r2 = self.client.get(
+            f"/api/ops/products/{pid}/history",
+            headers={"Authorization": f"Bearer {self.token}"},
+        )
+        assert r2.status_code == 200
+        revisions = r2.json()["revisions"]
+        assert len(revisions) == 1
+        assert revisions[0]["field_name"] == "product_name"
+        assert revisions[0]["new_value"] == "Updated Name"
+
+    def test_batch_update_status(self):
+        with Session(self.engine) as s:
+            ids = [p.id for p in s.query(ProductORM).limit(3).all()]
+        r = self.client.patch(
+            "/api/ops/products/batch",
+            json={"product_ids": ids, "status_editorial": "em_revisao"},
+            headers={"Authorization": f"Bearer {self.token}"},
+        )
+        assert r.status_code == 200
+        assert r.json()["updated"] == 3
