@@ -79,7 +79,7 @@ def _looks_like_inci(text: str) -> bool:
     if not text or len(text) < 30:
         return False
     # Must contain ingredient-like separators
-    return any(sep in text for sep in [",", "●", "•", "·"])
+    return any(sep in text for sep in [",", ";", "●", "•", "·"])
 
 
 def _label_priority(matched_label: str) -> int:
@@ -93,6 +93,31 @@ def _label_priority(matched_label: str) -> int:
 def _extract_inci_by_tab_labels(soup) -> tuple[str | None, str | None]:
     """Find INCI content in collapsible tabs/accordions by label text."""
     candidates: list[tuple[str, str, int]] = []  # (content, selector, priority)
+
+    # Strategy 0: Accordion container pattern (e.g., O Boticário)
+    # Heading inside a container div, content in a sibling/descendant region
+    import re as _re
+    for container in soup.find_all("div", class_=_re.compile(r"accordion.*padding|container.*padding")):
+        heading = container.find(["h2", "h3", "h4"])
+        if not heading:
+            continue
+        heading_text = heading.get_text(strip=True).lower()
+        for label in INCI_TAB_LABELS:
+            if label == heading_text or heading_text.startswith(label):
+                priority = _label_priority(label)
+                # Look for <p> or <li> content within the same container
+                for p in container.find_all(["p", "li"]):
+                    content = p.get_text(strip=True)
+                    if _looks_like_inci(content):
+                        candidates.append((content, f"accordion-container:{label}", priority))
+                        break
+                # Also check for region div (aria-controlled regions)
+                region = container.find("div", id=_re.compile(r"region|content"))
+                if region:
+                    content = region.get_text(strip=True)
+                    if _looks_like_inci(content):
+                        candidates.append((content, f"accordion-region:{label}", priority))
+                break
 
     # Strategy 1: Button/heading with label, content in nearby elements
     for el in soup.find_all(["button", "h2", "h3", "h4", "a", "span", "div", "strong", "p", "b"]):
@@ -215,10 +240,34 @@ def extract_by_selectors(
         for sel in image_selectors:
             el = soup.select_one(sel)
             if el:
-                src = el.get("src") or el.get("data-src")
+                src = el.get("data-src") or el.get("src")
+                # Skip data URIs (lazy-loading placeholders)
+                if src and src.startswith("data:"):
+                    src = el.get("data-src")
                 if src:
                     result["image"] = src
                     break
+
+    # Fallback: extract image from Vue media-gallery :variants JSON
+    if not result["image"]:
+        gallery = soup.select_one("media-gallery[\\:variants]")
+        if gallery:
+            import json as _json
+            try:
+                variants_json = gallery.get(":variants", "")
+                variants = _json.loads(variants_json)
+                if variants and isinstance(variants, list):
+                    first = variants[0]
+                    images = first.get("images", [])
+                    if images and isinstance(images, list):
+                        first_img_set = images[0]
+                        if isinstance(first_img_set, list):
+                            for img_entry in first_img_set:
+                                if isinstance(img_entry, dict) and img_entry.get("src"):
+                                    result["image"] = img_entry["src"]
+                                    break
+            except (_json.JSONDecodeError, KeyError, IndexError, TypeError):
+                pass
 
     return result
 
@@ -270,8 +319,12 @@ def extract_product_deterministic(
             result["description"] = sanitize_text(jsonld["description"])
         offers = jsonld.get("offers", {})
         if isinstance(offers, dict):
-            if offers.get("price"):
-                result["price"] = float(offers["price"])
+            price = offers.get("price") or offers.get("lowPrice")
+            # Check nested offers array (AggregateOffer pattern)
+            if not price and isinstance(offers.get("offers"), list) and offers["offers"]:
+                price = offers["offers"][0].get("price")
+            if price:
+                result["price"] = float(price)
                 result["currency"] = offers.get("priceCurrency", "BRL")
         result["extraction_method"] = "jsonld"
 
@@ -317,7 +370,7 @@ def extract_product_deterministic(
             sel_result["name"], ExtractionMethod.HTML_SELECTOR,
         ))
 
-    if sel_result["inci_raw"]:
+    if sel_result["inci_raw"] and not result["inci_raw"]:
         result["inci_raw"] = sel_result["inci_raw"]
         evidence_list.append(create_evidence(
             "inci_ingredients", url, sel_result["inci_selector"] or "",

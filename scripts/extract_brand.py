@@ -67,7 +67,9 @@ def main():
 
     headless = blueprint.get("extraction", {}).get("headless", True)
     delay = blueprint.get("extraction", {}).get("delay_seconds", 3)
-    browser = BrowserClient(headless=headless, delay_seconds=delay)
+    requires_js = blueprint.get("extraction", {}).get("requires_js", True)
+    use_httpx = not requires_js
+    browser = BrowserClient(headless=headless, delay_seconds=delay, use_httpx=use_httpx)
 
     try:
         session = get_session()

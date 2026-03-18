@@ -1,5 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ExternalLink } from 'lucide-react';
+import {
+  ExternalLink,
+  Package,
+  FlaskConical,
+  Shield,
+  AlertTriangle,
+  FileText,
+  Pencil,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Sheet,
@@ -13,9 +23,10 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StatusBadge from '@/components/StatusBadge';
-import { getProduct, updateProduct } from '@/lib/api';
+import { getProduct, updateProduct, getQuarantine, approveQuarantine, rejectQuarantine } from '@/lib/api';
 import type { Product } from '@/types/api';
 
 // ── Seal Display Config ──
@@ -85,6 +96,20 @@ export default function ProductSheet({
     verification_status: '',
   });
 
+  // Collapsible sections
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    info: false,
+    inci: false,
+    labels: false,
+    quality: false,
+    evidence: false,
+    edit: false,
+  });
+
+  const toggleSection = (key: string) => {
+    setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
   // Fetch full product detail when ID changes
   useEffect(() => {
     if (!productId || !open) {
@@ -114,7 +139,6 @@ export default function ProductSheet({
     setSaving(true);
     try {
       await updateProduct(product.id, editForm);
-      // Re-fetch full product to get all fields (PATCH returns partial)
       const refreshed = await getProduct(product.id);
       setProduct(refreshed);
       setEditForm({
@@ -138,268 +162,321 @@ export default function ProductSheet({
   const qualityScore = product?.quality?.score;
   const qualityColor =
     qualityScore === undefined
-      ? 'text-ink-muted'
+      ? 'text-neutral-400'
       : qualityScore === 100
-        ? 'text-sage'
+        ? 'text-emerald-600'
         : qualityScore >= 70
-          ? 'text-amber'
-          : 'text-coral';
+          ? 'text-amber-600'
+          : 'text-red-500';
+
+  const qualityBgColor =
+    qualityScore === undefined
+      ? 'bg-neutral-50'
+      : qualityScore === 100
+        ? 'bg-emerald-50'
+        : qualityScore >= 70
+          ? 'bg-amber-50'
+          : 'bg-red-50';
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-[500px] p-0 overflow-hidden z-[60]">
+      <SheetContent side="right" className="w-full sm:max-w-[480px] p-0 overflow-hidden border-l border-neutral-200">
         <ScrollArea className="h-full">
-          <div className="p-6 space-y-6">
-            {loading || !product ? (
-              <div className="flex items-center justify-center py-24">
-                <span className="text-sm text-ink-muted">Loading...</span>
+          {loading ? (
+            <SheetLoadingSkeleton />
+          ) : !product ? (
+            <div className="flex items-center justify-center py-24">
+              <span className="text-sm text-ink-muted">No product selected</span>
+            </div>
+          ) : (
+            <div className="pb-8">
+              {/* Hero Header */}
+              <div className="relative bg-neutral-50 border-b border-neutral-100">
+                {product.image_url_main ? (
+                  <img
+                    src={product.image_url_main}
+                    alt={product.product_name}
+                    className="w-full h-[200px] object-contain p-6"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-[140px] flex items-center justify-center">
+                    <Package className="size-10 text-neutral-300" />
+                  </div>
+                )}
               </div>
-            ) : (
-              <>
-                {/* Header */}
-                <SheetHeader className="p-0 space-y-4">
-                  {product.image_url_main && (
-                    <img
-                      src={product.image_url_main}
-                      alt={product.product_name}
-                      className="w-full max-h-[200px] object-contain rounded-lg bg-cream"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  )}
-                  <div className="space-y-2">
-                    <SheetTitle className="font-display text-xl font-semibold text-ink leading-tight">
+
+              {/* Title & Status */}
+              <SheetHeader className="px-5 pt-4 pb-0 space-y-0">
+                <div className="flex items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <SheetTitle className="text-base font-semibold text-neutral-900 leading-snug">
                       {sanitizeText(product.product_name)}
                     </SheetTitle>
-                    <SheetDescription className="flex items-center gap-2">
-                      <span className="text-sm text-ink-muted">
+                    <SheetDescription className="flex items-center gap-2 mt-1.5">
+                      <span className="text-sm text-neutral-500">
                         {formatBrandName(product.brand_slug)}
                       </span>
-                      <StatusBadge status={product.verification_status} />
+                      {product.line_collection && (
+                        <>
+                          <span className="text-neutral-300">·</span>
+                          <span className="text-sm text-neutral-400">
+                            {product.line_collection}
+                          </span>
+                        </>
+                      )}
                     </SheetDescription>
                   </div>
-                </SheetHeader>
+                  <StatusBadge status={product.verification_status} size="sm" />
+                </div>
 
-                <Separator />
+                {/* Quick Stats */}
+                <div className="flex items-center gap-3 pt-3 pb-1">
+                  <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md ${qualityBgColor}`}>
+                    <span className={`text-sm font-semibold tabular-nums ${qualityColor}`}>
+                      {qualityScore ?? '--'}
+                    </span>
+                    <span className="text-[10px] text-neutral-400 uppercase">quality</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-50">
+                    <span className="text-sm font-semibold tabular-nums text-neutral-700">
+                      {product.inci_ingredients?.length ?? 0}
+                    </span>
+                    <span className="text-[10px] text-neutral-400 uppercase">INCI</span>
+                  </div>
+                  {product.price != null && (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-50">
+                      <span className="text-sm font-semibold tabular-nums text-neutral-700">
+                        {product.currency ?? 'R$'} {product.price.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                </div>
 
-                {/* Basic Info */}
-                <section className="space-y-3">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
-                    Basic Info
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                {product.product_url && (
+                  <a
+                    href={product.product_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-neutral-400 hover:text-neutral-600 transition-colors pt-1"
+                  >
+                    <ExternalLink className="size-3" />
+                    Ver pagina do produto
+                  </a>
+                )}
+              </SheetHeader>
+
+              <div className="px-5 pt-4 space-y-0">
+                {/* Basic Info Section */}
+                <CollapsibleSection
+                  title="Basic Info"
+                  icon={<Package className="size-3.5" />}
+                  expanded={expandedSections.info}
+                  onToggle={() => toggleSection('info')}
+                  status={product.description ? 'ok' : 'warning'}
+                >
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                     <InfoItem label="Category" value={product.product_category} />
                     <InfoItem label="Type" value={product.product_type_normalized} />
                     <InfoItem label="Gender" value={product.gender_target} />
-                    <InfoItem
-                      label="Price"
-                      value={
-                        product.price
-                          ? `${product.currency ?? 'R$'} ${product.price.toFixed(2)}`
-                          : null
-                      }
-                    />
                     <InfoItem label="Size" value={product.size_volume} />
-                    <InfoItem label="Line" value={product.line_collection} />
                   </div>
-                  {product.product_url && (
-                    <a
-                      href={product.product_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs text-champagne-dark hover:underline"
-                    >
-                      <ExternalLink className="size-3" />
-                      View product page
-                    </a>
+                  {product.description && (
+                    <div className="mt-3 pt-3 border-t border-neutral-100">
+                      <span className="text-[11px] text-neutral-400 uppercase tracking-wider">Description</span>
+                      <p className="text-sm text-neutral-500 mt-1 leading-relaxed line-clamp-4">
+                        {sanitizeText(product.description)}
+                      </p>
+                    </div>
                   )}
-                </section>
-
-                <Separator />
+                </CollapsibleSection>
 
                 {/* INCI Ingredients */}
-                <section className="space-y-3">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
-                    INCI Ingredients
-                    {product.inci_ingredients && (
-                      <span className="ml-2 text-ink-muted font-normal normal-case">
-                        ({product.inci_ingredients.length})
-                      </span>
-                    )}
-                  </h3>
+                <CollapsibleSection
+                  title={`INCI Ingredients (${product.inci_ingredients?.length ?? 0})`}
+                  icon={<FlaskConical className="size-3.5" />}
+                  expanded={expandedSections.inci}
+                  onToggle={() => toggleSection('inci')}
+                  status={product.inci_ingredients && product.inci_ingredients.length > 0 ? 'ok' : 'warning'}
+                >
                   {product.inci_ingredients && product.inci_ingredients.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5 max-h-[200px] overflow-y-auto">
+                    <div className="flex flex-wrap gap-1 max-h-[240px] overflow-y-auto">
                       {product.inci_ingredients.map((ingredient, i) => (
-                        <Badge
+                        <span
                           key={i}
-                          variant="secondary"
-                          className="text-[11px] font-normal"
+                          className="text-[11px] font-normal bg-neutral-50 text-neutral-600 px-2 py-0.5 rounded-md"
                         >
                           {ingredient}
-                        </Badge>
+                        </span>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-ink-faint">No INCI data available</p>
+                    <p className="text-sm text-neutral-400">No INCI data available</p>
                   )}
-                </section>
-
-                <Separator />
+                </CollapsibleSection>
 
                 {/* Labels / Seals */}
                 {product.product_labels && (
-                  <>
-                    <section className="space-y-3">
-                      <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
-                        Labels & Seals
-                      </h3>
-                      {(product.product_labels.detected?.length > 0 ||
-                        product.product_labels.inferred?.length > 0) ? (
-                        <div className="space-y-2">
-                          {product.product_labels.detected?.length > 0 && (
-                            <div>
-                              <span className="text-[10px] uppercase tracking-wider text-ink-faint mb-1 block">
-                                Detected
-                              </span>
-                              <div className="flex flex-wrap gap-1.5">
-                                {product.product_labels.detected.map((seal) => (
-                                  <Badge
-                                    key={seal}
-                                    className={
-                                      POSITIVE_SEALS.has(seal)
-                                        ? 'bg-sage-bg text-sage border-sage/20'
-                                        : 'bg-coral-bg text-coral border-coral/20'
-                                    }
-                                    variant="outline"
-                                  >
-                                    {SEAL_DISPLAY[seal]?.label ?? seal}
-                                  </Badge>
-                                ))}
-                              </div>
+                  <CollapsibleSection
+                    title="Labels & Seals"
+                    icon={<Shield className="size-3.5" />}
+                    expanded={expandedSections.labels}
+                    onToggle={() => toggleSection('labels')}
+                    status={(product.product_labels?.detected?.length || product.product_labels?.inferred?.length) ? 'ok' : 'warning'}
+                  >
+                    {(product.product_labels.detected?.length > 0 ||
+                      product.product_labels.inferred?.length > 0) ? (
+                      <div className="space-y-3">
+                        {product.product_labels.detected?.length > 0 && (
+                          <div>
+                            <span className="text-[10px] uppercase tracking-wider text-ink-faint mb-1.5 block font-medium">
+                              Detected
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {product.product_labels.detected.map((seal) => (
+                                <Badge
+                                  key={seal}
+                                  className={
+                                    POSITIVE_SEALS.has(seal)
+                                      ? 'bg-sage/10 text-sage border-sage/20'
+                                      : 'bg-coral/10 text-coral border-coral/20'
+                                  }
+                                  variant="outline"
+                                >
+                                  {SEAL_DISPLAY[seal]?.label ?? seal}
+                                </Badge>
+                              ))}
                             </div>
-                          )}
-                          {product.product_labels.inferred?.length > 0 && (
-                            <div>
-                              <span className="text-[10px] uppercase tracking-wider text-ink-faint mb-1 block">
-                                Inferred
-                              </span>
-                              <div className="flex flex-wrap gap-1.5">
-                                {product.product_labels.inferred.map((seal) => (
-                                  <Badge
-                                    key={seal}
-                                    className={
-                                      POSITIVE_SEALS.has(seal)
-                                        ? 'bg-sage-bg text-sage border-sage/20'
-                                        : 'bg-coral-bg text-coral border-coral/20'
-                                    }
-                                    variant="outline"
-                                  >
-                                    {SEAL_DISPLAY[seal]?.label ?? seal}
-                                  </Badge>
-                                ))}
-                              </div>
+                          </div>
+                        )}
+                        {product.product_labels.inferred?.length > 0 && (
+                          <div>
+                            <span className="text-[10px] uppercase tracking-wider text-ink-faint mb-1.5 block font-medium">
+                              Inferred
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {product.product_labels.inferred.map((seal) => (
+                                <Badge
+                                  key={seal}
+                                  className={
+                                    POSITIVE_SEALS.has(seal)
+                                      ? 'bg-sage/10 text-sage border-sage/20'
+                                      : 'bg-coral/10 text-coral border-coral/20'
+                                  }
+                                  variant="outline"
+                                >
+                                  {SEAL_DISPLAY[seal]?.label ?? seal}
+                                </Badge>
+                              ))}
                             </div>
-                          )}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-ink-faint">No labels detected</p>
-                      )}
-                    </section>
-                    <Separator />
-                  </>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-ink-faint">No labels detected</p>
+                    )}
+                  </CollapsibleSection>
                 )}
 
                 {/* Quality */}
                 {product.quality && (
-                  <>
-                    <section className="space-y-3">
-                      <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
-                        Quality
-                      </h3>
-                      <div className="flex items-baseline gap-2">
-                        <span className={`text-2xl font-display font-semibold tabular-nums ${qualityColor}`}>
-                          {qualityScore}
-                        </span>
-                        <span className="text-sm text-ink-muted">/ 100</span>
+                  <CollapsibleSection
+                    title="Quality Report"
+                    icon={<AlertTriangle className="size-3.5" />}
+                    expanded={expandedSections.quality}
+                    onToggle={() => toggleSection('quality')}
+                    badge={
+                      product.quality.issues.length > 0
+                        ? `${product.quality.error_count}E / ${product.quality.warning_count}W`
+                        : undefined
+                    }
+                  >
+                    {product.quality.issues.length > 0 ? (
+                      <div className="space-y-1.5 max-h-[200px] overflow-y-auto">
+                        {product.quality.issues.map((issue, i) => (
+                          <div
+                            key={i}
+                            className={`text-xs px-3 py-2 rounded-lg flex items-start gap-2 ${
+                              issue.severity === 'error'
+                                ? 'bg-coral/8 text-coral border border-coral/10'
+                                : issue.severity === 'warning'
+                                  ? 'bg-amber/8 text-amber border border-amber/10'
+                                  : 'bg-ink/3 text-ink-muted border border-ink/5'
+                            }`}
+                          >
+                            <span className="font-medium shrink-0">{issue.field}:</span>
+                            <span>{issue.message}</span>
+                          </div>
+                        ))}
                       </div>
-                      {product.quality.issues.length > 0 && (
-                        <div className="space-y-1.5 max-h-[150px] overflow-y-auto">
-                          {product.quality.issues.map((issue, i) => (
-                            <div
-                              key={i}
-                              className={`text-xs px-2.5 py-1.5 rounded-md ${
-                                issue.severity === 'error'
-                                  ? 'bg-coral-bg text-coral'
-                                  : issue.severity === 'warning'
-                                    ? 'bg-amber-bg text-amber'
-                                    : 'bg-ink/5 text-ink-muted'
-                              }`}
-                            >
-                              <span className="font-medium">{issue.field}:</span>{' '}
-                              {issue.message}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </section>
-                    <Separator />
-                  </>
+                    ) : (
+                      <p className="text-sm text-sage">All quality checks passed</p>
+                    )}
+                  </CollapsibleSection>
                 )}
 
                 {/* Evidence */}
                 {product.evidence && product.evidence.length > 0 && (
-                  <>
-                    <section className="space-y-3">
-                      <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
-                        Evidence ({product.evidence.length})
-                      </h3>
-                      <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                        {product.evidence.map((ev) => (
-                          <div
-                            key={ev.id}
-                            className="text-xs p-2.5 rounded-md bg-ink/3 space-y-1"
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium text-ink">
-                                {ev.field_name}
-                              </span>
-                              <span className="text-ink-faint">
-                                {ev.extraction_method}
-                              </span>
-                            </div>
-                            {ev.source_url && (
-                              <a
-                                href={ev.source_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-champagne-dark hover:underline truncate block"
-                              >
-                                {ev.source_url}
-                              </a>
-                            )}
+                  <CollapsibleSection
+                    title={`Evidence (${product.evidence.length})`}
+                    icon={<FileText className="size-3.5" />}
+                    expanded={expandedSections.evidence}
+                    onToggle={() => toggleSection('evidence')}
+                  >
+                    <div className="space-y-2 max-h-[250px] overflow-y-auto">
+                      {product.evidence.map((ev) => (
+                        <div
+                          key={ev.id}
+                          className="text-xs p-3 rounded-lg bg-cream/70 border border-ink/5 space-y-1"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-ink">
+                              {ev.field_name}
+                            </span>
+                            <Badge variant="outline" className="text-[10px] h-auto py-0 px-1.5">
+                              {ev.extraction_method}
+                            </Badge>
                           </div>
-                        ))}
-                      </div>
-                    </section>
-                    <Separator />
-                  </>
+                          {ev.source_url && (
+                            <a
+                              href={ev.source_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-champagne-dark hover:underline truncate block"
+                            >
+                              {ev.source_url}
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CollapsibleSection>
                 )}
 
                 {/* Edit Section */}
-                <section className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-faint">
-                      Edit Product
-                    </h3>
-                    {!editing && (
-                      <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                        Edit
-                      </Button>
-                    )}
-                  </div>
-
-                  {editing && (
+                <CollapsibleSection
+                  title="Edit Product"
+                  icon={<Pencil className="size-3.5" />}
+                  expanded={expandedSections.edit || editing}
+                  onToggle={() => {
+                    if (!editing) toggleSection('edit');
+                  }}
+                >
+                  {!editing ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditing(true);
+                        setExpandedSections((prev) => ({ ...prev, edit: true }));
+                      }}
+                    >
+                      <Pencil className="size-3 mr-1.5" />
+                      Start Editing
+                    </Button>
+                  ) : (
                     <div className="space-y-3">
                       <EditField
                         label="Product Name"
@@ -458,7 +535,9 @@ export default function ProductSheet({
                         </Select>
                       </div>
 
-                      <div className="flex items-center gap-2 pt-2">
+                      <Separator />
+
+                      <div className="flex items-center gap-2">
                         <Button onClick={handleSave} disabled={saving} size="sm">
                           {saving ? 'Saving...' : 'Save Changes'}
                         </Button>
@@ -472,21 +551,184 @@ export default function ProductSheet({
                       </div>
                     </div>
                   )}
-                </section>
-              </>
-            )}
-          </div>
+                </CollapsibleSection>
+              </div>
+
+              {/* Quarantine Footer Actions */}
+              {product.verification_status === 'quarantined' && (
+                <QuarantineActions productId={product.id} productName={product.product_name} onAction={onProductUpdated} />
+              )}
+            </div>
+          )}
         </ScrollArea>
       </SheetContent>
     </Sheet>
   );
 }
 
+// ── Sub-components ──
+
+function CollapsibleSection({
+  title,
+  icon,
+  expanded,
+  onToggle,
+  badge,
+  status,
+  children,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  expanded: boolean;
+  onToggle: () => void;
+  badge?: string;
+  status?: 'ok' | 'warning' | 'missing';
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="border-b border-neutral-100 last:border-0">
+      <button
+        className="flex items-center gap-2.5 w-full py-3 text-left hover:bg-neutral-50/50 transition-colors rounded-md"
+        onClick={onToggle}
+      >
+        <span className="text-neutral-400">{icon}</span>
+        <span className="text-[12px] font-medium text-neutral-500 flex-1">
+          {title}
+        </span>
+        {status === 'ok' && (
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+        )}
+        {status === 'warning' && (
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+        )}
+        {badge && (
+          <span className="text-[10px] text-neutral-400 font-medium">
+            {badge}
+          </span>
+        )}
+        {expanded ? (
+          <ChevronUp className="size-3.5 text-neutral-300" />
+        ) : (
+          <ChevronDown className="size-3.5 text-neutral-300" />
+        )}
+      </button>
+      {expanded && <div className="pb-4 pt-1">{children}</div>}
+    </div>
+  );
+}
+
+function SheetLoadingSkeleton() {
+  return (
+    <div className="space-y-6 p-6">
+      <Skeleton className="w-full h-[180px] rounded-lg" />
+      <div className="space-y-2">
+        <Skeleton className="h-6 w-3/4" />
+        <Skeleton className="h-4 w-1/3" />
+      </div>
+      <div className="flex gap-3">
+        <Skeleton className="h-10 w-20 rounded-lg" />
+        <Skeleton className="h-10 w-20 rounded-lg" />
+      </div>
+      <Separator />
+      <div className="grid grid-cols-2 gap-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="space-y-1">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+        ))}
+      </div>
+      <Separator />
+      <div className="space-y-2">
+        <Skeleton className="h-3 w-32" />
+        <div className="flex flex-wrap gap-1.5">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-5 w-20 rounded-full" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function InfoItem({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div>
-      <span className="text-xs text-ink-faint">{label}</span>
-      <p className="text-sm text-ink truncate">{value || '--'}</p>
+      <span className="text-[11px] text-neutral-400 uppercase tracking-wider">{label}</span>
+      <p className="text-sm text-neutral-700 mt-0.5">{value || '--'}</p>
+    </div>
+  );
+}
+
+function QuarantineActions({
+  productId,
+  productName,
+  onAction,
+}: {
+  productId: string;
+  productName: string;
+  onAction: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [confirmingReject, setConfirmingReject] = useState(false);
+
+  async function handleApprove() {
+    setBusy(true);
+    try {
+      const items = await getQuarantine('pending');
+      const match = items.find((q) => q.product_id === productId);
+      if (match) {
+        await approveQuarantine(match.id);
+        toast.success(`${productName} aprovado`);
+        onAction();
+      } else {
+        toast.error('Registro de quarentena nao encontrado');
+      }
+    } catch {
+      toast.error('Falha ao aprovar');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleReject() {
+    if (!confirmingReject) {
+      setConfirmingReject(true);
+      return;
+    }
+    setBusy(true);
+    try {
+      const items = await getQuarantine('pending');
+      const match = items.find((q) => q.product_id === productId);
+      if (match) {
+        await rejectQuarantine(match.id);
+        toast.success(`${productName} rejeitado`);
+        onAction();
+      } else {
+        toast.error('Registro de quarentena nao encontrado');
+      }
+    } catch {
+      toast.error('Falha ao rejeitar');
+    } finally {
+      setBusy(false);
+      setConfirmingReject(false);
+    }
+  }
+
+  return (
+    <div className="sticky bottom-0 px-5 py-3 bg-white border-t border-neutral-100 flex items-center gap-3">
+      <Button onClick={handleApprove} disabled={busy} className="flex-1">
+        {busy ? 'Processando...' : 'Aprovar'}
+      </Button>
+      <Button
+        variant={confirmingReject ? 'destructive' : 'outline'}
+        onClick={handleReject}
+        onBlur={() => setConfirmingReject(false)}
+        disabled={busy}
+        className="flex-1"
+      >
+        {confirmingReject ? 'Confirmar Rejeicao' : 'Rejeitar'}
+      </Button>
     </div>
   );
 }

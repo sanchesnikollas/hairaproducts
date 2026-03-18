@@ -1,8 +1,8 @@
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface SealBadgeProps {
   seal: string;
+  variant?: 'detected' | 'inferred';
   className?: string;
 }
 
@@ -60,17 +60,18 @@ function getSealClassName(seal: string): string {
   return 'border-gray-200 bg-gray-50 text-gray-600';
 }
 
-export default function SealBadge({ seal, className }: SealBadgeProps) {
+export default function SealBadge({ seal, variant = 'detected', className }: SealBadgeProps) {
+  const isInferred = variant === 'inferred';
   return (
-    <Badge
-      variant="outline"
+    <span
       className={cn(
-        'text-[11px] h-auto px-2 py-0.5 font-medium tracking-wide',
+        'inline-flex text-[10px] h-auto px-1.5 py-0.5 font-medium rounded border',
         getSealClassName(seal),
+        isInferred && 'border-dashed opacity-70',
         className
       )}
     >
       {getSealLabel(seal)}
-    </Badge>
+    </span>
   );
 }

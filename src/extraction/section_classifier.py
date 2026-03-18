@@ -78,7 +78,7 @@ def validate_inci_content(text: str | None) -> bool:
     if not text or len(text) < 30:
         return False
     # Must contain ingredient-like separators
-    if not any(sep in text for sep in [",", "●", "•", "·"]):
+    if not any(sep in text for sep in [",", ";", "●", "•", "·"]):
         return False
     # Reject if contains marketing or usage verbs
     text_lower = text.lower()
@@ -96,6 +96,17 @@ def _get_soup(html: str):
 
 def _extract_content_after_heading(el) -> str | None:
     """Extract text content following a heading element."""
+    # Strategy 0: <details>/<summary> accordion pattern
+    # Structure: <details><summary><h2>Label</h2></summary><div class="accordion__content">...</div></details>
+    if el.parent and el.parent.name == "summary":
+        details = el.parent.parent
+        if details and details.name == "details":
+            content_div = details.find("div", class_=re.compile(r"accordion"))
+            if content_div:
+                content = content_div.get_text(strip=True)
+                if content:
+                    return content
+
     # Strategy 1: Next sibling element
     sibling = el.find_next_sibling()
     if sibling:
@@ -120,6 +131,21 @@ def _extract_content_after_heading(el) -> str | None:
             after = parent_text[idx + len(el_text):].strip()
             if after:
                 return after
+
+    # Strategy 4: Walk up to an accordion/container parent and find <p> content
+    # (handles structures like Boticário where h3 is nested deep inside buttons/labels)
+    ancestor = el.parent
+    for _ in range(5):  # max 5 levels up
+        if ancestor is None:
+            break
+        classes = " ".join(ancestor.get("class", []))
+        if re.search(r"accordion.*padding|container.*padding|accordion-pdp", classes):
+            for p in ancestor.find_all("p"):
+                p_text = p.get_text(strip=True)
+                if p_text and len(p_text) > 20 and p_text != el.get_text(strip=True):
+                    return p_text
+            break
+        ancestor = ancestor.parent
 
     return None
 

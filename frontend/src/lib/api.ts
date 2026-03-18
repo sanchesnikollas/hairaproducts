@@ -108,6 +108,10 @@ export async function getQuarantine(reviewStatus?: string): Promise<QuarantineIt
   return fetchJSON<QuarantineItem[]>(`/quarantine${qs}`);
 }
 
+export async function getQuarantineByBrand(brandSlug: string, reviewStatus = 'pending'): Promise<QuarantineItem[]> {
+  return fetchJSON<QuarantineItem[]>(`/quarantine?brand=${brandSlug}&review_status=${reviewStatus}`);
+}
+
 export async function approveQuarantine(id: string, notes?: string): Promise<{ status: string; quarantine_id: string }> {
   const params = notes ? `?notes=${encodeURIComponent(notes)}` : '';
   return fetchJSON(`/quarantine/${id}/approve${params}`, { method: 'POST' });

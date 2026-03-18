@@ -1,7 +1,6 @@
-import { Search } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from '@/components/ui/input-group';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 
@@ -46,44 +45,24 @@ export default function ProductFilters({
   verifiedOnly,
   onVerifiedOnlyChange,
   categories,
-  statusCounts,
 }: ProductFiltersProps) {
   return (
-    <div className="space-y-4">
-      {/* Status Tabs */}
-      <Tabs value={status} onValueChange={(val) => onStatusChange(val as StatusFilter)}>
-        <TabsList variant="line" className="gap-0">
-          {STATUS_TABS.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value} className="gap-2 px-3">
-              {tab.label}
-              <Badge
-                variant="secondary"
-                className="h-5 min-w-[1.25rem] px-1.5 text-[10px] tabular-nums"
-              >
-                {statusCounts[tab.value]}
-              </Badge>
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
-
-      {/* Search + Category + Toggles */}
+    <div className="space-y-3">
+      {/* Search + Filters Row */}
       <div className="flex flex-wrap items-center gap-3">
-        <InputGroup className="min-w-[240px] max-w-sm flex-1">
-          <InputGroupAddon align="inline-start">
-            <InputGroupText>
-              <Search className="size-4 text-ink-faint" />
-            </InputGroupText>
-          </InputGroupAddon>
-          <InputGroupInput
+        <div className="relative min-w-[240px] max-w-sm flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-ink-faint pointer-events-none" />
+          <Input
             placeholder="Search products..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-9"
           />
-        </InputGroup>
+        </div>
 
         <Select value={category || '__all__'} onValueChange={(v) => onCategoryChange(v === '__all__' ? '' : (v ?? ''))}>
-          <SelectTrigger className="min-w-[160px]">
+          <SelectTrigger className="min-w-[160px] w-auto">
+            <Filter className="size-3.5 text-ink-faint mr-1.5" />
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
           <SelectContent>
@@ -100,6 +79,7 @@ export default function ProductFilters({
           variant={excludeKits ? 'default' : 'outline'}
           size="sm"
           onClick={() => onExcludeKitsChange(!excludeKits)}
+          className="shrink-0"
         >
           Exclude Kits
         </Button>
@@ -108,10 +88,22 @@ export default function ProductFilters({
           variant={verifiedOnly ? 'default' : 'outline'}
           size="sm"
           onClick={() => onVerifiedOnlyChange(!verifiedOnly)}
+          className="shrink-0"
         >
-          Verified INCI Only
+          Verified Only
         </Button>
       </div>
+
+      {/* Status Tabs */}
+      <Tabs value={status} onValueChange={(val) => onStatusChange(val as StatusFilter)}>
+        <TabsList variant="line" className="gap-0">
+          {STATUS_TABS.map((tab) => (
+            <TabsTrigger key={tab.value} value={tab.value} className="px-4">
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
     </div>
   );
 }

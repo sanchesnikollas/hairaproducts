@@ -63,6 +63,15 @@ def classify_url(url: str, product_url_pattern: str | None = None) -> URLType:
         if seg_clean in NON_PRODUCT_PATHS:
             return URLType.OTHER
 
+    # Check blueprint product_url_pattern first (takes priority over generic indicators)
+    if product_url_pattern:
+        if re.search(product_url_pattern, lower):
+            return URLType.PRODUCT
+
+    # Shopify /products/{slug} detection — a slug after /products/ is a product page
+    if re.search(r'/products/[\w][\w-]+', path) and not path.rstrip("/").endswith("/products"):
+        return URLType.PRODUCT
+
     # Check for search/category query patterns (e.g., busca/?cgid=...)
     if "cgid=" in query or "category=" in query:
         return URLType.CATEGORY
@@ -78,11 +87,6 @@ def classify_url(url: str, product_url_pattern: str | None = None) -> URLType:
                 is_product = any(re.search(p, lower) for p in PRODUCT_INDICATORS)
                 if not is_product:
                     return URLType.CATEGORY
-
-    # Check product patterns
-    if product_url_pattern:
-        if re.search(product_url_pattern, lower):
-            return URLType.PRODUCT
 
     for pattern in PRODUCT_INDICATORS:
         if re.search(pattern, lower):

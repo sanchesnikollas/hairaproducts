@@ -44,10 +44,11 @@ class CoverageEngine:
         report.discovered_total = len(discovered_urls)
 
         # Classify URLs
+        product_url_pattern = blueprint.get("discovery", {}).get("product_url_pattern")
         hair_urls = []
         for url_info in discovered_urls:
             url = url_info.get("url", "") if isinstance(url_info, dict) else url_info.url
-            url_type = classify_url(url)
+            url_type = classify_url(url, product_url_pattern=product_url_pattern)
             if url_type == URLType.KIT:
                 report.kits_total += 1
             elif url_type == URLType.NON_HAIR:

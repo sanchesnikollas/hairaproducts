@@ -13,19 +13,64 @@ from src.storage.repository import ProductRepository
 router = APIRouter(tags=["quarantine"])
 
 
-def _get_session():
-    from sqlalchemy.orm import Session as SASession
-    engine = get_engine()
-    with SASession(engine) as session:
-        yield session
+def _get_session(brand: str | None = Query(None)):
+    from src.api.dependencies import is_multi_db, get_router
+    if is_multi_db():
+        if brand:
+            router = get_router()
+            session = router.get_session(brand)
+            try:
+                yield session
+            finally:
+                session.close()
+        else:
+            # No brand specified — yield None; route handlers aggregate across brands
+            yield None
+    else:
+        from sqlalchemy.orm import Session as SASession
+        engine = get_engine()
+        with SASession(engine) as session:
+            yield session
 
 
 @router.get("/quarantine")
 def list_quarantined(
     brand_slug: str | None = None,
     review_status: str = "pending",
-    session: Session = Depends(_get_session),
+    session: Session | None = Depends(_get_session),
 ):
+    from src.api.dependencies import is_multi_db, get_router
+
+    if is_multi_db() and session is None:
+        # Aggregate across all brands
+        router = get_router()
+        all_items = []
+        for brand_orm in router.list_brands():
+            try:
+                brand_session = router.get_session(brand_orm.brand_slug)
+                q = (
+                    brand_session.query(QuarantineDetailORM)
+                    .join(ProductORM)
+                    .filter(QuarantineDetailORM.review_status == review_status)
+                )
+                items = q.limit(100).all()
+                for qi in items:
+                    all_items.append({
+                        "id": qi.id,
+                        "product_id": qi.product_id,
+                        "product_name": qi.product.product_name if qi.product else None,
+                        "product_url": qi.product.product_url if qi.product else None,
+                        "brand_slug": qi.product.brand_slug if qi.product else None,
+                        "rejection_reason": qi.rejection_reason,
+                        "rejection_code": qi.rejection_code,
+                        "review_status": qi.review_status,
+                        "reviewer_notes": qi.reviewer_notes,
+                    })
+                brand_session.close()
+            except Exception:
+                continue
+        return all_items
+
     query = (
         session.query(QuarantineDetailORM)
         .join(ProductORM)
@@ -54,8 +99,10 @@ def list_quarantined(
 def approve_quarantined(
     quarantine_id: str,
     notes: str = "",
-    session: Session = Depends(_get_session),
+    session: Session | None = Depends(_get_session),
 ):
+    if session is None:
+        raise HTTPException(status_code=400, detail="brand query parameter required")
     detail = session.query(QuarantineDetailORM).filter(QuarantineDetailORM.id == quarantine_id).first()
     if not detail:
         raise HTTPException(status_code=404, detail="Quarantine record not found")
@@ -77,8 +124,10 @@ def get_review_queue(
     status: str | None = Query("pending"),
     brand_slug: str | None = Query(None),
     limit: int = Query(100, le=500),
-    session: Session = Depends(_get_session),
+    session: Session | None = Depends(_get_session),
 ):
+    if session is None:
+        return []
     repo = ProductRepository(session)
     items = repo.get_review_queue(status=status, brand_slug=brand_slug, limit=limit)
     return [
@@ -105,8 +154,10 @@ def get_review_queue(
 def resolve_review_queue_item(
     item_id: str,
     body: dict,
-    session: Session = Depends(_get_session),
+    session: Session | None = Depends(_get_session),
 ):
+    if session is None:
+        raise HTTPException(status_code=400, detail="brand query parameter required")
     repo = ProductRepository(session)
     status = body.get("status", "approved")
     notes = body.get("reviewer_notes")
@@ -122,8 +173,10 @@ def resolve_review_queue_item(
 def reject_quarantined(
     quarantine_id: str,
     notes: str = "",
-    session: Session = Depends(_get_session),
+    session: Session | None = Depends(_get_session),
 ):
+    if session is None:
+        raise HTTPException(status_code=400, detail="brand query parameter required")
     detail = session.query(QuarantineDetailORM).filter(QuarantineDetailORM.id == quarantine_id).first()
     if not detail:
         raise HTTPException(status_code=404, detail="Quarantine record not found")

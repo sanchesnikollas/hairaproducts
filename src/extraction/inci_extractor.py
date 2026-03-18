@@ -6,14 +6,17 @@ import re
 from src.core.inci_validator import clean_inci_text, validate_inci_list, INCIValidationResult
 
 # Separators used between INCI ingredients across different sites
-INCI_SEPARATORS = re.compile(r"[,●•·|/]\s*|\s{2,}")
+INCI_SEPARATORS = re.compile(r"[,;●•·|/]\s*|\s{2,}")
 
 
 def _split_ingredients(text: str) -> list[str]:
-    """Split INCI text by common separators (comma, bullet, pipe, etc.)."""
+    """Split INCI text by common separators (comma, semicolon, bullet, pipe, etc.)."""
     # If bullets or dots are present, prefer those as the separator
     if "●" in text or "•" in text or "·" in text:
         parts = re.split(r"[●•·]", text)
+    # If semicolons are the primary separator (e.g., O Boticário uses pt-BR names with ;)
+    elif ";" in text and text.count(";") > text.count(","):
+        parts = text.split(";")
     else:
         parts = text.split(",")
     return [p.strip() for p in parts if p.strip()]

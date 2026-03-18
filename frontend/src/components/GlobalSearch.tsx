@@ -52,9 +52,9 @@ export default function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) 
     }
   }, [open]);
 
-  const handleSelect = (productId: string) => {
+  const handleSelect = (product: Product) => {
     onOpenChange(false);
-    navigate(`/products?highlight=${productId}`);
+    navigate(`/brands/${product.brand_slug}/products/${product.id}`);
   };
 
   return (
@@ -84,7 +84,7 @@ export default function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) 
               <CommandItem
                 key={product.id}
                 value={product.product_name}
-                onSelect={() => handleSelect(product.id)}
+                onSelect={() => handleSelect(product)}
               >
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm font-medium text-ink">

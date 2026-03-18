@@ -16,10 +16,15 @@ router = APIRouter(tags=["brands"])
 
 
 def _get_session():
-    from sqlalchemy.orm import Session as SASession
-    engine = get_engine()
-    with SASession(engine) as session:
-        yield session
+    from src.api.dependencies import is_multi_db
+    if is_multi_db():
+        # In multi-DB mode, brand list comes from central DB; no default session needed
+        yield None
+    else:
+        from sqlalchemy.orm import Session as SASession
+        engine = get_engine()
+        with SASession(engine) as session:
+            yield session
 
 
 @router.get("/brands")
@@ -63,8 +68,12 @@ def list_brands(session: Session = Depends(_get_session)):
 
 
 @router.get("/brands/{slug}/coverage")
-def get_brand_coverage(slug: str, session: Session = Depends(_get_session)):
-    repo = ProductRepository(session)
+def get_brand_coverage(
+    request: Request,
+    slug: str,
+    brand_session: Session = Depends(get_brand_db_from_path),
+):
+    repo = ProductRepository(brand_session)
     cov = repo.get_brand_coverage(slug)
     if not cov:
         raise HTTPException(status_code=404, detail="Brand coverage not found")

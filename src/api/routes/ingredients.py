@@ -11,11 +11,22 @@ from src.storage.orm_models import IngredientORM, ProductIngredientORM
 router = APIRouter(tags=["ingredients"])
 
 
-def _get_session():
-    from sqlalchemy.orm import Session as SASession
-    engine = get_engine()
-    with SASession(engine) as session:
-        yield session
+def _get_session(brand: str | None = Query(None)):
+    from src.api.dependencies import is_multi_db, get_router
+    if is_multi_db():
+        if not brand:
+            raise HTTPException(status_code=400, detail="brand query parameter required in multi-database mode")
+        router = get_router()
+        session = router.get_session(brand)
+        try:
+            yield session
+        finally:
+            session.close()
+    else:
+        from sqlalchemy.orm import Session as SASession
+        engine = get_engine()
+        with SASession(engine) as session:
+            yield session
 
 
 @router.get("/ingredients")
