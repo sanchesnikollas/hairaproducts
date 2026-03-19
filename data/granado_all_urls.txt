@@ -1,0 +1,43 @@
+# Granado - Hair Products (human only, no pet)
+# Source: sitemap.xml - filtered for shampoo, condicionador, mascara capilar
+# Generated: 2026-03-15
+# Total: 29 URLs
+
+# Terrapeutics line - Adult hair care
+https://www.granado.com.br/granado/shampoo-castanha-do-brasil-180ml
+https://www.granado.com.br/granado/shampoo-castanha-do-brasil-50ml
+https://www.granado.com.br/granado/shampoo-lavanda-180ml
+https://www.granado.com.br/granado/shampoo-lavanda-50ml
+https://www.granado.com.br/granado/shampoo-salvia-e-confrey-180ml
+https://www.granado.com.br/granado/shampoo-sete-ervas-180ml
+https://www.granado.com.br/granado/condicionador-terrapeutics-castanha-do-brasil-180ml
+https://www.granado.com.br/granado/condicionador-terrapeutics-castanha-do-brasil-50ml
+https://www.granado.com.br/granado/condicionador-terrapeutics-lavanda-180ml
+https://www.granado.com.br/granado/condicionador-terrapeutics-lavanda-50ml
+https://www.granado.com.br/granado/condicionador-terrapeutics-salvia-e-confrey-180ml
+https://www.granado.com.br/granado/condicionador-terrapeutics-sete-ervas-180ml
+
+# Carioca line
+https://www.granado.com.br/granado/shampoo-carioca-280ml
+https://www.granado.com.br/granado/condicionador-granado-carioca-280ml
+
+# Masculino
+https://www.granado.com.br/granado/shampoo-masculino-para-cabelo-barba-e-bigode-150ml
+
+# Bebe line (baby hair care)
+https://www.granado.com.br/granado/shampoo-bebe-tradicional-250ml
+https://www.granado.com.br/granado/shampoo-bebe-lavanda-250ml
+https://www.granado.com.br/granado/shampoo-bebe-erva-doce-250ml
+https://www.granado.com.br/granado/shampoo-bebe-calendula-250ml
+https://www.granado.com.br/granado/shampoo-relaxante-bebe-camomila-250ml
+https://www.granado.com.br/granado/condicionador-bebe-tradicional-250ml
+https://www.granado.com.br/granado/condicionador-bebe-lavanda-250ml
+https://www.granado.com.br/granado/condicionador-granado-bebe-erva-doce-250ml
+https://www.granado.com.br/granado/condicionador-bebe-calendula-250ml
+https://www.granado.com.br/granado/condicionador-relaxante-bebe-camomila-250ml
+
+# Refil (refill packs)
+https://www.granado.com.br/granado/refil-shampoo-bebe-tradicional-250ml
+https://www.granado.com.br/granado/refil-shampoo-bebe-camomila-250ml
+https://www.granado.com.br/granado/refil-condicionador-bebe-tradicional-250ml
+https://www.granado.com.br/granado/refil-condicionador-bebe-camomila-250ml

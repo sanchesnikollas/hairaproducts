@@ -1,0 +1,79 @@
+brand_slug: redken
+brand_name: Redken
+platform: custom
+domain: www.redken.com.br
+allowed_domains:
+- www.redken.com.br
+entrypoints:
+- https://www.redken.com.br/produtos
+- https://www.redken.com.br/produtos/shampoos
+- https://www.redken.com.br/produtos/condicionadores
+- https://www.redken.com.br/produtos/tratamento
+- https://www.redken.com.br/produtos/mascaras
+- https://www.redken.com.br/produtos/oleos-e-seruns
+- https://www.redken.com.br/produtos/styling
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.redken.com.br/sitemap.xml
+  product_url_pattern: ^https://www\.redken\.com\.br/produtos/(?!produtos-de-coloracao-salao)[\w%-]+/[\w%-]+/[\w%-]+$
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: true
+  delay_seconds: 3
+  inci_selectors: []
+  name_selectors:
+  - h1
+  - .product-description__headers--category
+  - .product-grid__title
+  image_selectors:
+  - meta[property="og:image"]
+  - img[itemprop="image"]
+  - .product-image img
+  price_selectors: []
+  section_label_map:
+    description:
+      labels:
+      - detalhes
+      - sobre o produto
+      - "descri\xE7\xE3o"
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - "conselho de aplica\xE7\xE3o"
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+      - key ingredients
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o completa"
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: INCI
+  ingredients_format: inci_standard
+  platform_detail: sitecore_wsf_loreal
+  inci_available: true
+  inci_note: "INCI lists are published on product pages in the INGREDIENTES tab (tab-id 4). Content is server-side rendered in the HTML. httpx mode works (requires_js: false)."
+  parent_brand: "L'Or\xE9al Professionnel Products Division"
+  product_focus: professional_haircare
+  hair_lines: "Acidic Bonding Concentrate, Acidic Color Gloss, All Soft, Extreme, Extreme Length, Frizz Dismiss, One United, Blonde Idol, Styling"
+  waf: none
+version: 1

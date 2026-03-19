@@ -1,0 +1,72 @@
+brand_slug: johnsons-baby
+brand_name: "Johnson's Baby"
+platform: custom
+domain: www.johnsonsbaby.com.br
+allowed_domains:
+- www.johnsonsbaby.com.br
+entrypoints:
+- https://www.johnsonsbaby.com.br/produtos?categoria%2520de%2520produtos=cuidados%2520com%2520o%2520cabelo
+- https://www.johnsonsbaby.com.br/cuidados-com-o-cabelo
+- https://www.johnsonsbaby.com.br/blackinho-poderoso
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.johnsonsbaby.com.br/sitemap.xml
+  product_url_pattern: ^https://www\.johnsonsbaby\.com\.br/produtos/(shampoo|condicionador|creme-para-pentear)/[\w-]+$
+  max_pages: 50
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: true
+  delay_seconds: 3
+  inci_selectors: []
+  name_selectors:
+  - h1
+  - .rich-text h1
+  image_selectors:
+  - img[src*="ctfassets.net"]
+  - img[src*="images.ctfassets.net"]
+  price_selectors: []
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+      - o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+    ingredients_inci:
+      labels:
+      - lista de ingredientes
+      - ingredientes
+      - ingredients
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: individual_inci_with_descriptions
+  platform_detail: nextjs_contentful_stackbit
+  inci_available: true
+  inci_note: "INCI ingredients are published on product pages in a 'Lista de ingredientes' section. Each ingredient is listed individually with its name in bold followed by a description. Not a traditional comma-separated INCI list, but all standard INCI names are present. The extraction engine should capture bold text items as ingredient names. Content is server-side rendered (no JS required). Site uses Akamai WAF - requires browser User-Agent header."
+  parent_brand: "Johnson & Johnson (Kenvue)"
+  product_focus: baby_haircare
+  hair_lines: "Glicerina, Cachos dos Sonhos, Cheirinho Prolongado, Gotas de Brilho, Cabelos Claros, Blackinho Poderoso, Derma Protect"
+  waf: akamai
+  cdn: contentful_images
+version: 1

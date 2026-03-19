@@ -1,0 +1,71 @@
+brand_slug: amend
+brand_name: Amend
+platform: custom
+domain: www.amend.com.br
+allowed_domains:
+- www.amend.com.br
+entrypoints:
+- https://www.amend.com.br/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.amend.com.br/sitemap.xml
+  product_url_pattern: null
+  max_pages: 500
+  pagination:
+    type: scroll
+    max_pages: 10
+extraction:
+  inci_selectors:
+  - .product-ingredients p
+  - .product-ingredients
+  - p.description-product-page
+  - .greyBackground p.description-product-page
+  - '#ingredientes p'
+  - '#composicao p'
+  - '[data-tab=''ingredientes''] p'
+  - .product-description p
+  name_selectors:
+  - h1.product-name
+  - h1
+  - .product-title
+  - .product-name
+  image_selectors:
+  - .product-image img
+  - img.product-img
+  - .gallery img
+  section_label_map:
+    description:
+      labels:
+      - descricao
+      - sobre o produto
+      - detalhes do produto
+      - o produto
+    care_usage:
+      labels:
+      - modo de uso
+      - como usar
+      - modo de aplicacao
+      - instrucoes de uso
+      - como aplicar
+    composition:
+      labels:
+      - principios ativos
+      - ativos
+      - formula
+      - tecnologia
+      - composicao do produto
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - inci
+      - composicao completa
+      - lista de ingredientes
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+  wait_for_selector: null
+  use_llm_fallback: true
+version: 1

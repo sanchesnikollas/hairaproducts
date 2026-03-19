@@ -1,0 +1,81 @@
+# ============================================================================
+# HAIRA v2 — Silicones Reference List
+# ============================================================================
+# Used by LabelEngine to detect silicones in INCI ingredient lists.
+# Names are lowercased and matched case-insensitively against ingredient text.
+#
+# Categories:
+#   - Non-water-soluble (insoluble) silicones: problematic for curly/no-poo
+#   - Water-soluble silicones: generally accepted in low-poo routines
+#
+# ~30 common silicones found in hair care products.
+# ============================================================================
+
+# Non-water-soluble silicones — build up on hair, require sulfates to remove
+insoluble:
+  - dimethicone
+  - amodimethicone
+  - cyclomethicone
+  - cyclopentasiloxane
+  - cyclohexasiloxane
+  - trimethylsilylamodimethicone
+  - cetyl dimethicone
+  - cetearyl methicone
+  - stearyl dimethicone
+  - phenyl trimethicone
+  - dimethiconol
+  - behenoxy dimethicone
+  - stearoxy dimethicone
+  - trimethicone
+  - polysilicone-11
+  - polymethylsilsesquioxane
+  - methicone
+
+# Water-soluble silicones — wash out easily, generally low-poo compatible
+water_soluble:
+  - peg-8 dimethicone
+  - peg-12 dimethicone
+  - peg/ppg-18/18 dimethicone
+  - peg/ppg-20/15 dimethicone
+  - peg-7 amodimethicone
+  - peg-40 hydrogenated castor oil dimethicone
+  - bis-peg-18 methyl ether dimethyl silane
+  - dimethicone copolyol
+  - dimethicone peg-8 meadowfoamate
+  - lauryl methicone copolyol
+  - dimethicone peg-7 phosphate
+  - hydroxypropyldimethicone
+  - peg-14 dimethicone
+
+# Combined flat list of all silicones (for simple presence detection)
+silicones:
+  - dimethicone
+  - amodimethicone
+  - cyclomethicone
+  - cyclopentasiloxane
+  - cyclohexasiloxane
+  - trimethylsilylamodimethicone
+  - cetyl dimethicone
+  - cetearyl methicone
+  - stearyl dimethicone
+  - phenyl trimethicone
+  - dimethiconol
+  - behenoxy dimethicone
+  - stearoxy dimethicone
+  - trimethicone
+  - polysilicone-11
+  - polymethylsilsesquioxane
+  - methicone
+  - peg-8 dimethicone
+  - peg-12 dimethicone
+  - peg/ppg-18/18 dimethicone
+  - peg/ppg-20/15 dimethicone
+  - peg-7 amodimethicone
+  - peg-40 hydrogenated castor oil dimethicone
+  - bis-peg-18 methyl ether dimethyl silane
+  - dimethicone copolyol
+  - dimethicone peg-8 meadowfoamate
+  - lauryl methicone copolyol
+  - dimethicone peg-7 phosphate
+  - hydroxypropyldimethicone
+  - peg-14 dimethicone

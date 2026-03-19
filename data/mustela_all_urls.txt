@@ -1,0 +1,19 @@
+# Mustela Brazil - Hair-relevant products
+# Source: sitemap + manual curation
+# Platform: Shopify
+# Date: 2026-03-14
+
+# Shampoos
+https://www.mustela.com.br/products/shampoo-suave-com-abacate-organico
+https://www.mustela.com.br/products/shampoo-recem-nascido
+https://www.mustela.com.br/products/shampoo-solido-para-corpo-e-cabelo
+https://www.mustela.com.br/products/shampoo-cachos-desembaracados
+
+# Gel lavante (corpo e cabelo / body & hair)
+https://www.mustela.com.br/products/gel-lavante-suave-com-abacate-organico
+https://www.mustela.com.br/products/gel-lavante-calmante-com-schisandra-organica
+https://www.mustela.com.br/products/gel-lavante-bio-organico-certificado-corpo-e-cabelo
+https://www.mustela.com.br/products/gel-lavante-bio-organico-certificado-refil
+https://www.mustela.com.br/products/stelatopia-gel-lavante
+https://www.mustela.com.br/products/refil-gel-lavante-suave-com-abacate-organico
+https://www.mustela.com.br/products/oleo-de-banho-stelatopia

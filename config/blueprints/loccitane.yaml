@@ -1,0 +1,80 @@
+brand_slug: loccitane
+brand_name: "L'Occitane au Brasil"
+platform: custom
+domain: br.loccitane.com
+allowed_domains:
+- br.loccitane.com
+entrypoints:
+- https://br.loccitane.com/pt-br/tipos-de-cabelos
+- https://br.loccitane.com/pt-br/aromacologia.html
+- https://br.loccitane.com/pt-br/shampoo-com-ingredientes-naturais
+- https://br.loccitane.com/pt-br/condicionador-para-cabelo
+- https://br.loccitane.com/pt-br/produtos-masculinos-para-cabelo-e-banho
+- https://br.loccitane.com/pt-br/shampoos-em-barra
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://br.loccitane.com/sitemap_index.xml
+  - https://br.loccitane.com/pt-br/sitemap_0-product.xml
+  product_url_pattern: ^https://br\.loccitane\.com/pt-br/[\w%-]+/[\w]+\.html$
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: true
+  delay_seconds: 3
+  inci_selectors: []
+  name_selectors:
+  - h1
+  - .product-name
+  - .pdp-product-name
+  image_selectors:
+  - img[src*="demandware.static"]
+  - .product-image img
+  - .pdp-image img
+  price_selectors:
+  - .sales .value
+  - .simple-product-tile__price .value
+  - .price .value
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+      - o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - "conselho de aplica\xE7\xE3o"
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o completa"
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+      - compromissos
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: portuguese_names
+  platform_detail: salesforce_commerce_cloud_demandware
+  inci_available: false
+  inci_note: "INCI lists are NOT published on product pages. lbr_ingredientsHtml is empty, allIngredients is null. Products will be catalog_only."
+  parent_brand: "L'Occitane en Provence"
+  hair_line: Aromacologia
+version: 1

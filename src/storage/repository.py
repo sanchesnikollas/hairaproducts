@@ -1,0 +1,304 @@
+# src/storage/repository.py
+from __future__ import annotations
+
+from datetime import datetime, timezone
+
+from sqlalchemy import func, or_
+from sqlalchemy.orm import Session
+
+from src.core.models import ProductExtraction, QAResult, QAStatus
+from src.storage.orm_models import (
+    ProductORM, ProductEvidenceORM, QuarantineDetailORM, BrandCoverageORM,
+    ProductIngredientORM, IngredientORM, ReviewQueueORM, ValidationComparisonORM,
+)
+
+
+class ProductRepository:
+    def __init__(self, session: Session):
+        self._session = session
+
+    def upsert_product(self, extraction: ProductExtraction, qa: QAResult) -> str:
+        existing = (
+            self._session.query(ProductORM)
+            .filter(ProductORM.product_url == extraction.product_url)
+            .first()
+        )
+        if existing:
+            existing.product_name = extraction.product_name
+            existing.image_url_main = extraction.image_url_main
+            existing.image_urls_gallery = extraction.image_urls_gallery or None
+            existing.verification_status = qa.status.value
+            existing.product_type_raw = extraction.product_type_raw
+            existing.product_type_normalized = extraction.product_type_normalized
+            existing.product_category = extraction.product_category
+            existing.gender_target = extraction.gender_target.value
+            existing.hair_relevance_reason = extraction.hair_relevance_reason
+            existing.inci_ingredients = extraction.inci_ingredients
+            existing.description = extraction.description
+            existing.usage_instructions = extraction.usage_instructions
+            existing.composition = extraction.composition
+            existing.care_usage = extraction.care_usage
+            existing.benefits_claims = extraction.benefits_claims
+            existing.size_volume = extraction.size_volume
+            existing.price = extraction.price
+            existing.currency = extraction.currency
+            existing.line_collection = extraction.line_collection
+            existing.variants = extraction.variants
+            existing.confidence = extraction.confidence
+            existing.extraction_method = extraction.extraction_method
+            existing.extracted_at = extraction.extracted_at
+            existing.updated_at = datetime.now(timezone.utc)
+            product_id = existing.id
+        else:
+            product = ProductORM(
+                brand_slug=extraction.brand_slug,
+                product_name=extraction.product_name,
+                product_url=extraction.product_url,
+                image_url_main=extraction.image_url_main,
+                image_urls_gallery=extraction.image_urls_gallery or None,
+                verification_status=qa.status.value,
+                product_type_raw=extraction.product_type_raw,
+                product_type_normalized=extraction.product_type_normalized,
+                product_category=extraction.product_category,
+                gender_target=extraction.gender_target.value,
+                hair_relevance_reason=extraction.hair_relevance_reason,
+                inci_ingredients=extraction.inci_ingredients,
+                description=extraction.description,
+                usage_instructions=extraction.usage_instructions,
+                composition=extraction.composition,
+                care_usage=extraction.care_usage,
+                benefits_claims=extraction.benefits_claims,
+                size_volume=extraction.size_volume,
+                price=extraction.price,
+                currency=extraction.currency,
+                line_collection=extraction.line_collection,
+                variants=extraction.variants,
+                confidence=extraction.confidence,
+                extraction_method=extraction.extraction_method,
+                extracted_at=extraction.extracted_at,
+            )
+            self._session.add(product)
+            self._session.flush()
+            product_id = product.id
+
+        # Save evidence
+        for ev in extraction.evidence:
+            evidence_orm = ProductEvidenceORM(
+                product_id=product_id,
+                field_name=ev.field_name,
+                source_url=ev.source_url,
+                evidence_locator=ev.evidence_locator,
+                raw_source_text=ev.raw_source_text,
+                extraction_method=ev.extraction_method.value,
+                source_section_label=ev.source_section_label,
+                extracted_at=ev.extracted_at,
+            )
+            self._session.add(evidence_orm)
+
+        # Save quarantine details
+        if qa.status == QAStatus.QUARANTINED and qa.rejection_reason:
+            existing_q = (
+                self._session.query(QuarantineDetailORM)
+                .filter(QuarantineDetailORM.product_id == product_id)
+                .first()
+            )
+            if existing_q:
+                existing_q.rejection_reason = qa.rejection_reason
+            else:
+                qd = QuarantineDetailORM(
+                    product_id=product_id,
+                    rejection_reason=qa.rejection_reason,
+                    rejection_code=qa.checks_failed[0] if qa.checks_failed else None,
+                )
+                self._session.add(qd)
+
+        return product_id
+
+    def _apply_filters(self, query, brand_slug=None, verified_only=False, search=None, category=None, exclude_kits=False):
+        if brand_slug:
+            query = query.filter(ProductORM.brand_slug == brand_slug)
+        if verified_only:
+            query = query.filter(ProductORM.verification_status == "verified_inci")
+        if category:
+            query = query.filter(ProductORM.product_category == category)
+        if exclude_kits:
+            query = query.filter(ProductORM.is_kit == False)
+        if search:
+            pattern = f"%{search}%"
+            query = query.filter(
+                or_(
+                    ProductORM.product_name.ilike(pattern),
+                    ProductORM.description.ilike(pattern),
+                )
+            )
+        return query
+
+    def get_products(
+        self,
+        brand_slug: str | None = None,
+        verified_only: bool = False,
+        search: str | None = None,
+        category: str | None = None,
+        exclude_kits: bool = False,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[ProductORM]:
+        query = self._apply_filters(
+            self._session.query(ProductORM),
+            brand_slug=brand_slug, verified_only=verified_only, search=search, category=category, exclude_kits=exclude_kits,
+        )
+        return query.offset(offset).limit(limit).all()
+
+    def count_products(
+        self,
+        brand_slug: str | None = None,
+        verified_only: bool = False,
+        search: str | None = None,
+        category: str | None = None,
+        exclude_kits: bool = False,
+    ) -> int:
+        query = self._apply_filters(
+            self._session.query(func.count(ProductORM.id)),
+            brand_slug=brand_slug, verified_only=verified_only, search=search, category=category, exclude_kits=exclude_kits,
+        )
+        return query.scalar()
+
+    def count_products_by_status(
+        self,
+        brand_slug: str | None = None,
+        search: str | None = None,
+        category: str | None = None,
+        exclude_kits: bool = False,
+    ) -> dict[str, int]:
+        """Return product counts grouped by verification_status."""
+        base = self._apply_filters(
+            self._session.query(ProductORM.verification_status, func.count(ProductORM.id)),
+            brand_slug=brand_slug, search=search, category=category, exclude_kits=exclude_kits,
+        )
+        rows = base.group_by(ProductORM.verification_status).all()
+        counts = {status: count for status, count in rows}
+        total = sum(counts.values())
+        return {
+            "all": total,
+            "verified_inci": counts.get("verified_inci", 0),
+            "catalog_only": counts.get("catalog_only", 0),
+            "quarantined": counts.get("quarantined", 0),
+        }
+
+    def get_products_without_inci(self, brand_slug: str) -> list[ProductORM]:
+        """Get catalog_only products without INCI ingredients for a brand."""
+        return (
+            self._session.query(ProductORM)
+            .filter(
+                ProductORM.brand_slug == brand_slug,
+                ProductORM.verification_status == "catalog_only",
+                or_(
+                    ProductORM.inci_ingredients.is_(None),
+                    ProductORM.inci_ingredients == "[]",
+                ),
+            )
+            .all()
+        )
+
+    def get_product_by_id(self, product_id: str) -> ProductORM | None:
+        return self._session.query(ProductORM).filter(ProductORM.id == product_id).first()
+
+    def upsert_brand_coverage(self, stats: dict) -> None:
+        slug = stats["brand_slug"]
+        existing = (
+            self._session.query(BrandCoverageORM)
+            .filter(BrandCoverageORM.brand_slug == slug)
+            .first()
+        )
+        if existing:
+            for key, val in stats.items():
+                if key != "brand_slug" and hasattr(existing, key):
+                    setattr(existing, key, val)
+            existing.last_run = datetime.now(timezone.utc)
+        else:
+            cov = BrandCoverageORM(**stats)
+            cov.last_run = datetime.now(timezone.utc)
+            self._session.add(cov)
+
+    def get_brand_coverage(self, brand_slug: str) -> BrandCoverageORM | None:
+        return (
+            self._session.query(BrandCoverageORM)
+            .filter(BrandCoverageORM.brand_slug == brand_slug)
+            .first()
+        )
+
+    def get_all_brand_coverages(self) -> list[BrandCoverageORM]:
+        return self._session.query(BrandCoverageORM).all()
+
+    def update_product_labels(self, product_id: str, labels: dict) -> None:
+        """Update the product_labels JSON for a product."""
+        product = self.get_product_by_id(product_id)
+        if product:
+            product.product_labels = labels
+            product.updated_at = datetime.now(timezone.utc)
+
+    def get_product_ingredients(self, product_id: str) -> list[ProductIngredientORM]:
+        return (
+            self._session.query(ProductIngredientORM)
+            .filter_by(product_id=product_id)
+            .order_by(ProductIngredientORM.position)
+            .all()
+        )
+
+    def search_ingredients(self, query: str, limit: int = 50) -> list[IngredientORM]:
+        return (
+            self._session.query(IngredientORM)
+            .filter(IngredientORM.canonical_name.ilike(f"%{query}%"))
+            .limit(limit)
+            .all()
+        )
+
+    def get_review_queue(
+        self, status: str | None = None, brand_slug: str | None = None, limit: int = 100,
+    ) -> list[ReviewQueueORM]:
+        q = self._session.query(ReviewQueueORM)
+        if status:
+            q = q.filter_by(status=status)
+        if brand_slug:
+            q = q.join(ProductORM, ReviewQueueORM.product_id == ProductORM.id)
+            q = q.filter(ProductORM.brand_slug == brand_slug)
+        return q.order_by(ReviewQueueORM.created_at.desc()).limit(limit).all()
+
+    def resolve_review_queue_item(
+        self, item_id: str, status: str, notes: str | None = None,
+    ) -> ReviewQueueORM | None:
+        item = self._session.get(ReviewQueueORM, item_id)
+        if not item:
+            return None
+        item.status = status
+        item.reviewer_notes = notes
+        item.resolved_at = datetime.now(timezone.utc)
+        self._session.commit()
+        return item
+
+    def save_validation_comparison(
+        self, product_id: str, field_name: str,
+        pass_1_value: str | None, pass_2_value: str | None,
+        resolution: str,
+    ) -> ValidationComparisonORM:
+        vc = ValidationComparisonORM(
+            product_id=product_id, field_name=field_name,
+            pass_1_value=pass_1_value, pass_2_value=pass_2_value,
+            resolution=resolution,
+        )
+        if resolution == "auto_matched":
+            vc.resolved_at = datetime.now(timezone.utc)
+        self._session.add(vc)
+        self._session.commit()
+        return vc
+
+    def create_review_queue_item(
+        self, product_id: str, comparison_id: str, field_name: str,
+    ) -> ReviewQueueORM:
+        rq = ReviewQueueORM(
+            product_id=product_id, comparison_id=comparison_id,
+            field_name=field_name, status="pending",
+        )
+        self._session.add(rq)
+        self._session.commit()
+        return rq

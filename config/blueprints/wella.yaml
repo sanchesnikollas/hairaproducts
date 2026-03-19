@@ -1,0 +1,64 @@
+brand_slug: wella
+brand_name: Wella Professionals
+platform: custom
+domain: www.wella.com
+allowed_domains:
+- www.wella.com
+entrypoints:
+- https://www.wella.com/en-us/professionals/products
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.wella.com/sitemap.xml
+  product_url_pattern: null
+  max_pages: 500
+  pagination:
+    type: scroll
+    max_pages: 10
+extraction:
+  requires_js: true
+  wait_for_selector: .product-detail
+  inci_selectors:
+  - .product-ingredients p
+  - .product-ingredients
+  - '#ingredients p'
+  name_selectors:
+  - h1.product-name
+  - h1
+  - .product-title
+  image_selectors:
+  - .product-image img
+  - img.product-img
+  - .gallery img
+  section_label_map:
+    description:
+      labels:
+      - description
+      - about this product
+      - product details
+      - overview
+    care_usage:
+      labels:
+      - how to use
+      - directions
+      - usage instructions
+      - application
+      - how to apply
+    composition:
+      labels:
+      - key ingredients
+      - active ingredients
+      - formula
+      - technology
+    ingredients_inci:
+      labels:
+      - ingredients
+      - inci
+      - full ingredient list
+      - ingredient list
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+  use_llm_fallback: true
+version: 2
