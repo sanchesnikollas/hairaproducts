@@ -1,3 +1,12 @@
+export interface BrandQualityMetrics {
+  avg_confidence: number;
+  has_description_pct: number;
+  has_image_pct: number;
+  has_category_pct: number;
+  has_labels_pct: number;
+  avg_ingredients: number;
+}
+
 export interface BrandCoverage {
   id: number;
   brand_slug: string;
@@ -16,6 +25,7 @@ export interface BrandCoverage {
   coverage_report: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
+  quality?: BrandQualityMetrics;
 }
 
 export interface ProductEvidence {

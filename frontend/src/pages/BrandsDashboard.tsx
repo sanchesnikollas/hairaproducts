@@ -8,8 +8,14 @@ import ProgressBar from '@/components/ProgressBar';
 import StatusBadge from '@/components/StatusBadge';
 import LoadingState, { ErrorState, EmptyState } from '@/components/LoadingState';
 
-type SortField = 'brand_slug' | 'verified_inci_rate' | 'extracted_total' | 'discovered_total';
+type SortField = 'brand_slug' | 'verified_inci_rate' | 'extracted_total' | 'discovered_total' | 'avg_confidence' | 'completeness';
 type SortDir = 'asc' | 'desc';
+
+function getCompleteness(b: BrandCoverage): number {
+  const q = b.quality;
+  if (!q) return 0;
+  return Math.round((q.has_description_pct + q.has_image_pct + q.has_category_pct + q.has_labels_pct) / 4);
+}
 
 export default function BrandsDashboard() {
   const { data: brands, loading, error, refetch } = useAPI(getBrands);
@@ -23,8 +29,18 @@ export default function BrandsDashboard() {
       b.brand_slug.toLowerCase().includes(search.toLowerCase())
     );
     result.sort((a, b) => {
-      const aVal = a[sortField];
-      const bVal = b[sortField];
+      let aVal: number | string;
+      let bVal: number | string;
+      if (sortField === 'avg_confidence') {
+        aVal = a.quality?.avg_confidence ?? 0;
+        bVal = b.quality?.avg_confidence ?? 0;
+      } else if (sortField === 'completeness') {
+        aVal = getCompleteness(a);
+        bVal = getCompleteness(b);
+      } else {
+        aVal = a[sortField];
+        bVal = b[sortField];
+      }
       if (typeof aVal === 'string' && typeof bVal === 'string') {
         return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
       }
@@ -39,7 +55,10 @@ export default function BrandsDashboard() {
     const totalProducts = brands.reduce((s, b) => s + b.extracted_total, 0);
     const totalVerified = brands.reduce((s, b) => s + b.verified_inci_total, 0);
     const avgRate = totalProducts > 0 ? totalVerified / totalProducts : 0;
-    return { totalBrands, totalProducts, totalVerified, avgRate };
+    const avgConfidence = brands.reduce((s, b) => s + (b.quality?.avg_confidence ?? 0), 0) / brands.length;
+    const avgCompleteness = brands.reduce((s, b) => s + getCompleteness(b), 0) / brands.length;
+    const totalQuarantine = brands.reduce((s, b) => s + b.quarantined_total, 0);
+    return { totalBrands, totalProducts, totalVerified, avgRate, avgConfidence, avgCompleteness, totalQuarantine };
   }, [brands]);
 
   function toggleSort(field: SortField) {
@@ -53,7 +72,7 @@ export default function BrandsDashboard() {
 
   function sortIndicator(field: SortField) {
     if (sortField !== field) return '';
-    return sortDir === 'asc' ? ' \u2191' : ' \u2193';
+    return sortDir === 'asc' ? ' ↑' : ' ↓';
   }
 
   const navigate = useNavigate();
@@ -74,7 +93,7 @@ export default function BrandsDashboard() {
           Brand Coverage
         </h1>
         <p className="mt-2 text-sm text-ink-muted">
-          Monitoring INCI verification progress across all registered brands.
+          Monitoring INCI verification and data quality across all registered brands.
         </p>
       </motion.div>
 
@@ -84,12 +103,18 @@ export default function BrandsDashboard() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="grid grid-cols-4 gap-4"
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
         >
-          <StatCard label="Brands Tracked" value={stats.totalBrands} />
-          <StatCard label="Products Extracted" value={stats.totalProducts} />
+          <StatCard label="Brands" value={stats.totalBrands} />
+          <StatCard label="Products" value={stats.totalProducts} />
           <StatCard label="Verified INCI" value={stats.totalVerified} accent />
-          <StatCard label="Avg. Verification Rate" value={`${Math.round(stats.avgRate * 100)}%`} accent />
+          <StatCard label="Avg. INCI Rate" value={`${Math.round(stats.avgRate * 100)}%`} accent />
+          <StatCard label="Avg. Confidence" value={`${Math.round(stats.avgConfidence)}%`} />
+          <StatCard
+            label="Quarantined"
+            value={stats.totalQuarantine}
+            danger={stats.totalQuarantine > 0}
+          />
         </motion.div>
       )}
 
@@ -127,10 +152,15 @@ export default function BrandsDashboard() {
               <tr className="border-b border-ink/5">
                 <Th onClick={() => toggleSort('brand_slug')}>Brand{sortIndicator('brand_slug')}</Th>
                 <Th align="center">Status</Th>
-                <Th align="right" onClick={() => toggleSort('discovered_total')}>Discovered{sortIndicator('discovered_total')}</Th>
-                <Th align="right" onClick={() => toggleSort('extracted_total')}>Extracted{sortIndicator('extracted_total')}</Th>
-                <Th onClick={() => toggleSort('verified_inci_rate')} className="min-w-[200px]">
-                  Verification Rate{sortIndicator('verified_inci_rate')}
+                <Th align="right" onClick={() => toggleSort('extracted_total')}>Products{sortIndicator('extracted_total')}</Th>
+                <Th onClick={() => toggleSort('verified_inci_rate')} className="min-w-[160px]">
+                  INCI Rate{sortIndicator('verified_inci_rate')}
+                </Th>
+                <Th onClick={() => toggleSort('avg_confidence')} className="min-w-[160px]">
+                  Confidence{sortIndicator('avg_confidence')}
+                </Th>
+                <Th onClick={() => toggleSort('completeness')} className="min-w-[160px]">
+                  Completeness{sortIndicator('completeness')}
                 </Th>
                 <Th align="right">Quarantined</Th>
               </tr>
@@ -154,11 +184,11 @@ export default function BrandsDashboard() {
 
 // ── Sub-components ──
 
-function StatCard({ label, value, accent }: { label: string; value: string | number; accent?: boolean }) {
+function StatCard({ label, value, accent, danger }: { label: string; value: string | number; accent?: boolean; danger?: boolean }) {
   return (
     <div className="bg-white rounded-xl border border-ink/5 p-5 shadow-sm">
       <p className="text-xs uppercase tracking-wider text-ink-muted mb-1">{label}</p>
-      <p className={`text-2xl font-display font-semibold ${accent ? 'text-champagne-dark' : 'text-ink'}`}>
+      <p className={`text-2xl font-display font-semibold ${danger ? 'text-red-500' : accent ? 'text-champagne-dark' : 'text-ink'}`}>
         {typeof value === 'number' ? value.toLocaleString() : value}
       </p>
     </div>
@@ -187,8 +217,25 @@ function Th({
   );
 }
 
+function MiniBar({ value, color }: { value: number; color: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 h-1.5 rounded-full bg-ink/5 overflow-hidden">
+        <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(value, 100)}%` }} />
+      </div>
+      <span className="text-xs tabular-nums text-ink-light w-9 text-right">{Math.round(value)}%</span>
+    </div>
+  );
+}
+
 function BrandRow({ brand, index, onClick }: { brand: BrandCoverage; index: number; onClick: () => void }) {
   const rateColor = brand.verified_inci_rate >= 0.8 ? 'sage' : brand.verified_inci_rate >= 0.5 ? 'champagne' : 'coral';
+  const q = brand.quality;
+  const avgConf = q?.avg_confidence ?? 0;
+  const completeness = getCompleteness(brand);
+
+  const confColor = avgConf >= 70 ? 'bg-emerald-400' : avgConf >= 40 ? 'bg-amber-400' : 'bg-red-400';
+  const compColor = completeness >= 70 ? 'bg-emerald-400' : completeness >= 40 ? 'bg-amber-400' : 'bg-red-400';
 
   return (
     <motion.tr
@@ -205,13 +252,16 @@ function BrandRow({ brand, index, onClick }: { brand: BrandCoverage; index: numb
         <StatusBadge status={brand.status} />
       </td>
       <td className="px-5 py-4 text-right text-sm tabular-nums text-ink-light">
-        {brand.discovered_total.toLocaleString()}
-      </td>
-      <td className="px-5 py-4 text-right text-sm tabular-nums text-ink-light">
         {brand.extracted_total.toLocaleString()}
       </td>
       <td className="px-5 py-4">
         <ProgressBar value={brand.verified_inci_rate} color={rateColor} />
+      </td>
+      <td className="px-5 py-4">
+        <MiniBar value={avgConf} color={confColor} />
+      </td>
+      <td className="px-5 py-4">
+        <MiniBar value={completeness} color={compColor} />
       </td>
       <td className="px-5 py-4 text-right">
         {brand.quarantined_total > 0 ? (

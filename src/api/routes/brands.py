@@ -6,8 +6,12 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
+from sqlalchemy import func, case, text
+from sqlalchemy.orm import Session as SASession
+
 from src.api.dependencies import get_brand_db_from_path, get_router, is_multi_db
 from src.storage.database import get_engine
+from src.storage.orm_models import ProductORM, ProductIngredientORM
 from src.storage.repository import ProductRepository
 
 logger = logging.getLogger("haira.api.brands")
@@ -50,6 +54,10 @@ def list_brands(session: Session = Depends(_get_session)):
     # Single-DB fallback: existing behaviour
     repo = ProductRepository(session)
     coverages = repo.get_all_brand_coverages()
+
+    # Compute quality metrics per brand
+    quality = _compute_brand_quality_metrics(session)
+
     return [
         {
             "brand_slug": c.brand_slug,
@@ -62,9 +70,52 @@ def list_brands(session: Session = Depends(_get_session)):
             "quarantined_total": c.quarantined_total,
             "status": c.status,
             "last_run": str(c.last_run) if c.last_run else None,
+            "quality": quality.get(c.brand_slug, {}),
         }
         for c in coverages
     ]
+
+
+def _compute_brand_quality_metrics(session: SASession) -> dict:
+    """Compute data quality metrics per brand in one pass."""
+    # Count products with key fields filled, avg confidence, avg ingredient count
+    rows = session.query(
+        ProductORM.brand_slug,
+        func.count(ProductORM.id).label("total"),
+        func.avg(ProductORM.confidence).label("avg_confidence"),
+        func.sum(case((ProductORM.description.isnot(None), 1), else_=0)).label("has_description"),
+        func.sum(case((ProductORM.image_url_main.isnot(None), 1), else_=0)).label("has_image"),
+        func.sum(case((ProductORM.product_category.isnot(None), 1), else_=0)).label("has_category"),
+        func.sum(case((ProductORM.product_labels.isnot(None), 1), else_=0)).label("has_labels"),
+    ).group_by(ProductORM.brand_slug).all()
+
+    # Average ingredients per product per brand
+    ing_per_product = session.query(
+        ProductORM.brand_slug,
+        ProductORM.id,
+        func.count(ProductIngredientORM.id).label("ing_count"),
+    ).join(ProductIngredientORM, ProductIngredientORM.product_id == ProductORM.id).group_by(
+        ProductORM.brand_slug, ProductORM.id
+    ).subquery()
+
+    ing_avg = session.query(
+        ing_per_product.c.brand_slug,
+        func.avg(ing_per_product.c.ing_count).label("avg_ingredients"),
+    ).group_by(ing_per_product.c.brand_slug).all()
+    ing_map = {r.brand_slug: round(float(r.avg_ingredients or 0), 1) for r in ing_avg}
+
+    result = {}
+    for r in rows:
+        total = r.total or 1
+        result[r.brand_slug] = {
+            "avg_confidence": round(float(r.avg_confidence or 0) * 100, 1),
+            "has_description_pct": round((r.has_description or 0) / total * 100, 1),
+            "has_image_pct": round((r.has_image or 0) / total * 100, 1),
+            "has_category_pct": round((r.has_category or 0) / total * 100, 1),
+            "has_labels_pct": round((r.has_labels or 0) / total * 100, 1),
+            "avg_ingredients": ing_map.get(r.brand_slug, 0),
+        }
+    return result
 
 
 @router.get("/brands/{slug}/coverage")
