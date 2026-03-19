@@ -1,0 +1,85 @@
+brand_slug: loccitane-us
+brand_name: "L'Occitane (US)"
+platform: custom
+domain: www.loccitane.com
+allowed_domains:
+- www.loccitane.com
+entrypoints:
+- https://www.loccitane.com/en-us/hair-care
+- https://www.loccitane.com/en-us/hair-care/shampoo
+- https://www.loccitane.com/en-us/hair-care/conditioner
+- https://www.loccitane.com/en-us/hair-care/hair-treatment
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.loccitane.com/en-us/sitemap_1.xml
+  product_url_pattern: ^https://www\.loccitane\.com/en-us/[\w%-]+-[\w]+\.html$
+  max_pages: 500
+  hair_keywords:
+  - shampoo
+  - conditioner
+  - hair
+  - scalp
+  - masque
+  - repair
+  - aromachologie
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: false
+  delay_seconds: 2
+  inci_selectors:
+  - ".ingredients-list p"
+  - ".ingredients-list"
+  name_selectors:
+  - h1
+  - .product-name
+  - .pdp-product-name
+  image_selectors:
+  - img[src*="demandware.static"]
+  - .product-image img
+  - .pdp-image img
+  price_selectors:
+  - .sales .value
+  - .price .value
+  section_label_map:
+    description:
+      labels:
+      - description
+      - details
+      - about this product
+    care_usage:
+      labels:
+      - how to use
+      - directions
+      - application tips
+    ingredients_inci:
+      labels:
+      - inci list
+      - ingredients
+      - full ingredient list
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - benefits
+      - results
+      - commitments
+  wait_for_selector: null
+  use_llm_fallback: false
+  inci_separator: " - "
+notes:
+  ingredients_language: en
+  ingredients_format: inci_standard
+  platform_detail: salesforce_commerce_cloud_demandware
+  inci_available: true
+  inci_note: "Full INCI lists available in .ingredients-list p elements inside #panel-ingredients side panel. Separator is ' - ' (space-hyphen-space)."
+  parent_brand: "L'Occitane en Provence"
+  hair_line: Aromachologie
+  formulated_without_selector: "ul.m-product-formulated li.a-product-formulated"
+  cross_reference_brand: loccitane
+  cross_reference_note: "SKU codes overlap with BR site. First digits indicate line, last 2 digits indicate formulation year."
+version: 1

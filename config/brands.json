@@ -7039,5 +7039,17 @@
     "catalog_entrypoints": [],
     "status": "active",
     "notes": null
+  },
+  {
+    "brand_name": "L'Occitane (US)",
+    "brand_slug": "loccitane-us",
+    "official_url_root": "https://www.loccitane.com/en-us/",
+    "country": "US",
+    "priority": 3,
+    "catalog_entrypoints": [
+      "https://www.loccitane.com/en-us/hair-care"
+    ],
+    "status": "new",
+    "notes": "US site with full INCI data. Cross-reference with BR loccitane catalog_only products."
   }
 ]

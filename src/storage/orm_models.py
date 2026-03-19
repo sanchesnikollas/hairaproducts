@@ -247,3 +247,7 @@ class ReviewQueueORM(Base):
     resolved_at = Column(DateTime, nullable=True)
     product = relationship("ProductORM")
     comparison = relationship("ValidationComparisonORM", back_populates="review_queue_item")
+
+
+# Ensure ops_models (UserORM, etc.) are loaded so FK references resolve
+import src.storage.ops_models as _ops_models  # noqa: F401, E402
