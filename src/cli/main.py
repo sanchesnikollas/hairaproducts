@@ -200,8 +200,16 @@ def scrape(brand: str | None, priority: int | None, max_brands: int, headless: b
             click.echo(f"  No blueprint for {slug}, skipping.")
             continue
 
+        # Use httpx when blueprint says JS is not required (avoids WAF/CAPTCHA blocks)
+        extraction_config = bp.get("extraction", {})
+        brand_browser = browser
+        if not extraction_config.get("requires_js", True) and extraction_config.get("headless") is False:
+            from src.core.browser import BrowserClient as BC
+            brand_browser = BC(use_httpx=True)
+            click.echo("  Using httpx (requires_js=false)")
+
         # Discover URLs
-        discoverer = ProductDiscoverer(browser=browser)
+        discoverer = ProductDiscoverer(browser=brand_browser)
         discovered = discoverer.discover(bp)
         click.echo(f"  Discovered: {len(discovered)} URLs")
 
@@ -214,7 +222,7 @@ def scrape(brand: str | None, priority: int | None, max_brands: int, headless: b
 
         # Run coverage engine
         with SASession(engine) as session:
-            cov_engine = CoverageEngine(session=session, browser=browser)
+            cov_engine = CoverageEngine(session=session, browser=brand_browser)
             report = cov_engine.process_brand(slug, bp, url_dicts)
 
         click.echo(f"\n  Results for {slug}:")
