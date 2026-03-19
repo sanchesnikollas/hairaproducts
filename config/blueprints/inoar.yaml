@@ -1,0 +1,74 @@
+brand_slug: inoar
+brand_name: Inoar
+platform: custom
+domain: www.loja.inoar.com.br
+allowed_domains:
+- www.loja.inoar.com.br
+entrypoints:
+- https://www.loja.inoar.com.br/produtos
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.loja.inoar.com.br/sitemap.xml
+  product_url_pattern: ^https://www\.loja\.inoar\.com\.br/produto/[\w%-]+-\d+$
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: false
+  ssl_verify: false
+  delay_seconds: 3
+  inci_selectors:
+  - div.flex.flex-col.w-full.gap-2.mb-8.text-ino-secondary
+  name_selectors:
+  - h1
+  image_selectors:
+  - img[src*="fbitsstatic.net/img/p/"]
+  price_selectors:
+  - '[class*="price"]'
+  - '[class*="Price"]'
+  section_label_map:
+    description:
+      labels:
+      - resultado
+      - detalhes
+      - sobre o produto
+    care_usage:
+      labels:
+      - modo de usar
+      - como usar
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "princ\xEDpio ativo"
+    ingredients_inci:
+      labels:
+      - "composi\xE7\xE3o"
+      - ingredientes
+      - ingredients
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+    benefits:
+      labels:
+      - resultado
+      - "benef\xEDcios"
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: bilingual
+  ingredients_format: inci_slash_portuguese
+  platform_detail: fbits_ecommerce
+  inci_available: true
+  inci_note: >-
+    INCI lists are published on product pages in bilingual format
+    (INCI/Portuguese), e.g. "AQUA/AGUA, CETEARYL ALCOHOL/ALCOOL CETOESTEARILICO".
+    Content is available in static HTML (no JS rendering needed).
+    SSL certificate is expired -- requires verify=False for HTTP clients.
+  product_focus: haircare_personal_care
+  waf: none
+  ssl_expired: true
+version: 1

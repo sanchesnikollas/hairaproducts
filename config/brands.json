@@ -2145,12 +2145,12 @@
     "brand_slug": "inoar",
     "official_url_root": "https://www.loja.inoar.com.br/",
     "country": "Brasil",
-    "priority": 10,
+    "priority": 3,
     "catalog_entrypoints": [
       "https://www.loja.inoar.com.br/produtos"
     ],
     "status": "active",
-    "notes": null
+    "notes": "inci_on_site=sim, platform=fbits, ssl_expired=true"
   },
   {
     "brand_name": "Instinto Natural",

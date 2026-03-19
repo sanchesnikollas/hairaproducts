@@ -16,10 +16,11 @@ _DEFAULT_USER_AGENT = (
 
 
 class BrowserClient:
-    def __init__(self, delay_seconds: float | None = None, headless: bool = True, use_httpx: bool = False):
+    def __init__(self, delay_seconds: float | None = None, headless: bool = True, use_httpx: bool = False, ssl_verify: bool = True):
         self._delay = delay_seconds or float(os.environ.get("REQUEST_DELAY_SECONDS", "3"))
         self._headless = headless
         self._use_httpx = use_httpx
+        self._ssl_verify = ssl_verify
         self._browser = None
         self._page = None
         self._httpx_client = None
@@ -60,6 +61,7 @@ class BrowserClient:
                 },
                 follow_redirects=True,
                 timeout=30.0,
+                verify=self._ssl_verify,
             )
 
     def _fetch_page_httpx(self, url: str) -> str:

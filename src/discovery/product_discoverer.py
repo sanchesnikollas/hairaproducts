@@ -12,10 +12,11 @@ logger = logging.getLogger(__name__)
 
 
 class ProductDiscoverer:
-    def __init__(self, browser=None):
+    def __init__(self, browser=None, ssl_verify: bool = True):
         self._browser = browser
+        self._ssl_verify = ssl_verify
         self._adapters = [
-            SitemapAdapter(),
+            SitemapAdapter(ssl_verify=ssl_verify),
             DOMCrawlerAdapter(browser=browser),
         ]
 
@@ -23,6 +24,16 @@ class ProductDiscoverer:
         all_discovered: dict[str, DiscoveredURL] = {}
 
         discovery_config = blueprint.get("discovery", {})
+        extraction_config = blueprint.get("extraction", {})
+        ssl_verify = extraction_config.get("ssl_verify", True)
+
+        # Rebuild adapters if ssl_verify differs from init
+        if ssl_verify != self._ssl_verify:
+            self._adapters = [
+                SitemapAdapter(ssl_verify=ssl_verify),
+                DOMCrawlerAdapter(browser=self._browser),
+            ]
+
         config = {
             "sitemap_urls": discovery_config.get("sitemap_urls", []),
             "entrypoints": blueprint.get("entrypoints", []),

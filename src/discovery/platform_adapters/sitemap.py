@@ -19,12 +19,13 @@ SITEMAP_NS = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
 class SitemapAdapter(BaseAdapter):
     name = "sitemap"
 
-    def __init__(self, timeout: float = 15.0):
+    def __init__(self, timeout: float = 15.0, ssl_verify: bool = True):
         self._timeout = timeout
+        self._ssl_verify = ssl_verify
 
     def _fetch_sitemap(self, url: str) -> str | None:
         try:
-            resp = httpx.get(url, timeout=self._timeout, follow_redirects=True)
+            resp = httpx.get(url, timeout=self._timeout, follow_redirects=True, verify=self._ssl_verify)
             if resp.status_code == 200 and resp.text.strip():
                 return resp.text
         except Exception as e:
