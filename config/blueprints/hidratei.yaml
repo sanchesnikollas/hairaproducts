@@ -1,0 +1,78 @@
+brand_slug: hidratei
+brand_name: Hidratei
+platform: shopify
+domain: hidratei.com.br
+allowed_domains:
+- hidratei.com.br
+entrypoints:
+- https://hidratei.com.br/collections/all
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://hidratei.com.br/sitemap.xml
+  - "https://hidratei.com.br/sitemap_products_1.xml?from=7122900254767&to=15041340899692"
+  product_url_pattern: ^https://hidratei\.com\.br/products/[\w-]+$
+  max_pages: 200
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: true
+  headless: true
+  delay_seconds: 3
+  inci_selectors:
+  - "details.accordion .accordion__content .prose"
+  name_selectors:
+  - h1
+  - .product-title
+  - .product-name
+  image_selectors:
+  - "img[src*='cdn.shopify.com']"
+  - .product-image img
+  price_selectors:
+  - ".product-price"
+  - "[class*='price']"
+  - sale-price
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+      - o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - modo de usar
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o"
+      - "composi\xE7\xE3o completa"
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+      - resultados esperados
+  wait_for_selector: null
+  accordion_click_selector: "details.accordion summary"
+  ingredient_container_selector: ".accordion__content .prose"
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: inci_standard
+  platform_detail: shopify
+  inci_available: true
+  inci_note: "INCI lists are inside accordion sections labeled 'Composicao'. The accordion uses <details> elements that need to be expanded. Full INCI list with standard nomenclature."
+  parent_brand: Hidratei
+  product_focus: haircare
+version: 1

@@ -1,0 +1,73 @@
+brand_slug: alva
+brand_name: Alva
+platform: shopify
+domain: alvapersonalcare.com.br
+allowed_domains:
+- alvapersonalcare.com.br
+entrypoints:
+- https://alvapersonalcare.com.br/collections/body
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://alvapersonalcare.com.br/sitemap.xml
+  product_url_pattern: ^https://alvapersonalcare\.com\.br/products/[\w%-]+$
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: false
+  ssl_verify: true
+  delay_seconds: 3
+  inci_selectors: []
+  name_selectors:
+  - h1.product-title
+  - h1
+  image_selectors:
+  - .product-image img
+  - img[src*="cdn.shopify.com"]
+  price_selectors:
+  - '[class*="price"]'
+  - '[class*="Price"]'
+  section_label_map:
+    description:
+      labels:
+      - sobre o produto
+      - detalhes
+      - porque comprar
+    care_usage:
+      labels:
+      - modo de uso
+      - como usar
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o"
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: bilingual
+  ingredients_format: inci_with_portuguese_translation
+  platform_detail: shopify
+  inci_available: true
+  inci_note: >-
+    INCI lists are in FAQ accordion under "Ingredientes" heading.
+    Format is bilingual: "INCI Name (Portuguese Name)".
+    Structure: div.question-container > div.question-text > div.metafield-rich_text_field.
+    Not all products are haircare - brand also sells deodorants, dental, skincare.
+  product_focus: personal_care_haircare
+  waf: none
+version: 1

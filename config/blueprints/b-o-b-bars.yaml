@@ -1,0 +1,78 @@
+brand_slug: b-o-b-bars
+brand_name: B.O.B. Bars
+platform: shopify
+domain: www.usebob.com.br
+allowed_domains:
+- www.usebob.com.br
+entrypoints:
+- https://www.usebob.com.br/collections/cabelo
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.usebob.com.br/sitemap.xml
+  product_url_pattern: ^https://www\.usebob\.com\.br/products/[\w-]+$
+  max_pages: 200
+  pagination:
+    type: none
+    max_pages: 1
+  exclude_patterns:
+  - /products/gift-card
+  - /products/.*kit-.*   # kits can be processed but flagged
+extraction:
+  requires_js: false
+  headless: false
+  delay_seconds: 2
+  inci_selectors:
+  - .ingredient-dec
+  - .pro-ingredient-popup .ingredient-dec
+  - div[class*="ingredient-dec"]
+  name_selectors:
+  - h1
+  - h1.e-main-product__infos--title
+  - '[data-product-title]'
+  image_selectors:
+  - .e-main-product__images img
+  - img[src*="cdn.shopify.com"]
+  price_selectors:
+  - '[class*="price"]'
+  - .e-main-product__infos--price
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o completa"
+      - "composi\xE7\xE3o"
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: false
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: portuguese_names
+  platform_detail: shopify_custom_theme
+  inci_available: true
+  inci_note: "INCI lists are in a popup triggered by 'ver composicao completa' link. Ingredients are inside .ingredient-dec div within .pro-ingredient-popup. Ingredients use Portuguese names (not standard INCI). Static HTML, no JS rendering needed."
+  parent_brand: "B.O.B Bars Over Bottles"
+  product_focus: haircare_skincare_bodycare
+  hair_lines: "Shampoos em Barra, Condicionadores em Barra, Mascaras Capilares"
+  sustainability_focus: "plastic-free, solid bars, natural ingredients"
+version: 1

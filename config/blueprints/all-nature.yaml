@@ -1,0 +1,77 @@
+brand_slug: all-nature
+brand_name: All Nature
+platform: magazord
+domain: www.allnature.com.br
+allowed_domains:
+- www.allnature.com.br
+entrypoints:
+- https://www.allnature.com.br/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.allnature.com.br/sitemap-produto.xml
+  product_url_pattern: ^https://www\.allnature\.com\.br/[\w%-]+$
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: false
+  ssl_verify: true
+  delay_seconds: 3
+  inci_selectors:
+  - "#descricao-produto .content"
+  - div.conteudo-produto
+  name_selectors:
+  - h1
+  - "#prod-nome"
+  image_selectors:
+  - img[src*="allnature.cdn.magazord.com.br"]
+  price_selectors:
+  - '[class*="price"]'
+  - '[class*="preco"]'
+  - '#prod-valor'
+  section_label_map:
+    description:
+      labels:
+      - detalhes
+      - sobre o produto
+    care_usage:
+      labels:
+      - modo de usar
+      - como usar
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+    ingredients_inci:
+      labels:
+      - "composi\xE7\xE3o"
+      - ingredientes
+      - ingredients
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+    benefits:
+      labels:
+      - resultado
+      - "benef\xEDcios"
+      - "indica\xE7\xE3o"
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: bilingual
+  ingredients_format: inci_with_portuguese_translation
+  platform_detail: magazord_ecommerce
+  inci_available: true
+  inci_note: >-
+    INCI lists are published on product pages in the description section,
+    preceded by "COMPOSICAO:" label, followed by a "TRADUCAO:" section
+    with Portuguese translations. INCI is in the JSON-LD description field
+    and also rendered in div#descricao-produto .content as static HTML.
+  product_focus: haircare_professional
+  waf: none
+  json_ld: true
+  json_ld_selector: "#product-schema"
+version: 1

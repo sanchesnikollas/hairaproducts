@@ -1,0 +1,94 @@
+brand_slug: brae
+brand_name: "Bra\xE9"
+platform: vtex
+domain: www.brae.com.br
+allowed_domains:
+- www.brae.com.br
+entrypoints:
+- https://www.brae.com.br/produtos
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.brae.com.br/sitemap.xml
+  - https://www.brae.com.br/sitemap/product-0.xml
+  product_url_pattern: ^https://www\.brae\.com\.br/[\w%-]+/p$
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: true
+  headless: false
+  ssl_verify: true
+  delay_seconds: 3
+  inci_selectors:
+  - ".vtex-store-components-3-x-productDescriptionText p"
+  - ".vtex-tab-layout-0-x-contentItem p"
+  - ".vtex-rich-text-0-x-paragraph"
+  - ".product-description p"
+  - ".productDescriptionContainer p"
+  name_selectors:
+  - "h1 .vtex-store-components-3-x-productBrand"
+  - h1
+  - .product-name
+  image_selectors:
+  - "img.vtex-store-components-3-x-productImageTag"
+  - "img[src*='brae.com.br']"
+  - "img[src*='vtexassets']"
+  - .product-image img
+  price_selectors:
+  - ".vtex-product-price-1-x-sellingPriceValue"
+  - ".vtex-product-price-1-x-sellingPrice"
+  - '[class*="sellingPrice"]'
+  - '[class*="price"]'
+  section_label_map:
+    description:
+      labels:
+      - detalhes
+      - sobre o produto
+      - "descri\xE7\xE3o"
+      - o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - "modo de aplica\xE7\xE3o"
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+      - "princ\xEDpio ativo"
+      - ativos
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o completa"
+      - "lista de ingredientes"
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+    benefits:
+      labels:
+      - "a\xE7\xE3o / resultado"
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: ".vtex-store-components-3-x-productDescriptionText"
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: inci_standard
+  platform_detail: vtex_io
+  inci_available: unknown
+  inci_note: >-
+    VTEX IO site. Product data is rendered client-side. INCI availability
+    needs to be confirmed during recon. The site has ~69 individual products
+    and ~98 kits. Some products may be makeup (palettes, eyeshadow) rather
+    than haircare -- these should be filtered out.
+  product_focus: haircare
+  waf: none
+  requires_headed_browser: true
+  non_hair_products: true
+  non_hair_note: "Site also sells makeup (palettes, eyeshadow, iluminador). Filter by URL or category."
+version: 1

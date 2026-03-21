@@ -1,0 +1,68 @@
+brand_slug: balai
+brand_name: Balai
+platform: shopify
+domain: mundobalai.com.br
+allowed_domains:
+- mundobalai.com.br
+entrypoints:
+- https://mundobalai.com.br/collections/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://mundobalai.com.br/sitemap.xml
+  - https://mundobalai.com.br/sitemap_products_1.xml
+  product_url_pattern: '/products/'
+  max_pages: 500
+  pagination:
+    type: scroll
+    max_pages: 10
+extraction:
+  inci_selectors:
+  - .m-collapsible--content .rte p
+  - .m-collapsible--content__inner .rte p
+  - .m-collapsible--content .metafield-rich_text_field p
+  - .product-description p
+  - .rte p
+  name_selectors:
+  - h1.product__title
+  - h1
+  - .product-title
+  image_selectors:
+  - .product-image img
+  - .product__media img
+  - img.product-img
+  section_label_map:
+    description:
+      labels:
+      - descricao
+      - sobre o produto
+      - detalhes do produto
+      - o produto
+    care_usage:
+      labels:
+      - modo de uso
+      - como usar
+      - modo de aplicacao
+      - instrucoes de uso
+      - como aplicar
+    composition:
+      labels:
+      - principios ativos
+      - ativos
+      - formula
+      - tecnologia
+      - composicao do produto
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - inci
+      - composicao completa
+      - lista de ingredientes
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+  wait_for_selector: null
+  use_llm_fallback: true
+version: 1

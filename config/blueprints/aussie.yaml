@@ -1,0 +1,59 @@
+brand_slug: aussie
+brand_name: Aussie
+platform: custom
+domain: aussie.com.br
+allowed_domains:
+- aussie.com.br
+entrypoints:
+- https://aussie.com.br/pt-br/produtos/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://aussie.com.br/sitemap.xml
+  product_url_pattern: /pt-br/produtos/[^/]+/$
+  max_pages: 100
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  wait_for_selector: null
+  inci_selectors:
+  - .moreIngredient p
+  - .moreIngredient
+  - .ingredient-content p
+  name_selectors:
+  - h1
+  image_selectors:
+  - .product-image img
+  - img[src*="ctfassets"]
+  section_label_map:
+    description:
+      labels:
+      - description
+      - descricao
+      - sobre o produto
+      - product details
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - how to use
+      - directions
+    composition:
+      labels:
+      - ingredientes
+      - nossos ingredientes
+      - key ingredients
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - inci
+      - composicao
+      - full ingredient list
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+  use_llm_fallback: true
+version: 2

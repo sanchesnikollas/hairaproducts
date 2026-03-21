@@ -1,0 +1,95 @@
+brand_slug: truss
+brand_name: TRUSS Professional
+platform: custom
+domain: www.trussprofessional.com.br
+allowed_domains:
+- www.trussprofessional.com.br
+- trussprofessional.com.br
+entrypoints:
+- https://www.trussprofessional.com.br/truss/
+- https://www.trussprofessional.com.br/truss/basic/
+- https://www.trussprofessional.com.br/truss/blond/
+- https://www.trussprofessional.com.br/truss/blond-revolution/
+- https://www.trussprofessional.com.br/truss/color/
+- https://www.trussprofessional.com.br/truss/curly/
+- https://www.trussprofessional.com.br/truss/equilibrium/
+- https://www.trussprofessional.com.br/truss/equilibrium-scalp/
+- https://www.trussprofessional.com.br/truss/fix/
+- https://www.trussprofessional.com.br/truss/frizz-zero/
+- https://www.trussprofessional.com.br/truss/infusion/
+- https://www.trussprofessional.com.br/truss/miracle/
+- https://www.trussprofessional.com.br/truss/miracle-summer/
+- https://www.trussprofessional.com.br/truss/no-metal/
+- https://www.trussprofessional.com.br/truss/nutri-infusion/
+- https://www.trussprofessional.com.br/truss/perfect/
+- https://www.trussprofessional.com.br/truss/structure/
+- https://www.trussprofessional.com.br/truss/ultra-hydration/
+- https://www.trussprofessional.com.br/truss/ultra-hydration-plus/
+- https://www.trussprofessional.com.br/truss/uso-obrigatorio/
+- https://www.trussprofessional.com.br/truss/uso-obrigatorio-plus/
+- https://www.trussprofessional.com.br/truss/man-nature/
+- https://www.trussprofessional.com.br/truss/therapy/
+- https://www.trussprofessional.com.br/truss/bem-estar-e-saude/
+discovery:
+  strategy: entrypoint_crawl
+  sitemap_urls: []
+  product_url_pattern: 'trussprofessional\.com\.br/[a-z0-9][a-z0-9\-]*\d+[a-z0-9\-]*/?$'
+  max_pages: 500
+  pagination:
+    type: scroll
+    max_pages: 5
+extraction:
+  requires_js: true
+  headless: false
+  expand_accordions: true
+  wait_for_selector: .product-ingredients
+  inci_selectors:
+  - .product-ingredients-content .product-description-content p
+  - .product-ingredients-content .product-description-content
+  - .product-ingredients .product-description-content p
+  - .product-ingredients p
+  name_selectors:
+  - h1
+  - .product-name
+  - .product-title
+  image_selectors:
+  - img[class*="product"]
+  - .product-image img
+  - img[src*="cloudinary"]
+  price_selectors:
+  - .product-price .price
+  - .product-price
+  - '[class*="price"]'
+  section_label_map:
+    description:
+      labels:
+      - detalhes
+      - descricao
+      - description
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - how to use
+    composition:
+      labels:
+      - ingredientes
+      - composicao
+      - ingredients
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - inci
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+  use_llm_fallback: true
+notes:
+  platform_detail: "Beleza na Web infrastructure (cloudinary CDN)"
+  waf: "Akamai WAF - blocks headless browsers, must use headed mode"
+  accordion: "INCI is inside accordion (.accordion-pdp-item) - needs expand_accordions"
+  json_ld: "Has JSON-LD Product schema with name, sku, price, image"
+  sitemap: "No sitemap available (returns 403)"
+version: 1

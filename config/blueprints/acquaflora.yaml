@@ -1,0 +1,80 @@
+brand_slug: acquaflora
+brand_name: Acquaflora
+platform: nuvemshop
+domain: www.acquafloracosmeticos.com.br
+allowed_domains:
+- www.acquafloracosmeticos.com.br
+entrypoints:
+- https://www.acquafloracosmeticos.com.br/linhas/
+- https://www.acquafloracosmeticos.com.br/coloracao/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://acdn-us.mitiendanube.com/stores/004/242/356/themes/common/sitemap.xml.gz
+  product_url_pattern: ^https://www\.acquafloracosmeticos\.com\.br/produtos/[\w%-]+/$
+  max_pages: 300
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: false
+  delay_seconds: 3
+  inci_selectors: []
+  name_selectors:
+  - h1
+  - h1.js-product-name
+  - .product-name
+  image_selectors:
+  - .product-image img
+  - img[src*="mitiendanube.com"]
+  - img[src*="acdn-us"]
+  price_selectors:
+  - .js-price-display
+  - '[data-product-price]'
+  - .price
+  description_selectors:
+  - .user-content
+  - .product-description
+  - .js-product-description
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - "frequ\xEAncia de uso"
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o completa"
+      - "composi\xE7\xE3o"
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: false
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: portuguese_names
+  platform_detail: nuvemshop_tiendanube
+  inci_available: false
+  inci_note: "Acquaflora does NOT publish INCI ingredient lists on product pages. Products will be catalog_only. Descriptions mention key claims (vegano, cruelty free, low poo, sulfate free) but no full ingredient lists."
+  parent_brand: "Acquaflora Cosmeticos"
+  product_focus: haircare_coloracao_tratamento
+  hair_lines: "Coloracao Permanente Vegana, Tonalizante, Sequestra Metal, Crono 10, Unico"
+  waf: none
+version: 1

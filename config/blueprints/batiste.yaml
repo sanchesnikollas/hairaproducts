@@ -1,0 +1,83 @@
+brand_slug: batiste
+brand_name: Batiste
+platform: shopify
+domain: batistehair.com.br
+allowed_domains:
+- batistehair.com.br
+entrypoints:
+- https://batistehair.com.br/collections/all
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://batistehair.com.br/sitemap.xml
+  - https://batistehair.com.br/sitemap_products_1.xml
+  product_url_pattern: '/products/'
+  max_pages: 200
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: true
+  delay_seconds: 3
+  inci_selectors:
+  - .product-description p
+  - .rte p
+  - .metafield-rich_text_field p
+  - .collapsible-content p
+  - "[data-content] p"
+  name_selectors:
+  - h1.product__title
+  - h1
+  - .product-title
+  image_selectors:
+  - img[src*="cdn.shopify.com"]
+  - .product-image img
+  - .product__media img
+  price_selectors:
+  - .product-price
+  - '[class*="price"]'
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+      - o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - "instru\xE7\xF5es de uso"
+      - "modo de aplica\xE7\xE3o"
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - inci
+      - "composi\xE7\xE3o completa"
+      - lista de ingredientes
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: null
+  accordion_click_selector: null
+  ingredient_container_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: inci_standard
+  platform_detail: shopify
+  inci_available: true
+  parent_brand: Church & Dwight
+  product_focus: dry_shampoo_hair_care
+version: 1

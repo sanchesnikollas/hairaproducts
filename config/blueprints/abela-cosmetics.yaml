@@ -1,0 +1,74 @@
+brand_slug: abela-cosmetics
+brand_name: Abela Cosmetics
+platform: nuvemshop
+domain: www.lojaabelacosmetics.com
+allowed_domains:
+- www.lojaabelacosmetics.com
+entrypoints:
+- https://www.lojaabelacosmetics.com/produtos/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://acdn-us.mitiendanube.com/stores/002/114/942/themes/common/sitemap.xml.gz
+  product_url_pattern: ^https://www\.lojaabelacosmetics\.com/produtos/[\w%-]+/$
+  max_pages: 200
+  pagination:
+    type: query_param
+    param: mpage
+    max_pages: 10
+extraction:
+  requires_js: false
+  headless: false
+  delay_seconds: 3
+  inci_selectors:
+  - div.user-content p
+  - '[data-store^="product-description"] p'
+  name_selectors:
+  - h1
+  - h1.product-name
+  - '[class*="product-name"]'
+  image_selectors:
+  - img.product-image
+  - '[class*="product-image"] img'
+  - img[src*="mitiendanube.com"]
+  price_selectors:
+  - '[class*="price"]'
+  - '[data-store^="product-price"]'
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+    ingredients_inci:
+      labels:
+      - "composi\xE7\xE3o"
+      - "composi\xE7\xE3o*"
+      - ingredientes
+      - ingredients
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: mixed_portuguese_inci
+  platform_detail: nuvemshop_tiendanube
+  inci_available: true
+  inci_note: "INCI lists appear in product description under 'Composicao*:' label. Format is comma-separated, mix of Portuguese names and INCI nomenclature. No JS required."
+  product_focus: haircare
+  hair_lines: "Natural Blend, Just Nutrition, Love Vegan, Cronograma Capilar, Repara, Kayapo"
+version: 1

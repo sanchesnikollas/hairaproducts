@@ -1,0 +1,67 @@
+brand_slug: aneethun
+brand_name: Aneethun
+platform: custom
+domain: www.aneethun.com
+allowed_domains:
+- www.aneethun.com
+entrypoints:
+- https://www.aneethun.com/produto-sitemap.xml
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.aneethun.com/produto-sitemap.xml
+  product_url_pattern: ^https://www\.aneethun\.com/produto/[\w%-]+$
+  max_pages: 200
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: false
+  delay_seconds: 3
+  inci_selectors: []
+  name_selectors:
+  - h1
+  - article.produto-root h1
+  image_selectors:
+  - article.produto-root img
+  - img[src*="aneethun.com/wp-content/uploads"]
+  price_selectors: []
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+    care_usage:
+      labels:
+      - forma de aplica\xE7\xE3o
+      - como usar
+      - modo de uso
+    composition:
+      labels:
+      - ingredientes utilizados
+      - "composi\xE7\xE3o"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o completa"
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultados esperados
+  wait_for_selector: null
+  use_llm_fallback: false
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: marketing_descriptions_only
+  platform_detail: wordpress_custom_theme_onepress
+  inci_available: false
+  inci_note: "Site does NOT publish actual INCI lists. The 'Ingredientes utilizados' section contains marketing descriptions of key ingredients, not the full INCI composition. Products will be extracted as catalog_only."
+  product_focus: haircare_professional
+  hair_lines: "Repair, Derma Regulate, Low/No Poo, Linha A, Silicone, Restore, Force, Hidra, Care System, Kera System, Defrizante, Matizante, Scalp"
+version: 1

@@ -1,0 +1,83 @@
+brand_slug: haskell
+brand_name: Haskell
+platform: nuvemshop
+domain: haskellcosmeticos.com.br
+allowed_domains:
+- haskellcosmeticos.com.br
+entrypoints:
+- https://haskellcosmeticos.com.br/tratamentos-capilares/
+- https://haskellcosmeticos.com.br/coloracao/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://acdn-us.mitiendanube.com/stores/001/154/387/themes/common/sitemap.xml.gz
+  - https://haskellcosmeticos.com.br/sitemap.xml
+  product_url_pattern: ^https://haskellcosmeticos\.com\.br/produtos/[\w%-]+/$
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: false
+  ssl_verify: true
+  delay_seconds: 3
+  inci_selectors:
+  - "#product-description table td p"
+  - "#product-description .product-description p"
+  - "#product-description p"
+  name_selectors:
+  - h1.js-product-name
+  - h1
+  image_selectors:
+  - img.js-product-slide-img
+  - "img[src*='mitiendanube.com']"
+  price_selectors:
+  - span.js-price-display
+  - '[class*="price"]'
+  section_label_map:
+    description:
+      labels:
+      - resultado
+      - detalhes
+      - sobre o produto
+      - "indicação"
+    care_usage:
+      labels:
+      - modo de usar
+      - como usar
+      - "modo de aplicação"
+    composition:
+      labels:
+      - "princípio ativo"
+      - "ativos"
+    ingredients_inci:
+      labels:
+      - "composição"
+      - ingredientes
+      - ingredients
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+    benefits:
+      labels:
+      - resultado
+      - "benefícios"
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: portuguese_translated
+  ingredients_format: portuguese_names_comma_separated
+  platform_detail: nuvemshop_tiendanube
+  inci_available: partial
+  inci_note: >-
+    INCI lists are published on some product pages inside a table within
+    #product-description, under a "INGREDIENTES" heading. Ingredients are
+    listed in Portuguese translated names (e.g. "sulfato de sódio laurete"
+    instead of "sodium laureth sulfate"). Not all products have ingredient
+    lists -- coverage is partial.
+  product_focus: haircare
+  waf: none
+  ssl_expired: false
+version: 1

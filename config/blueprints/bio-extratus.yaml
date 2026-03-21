@@ -1,0 +1,76 @@
+brand_slug: bio-extratus
+brand_name: Bio Extratus
+platform: vtex
+domain: www.bioextratus.com.br
+allowed_domains:
+- www.bioextratus.com.br
+entrypoints:
+- https://www.bioextratus.com.br/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.bioextratus.com.br/sitemap.xml
+  - https://www.bioextratus.com.br/sitemap/product-0.xml
+  product_url_pattern: ^https://www\.bioextratus\.com\.br/[\w%-]+/p$
+  max_pages: 500
+  pagination:
+    type: scroll
+    max_pages: 10
+extraction:
+  requires_js: true
+  headless: false
+  delay_seconds: 3
+  inci_selectors:
+  - 'span[data-specification-name="Ingredientes"].vtex-product-specifications-1-x-specificationValue'
+  - '[data-specification-name="Ingredientes"]'
+  - '.vtex-product-specifications-1-x-specificationValue'
+  name_selectors:
+  - span.vtex-store-components-3-x-productBrand
+  - h1
+  - .product-name
+  image_selectors:
+  - img.vtex-store-components-3-x-productImageTag
+  - .swiper img
+  - .product-image img
+  price_selectors:
+  - '[class*="sellingPrice"]'
+  - .product-price
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+      - o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - modo de usar
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o completa"
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "a\xE7\xE3o / resultado"
+      - "benef\xEDcios"
+      - resultado
+      - resultados esperados
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: portuguese_names
+  vtex_specifications: true
+  product_focus: haircare_personal_care
+  parent_company: Bio Extratus
+version: 1

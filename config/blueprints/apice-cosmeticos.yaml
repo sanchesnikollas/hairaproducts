@@ -1,0 +1,79 @@
+brand_slug: apice-cosmeticos
+brand_name: "Apice Cosm\xE9ticos"
+platform: shopify
+domain: www.apicecosmeticos.com.br
+allowed_domains:
+- www.apicecosmeticos.com.br
+entrypoints:
+- https://www.apicecosmeticos.com.br/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.apicecosmeticos.com.br/sitemap.xml
+  product_url_pattern: ^https://www\.apicecosmeticos\.com\.br/products/[\w%-]+$
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: false
+  ssl_verify: true
+  delay_seconds: 2
+  inci_selectors:
+  - .faq-answer.answer-composicao
+  - div[class*="answer-composicao"]
+  - .product__description
+  name_selectors:
+  - h1
+  image_selectors:
+  - .product__media img
+  - img[src*="cdn.shopify.com"]
+  price_selectors:
+  - .price-item--regular
+  - .price__regular .price-item
+  - '[class*="price"]'
+  section_label_map:
+    description:
+      labels:
+      - descricao
+      - sobre o produto
+      - detalhes do produto
+    care_usage:
+      labels:
+      - modo de uso
+      - como usar
+      - modo de aplicacao
+    composition:
+      labels:
+      - principios ativos
+      - ativos
+    ingredients_inci:
+      labels:
+      - "composi\xE7\xE3o"
+      - composicao
+      - ingredientes
+      - ingredients
+      - inci
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+    benefits:
+      labels:
+      - resultado
+      - "benef\xEDcios"
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: inci_standard
+  ingredients_format: inci_comma_separated
+  platform_detail: shopify
+  inci_available: true
+  inci_note: >-
+    INCI lists are in FAQ accordion under "Composicao" section.
+    Selector .faq-answer.answer-composicao reliably captures ingredient lists.
+    Static HTML, no JS rendering needed.
+  product_focus: haircare_personal_care
+  waf: none
+version: 1

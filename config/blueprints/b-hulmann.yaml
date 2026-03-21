@@ -1,0 +1,69 @@
+brand_slug: b-hulmann
+brand_name: B. Hulmann
+platform: shopify
+domain: bhulmann.com.br
+allowed_domains:
+- bhulmann.com.br
+entrypoints:
+- https://bhulmann.com.br/collections/all
+discovery:
+  strategy: shopify_api
+  sitemap_urls:
+  - https://bhulmann.com.br/sitemap_products_1.xml
+  product_url_pattern: /products/
+  max_pages: 500
+  pagination:
+    type: shopify_json
+    max_pages: 10
+extraction:
+  inci_selectors:
+  - .accordion__content .prose p
+  - .product-description p
+  - '[data-tab=''ingredientes''] p'
+  - '#composicao p'
+  - '#ingredientes p'
+  name_selectors:
+  - h1.product-single__title
+  - h1
+  - .product__title h1
+  image_selectors:
+  - .product-image img
+  - .product__media img
+  - img.product-img
+  section_label_map:
+    description:
+      labels:
+      - descricao
+      - sobre o produto
+      - detalhes do produto
+      - o que e
+      - o produto
+    care_usage:
+      labels:
+      - modo de uso
+      - como usar
+      - modo de aplicacao
+      - instrucoes de uso
+      - como aplicar
+    composition:
+      labels:
+      - principios ativos
+      - ativos
+      - formula
+      - tecnologia
+      - composicao do produto
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - inci
+      - composicao
+      - composicao completa
+      - lista de ingredientes
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+  wait_for_selector: null
+  use_llm_fallback: true
+version: 1

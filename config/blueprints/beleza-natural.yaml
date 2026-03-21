@@ -1,0 +1,74 @@
+brand_slug: beleza-natural
+brand_name: Beleza Natural
+platform: vtex
+domain: www.bncachos.com.br
+allowed_domains:
+- www.bncachos.com.br
+entrypoints:
+- https://www.bncachos.com.br/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.bncachos.com.br/sitemap.xml
+  - https://www.bncachos.com.br/sitemap/product-0.xml
+  product_url_pattern: ^https://www\.bncachos\.com\.br/[\w-]+/p$
+  max_pages: 500
+  pagination:
+    type: scroll
+    max_pages: 10
+extraction:
+  requires_js: false
+  headless: false
+  inci_selectors:
+  - 'span[data-specification-name="Ingredientes"].vtex-product-specifications-1-x-specificationValue'
+  - '[data-specification-name="Ingredientes"][data-specification-value]'
+  - '.vtex-product-specifications-1-x-specificationValue[data-specification-name="Ingredientes"]'
+  name_selectors:
+  - span.vtex-store-components-3-x-productBrand
+  - h1
+  - .product-name
+  image_selectors:
+  - img.vtex-store-components-3-x-productImageTag
+  - .swiper img
+  - .product-image img
+  price_selectors:
+  - '[class*="sellingPrice"]'
+  - .product-price
+  section_label_map:
+    description:
+      labels:
+      - descrição
+      - detalhes
+      - sobre o produto
+      - o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - conselho de aplicação
+    composition:
+      labels:
+      - composição
+      - fórmula
+      - composição do anúncio
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - composição completa
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - ação / resultado
+      - benefícios
+      - resultado
+      - resultados
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: portuguese_names
+  vtex_specifications: true
+version: 1

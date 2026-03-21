@@ -1,0 +1,96 @@
+brand_slug: salon-line
+brand_name: Salon Line
+platform: custom
+domain: www.salonline.com.br
+allowed_domains:
+- www.salonline.com.br
+- salonline.com.br
+entrypoints:
+- https://www.salonline.com.br/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.salonline.com.br/productSitemap.xml
+  product_url_pattern: https://www\.salonline\.com\.br/[a-z0-9-]+-salon-line-[a-z0-9]+
+  max_pages: 1500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: true
+  wait_for_selector: .chakra-accordion__item
+  inci_selectors:
+  - .chakra-accordion__panel p
+  - .chakra-accordion__panel
+  - '#accordion-panel-composicao'
+  - div[role="region"] p
+  name_selectors:
+  - h1.chakra-heading
+  - h1
+  - meta[property="og:title"]
+  image_selectors:
+  - .chakra-image
+  - img[alt*="Salon Line"]
+  - meta[property="og:image"]
+  section_label_map:
+    description:
+      labels:
+      - o que voce precisa saber
+      - descricao
+      - description
+      - sobre o produto
+    care_usage:
+      labels:
+      - modo de uso
+      - etapas de uso
+      - como usar
+      - directions
+    composition:
+      labels:
+      - principais ativos
+      - ativos
+      - key ingredients
+      - formula
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - composicao
+      - ingredients
+      - inci
+      - detalhes adicionais
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+    features:
+      labels:
+      - detalhes do produto
+      - caracteristicas
+      - features
+  use_llm_fallback: true
+  occ_api:
+    enabled: true
+    base_url: https://www.salonline.com.br/ccstore/v1
+    product_endpoint: /products/{product_id}
+    fields:
+    - displayName
+    - description
+    - longDescription
+    - brand
+    - sl_descriptionActives
+    - sl_descriptionFeature
+    - sl_descriptionIndications
+    - sl_descriptionWayOfUse
+    - sl_hairType
+    - sl_hairCurvature
+    - sl_isVegan
+    - sl_isLiberado
+    - sl_benefits
+    - sl_productSize
+    - sl_etapasUso
+    - sl_ageRange
+    - primaryFullImageURL
+    - route
+    - listPrice
+    - salePrice
+version: 2

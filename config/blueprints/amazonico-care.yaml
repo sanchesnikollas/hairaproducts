@@ -1,0 +1,71 @@
+brand_slug: amazonico-care
+brand_name: "Amaz\xF4nico Care"
+platform: shopify
+domain: amazonicocare.com.br
+allowed_domains:
+- amazonicocare.com.br
+entrypoints:
+- https://amazonicocare.com.br/collections/all
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://amazonicocare.com.br/sitemap.xml
+  product_url_pattern: ^https://amazonicocare\.com\.br/products/[\w%-]+$
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: false
+  ssl_verify: true
+  delay_seconds: 3
+  inci_selectors:
+  - div.metafield-rich_text_field
+  name_selectors:
+  - h1.product-title
+  - h1
+  image_selectors:
+  - img[src*="cdn.shopify.com"]
+  - .product-image img
+  price_selectors:
+  - '[class*="price"]'
+  - '[class*="Price"]'
+  section_label_map:
+    description:
+      labels:
+      - sobre o produto
+      - detalhes
+      - "descri\xE7\xE3o"
+    care_usage:
+      labels:
+      - modo de uso
+      - como usar
+    ingredients_inci:
+      labels:
+      - "composi\xE7\xE3o"
+      - ingredientes
+      - ingredients
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: portuguese
+  ingredients_format: portuguese_common_names
+  platform_detail: shopify
+  inci_available: true
+  inci_note: >-
+    Ingredient lists are in the "Composicao" accordion tab, inside
+    div.metafield-rich_text_field. Format uses Portuguese common names
+    (e.g. "Agua, Alcool Cetoestearilico, Glicerina") rather than
+    standard INCI nomenclature. Available in static HTML, no JS needed.
+  product_focus: haircare
+  waf: none
+version: 1

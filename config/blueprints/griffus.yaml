@@ -1,0 +1,79 @@
+brand_slug: griffus
+brand_name: Griffus
+platform: nuvemshop
+domain: lojagriffus.com.br
+allowed_domains:
+- lojagriffus.com.br
+entrypoints:
+- https://lojagriffus.com.br/
+- https://lojagriffus.com.br/cabelos/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://lojagriffus.com.br/sitemap.xml
+  - https://acdn-us.mitiendanube.com/stores/005/682/255/themes/common/sitemap.xml.gz
+  product_url_pattern: ^https://lojagriffus\.com\.br/produtos/[\w%-]+/$
+  max_pages: 800
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: false
+  delay_seconds: 3
+  inci_selectors:
+  - div.product-description p
+  - div.product-description.user-content p
+  - div.product-description
+  name_selectors:
+  - h1
+  - h1.product-name
+  - meta[property="og:title"]
+  image_selectors:
+  - img.product-image
+  - meta[property="og:image"]
+  price_selectors:
+  - span[data-product-price]
+  - .product-price
+  section_label_map:
+    description:
+      labels:
+      - descricao
+      - sobre o produto
+      - detalhes
+    care_usage:
+      labels:
+      - modo de uso
+      - como usar
+      - directions
+    composition:
+      labels:
+      - composicao
+      - principais ativos
+      - ativos naturais
+      - formula
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - composicao
+      - ingredients
+      - inci
+      - composicao (principais ativos)
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+    features:
+      labels:
+      - detalhes do produto
+      - caracteristicas
+      - features
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: inci_standard
+  platform_note: "Nuvemshop platform. INCI is embedded in product description paragraphs, typically after a 'Composicao' label."
+  product_focus: haircare_and_bodycare
+  parent_company: Griffus Cosmeticos
+version: 1

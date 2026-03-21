@@ -1,0 +1,74 @@
+brand_slug: agilise-cosmeticos
+brand_name: "Agilise Cosm\xE9ticos"
+platform: wordpress
+domain: agilisecosmeticos.com.br
+allowed_domains:
+- agilisecosmeticos.com.br
+entrypoints:
+- https://agilisecosmeticos.com.br/produtos/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://agilisecosmeticos.com.br/wp-sitemap-posts-page-1.xml
+  product_url_pattern: ^https://agilisecosmeticos\.com\.br/produtos/linha-[^/]+/[^/]+/$
+  max_pages: 100
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: false
+  delay_seconds: 3
+  inci_selectors:
+  - "#js-1 .el-item:last-child .el-content"
+  - "#js-1 div:last-child .el-content.uk-panel"
+  name_selectors:
+  - h1
+  - .uk-article-title
+  image_selectors:
+  - .uk-grid-item-match img
+  - picture img
+  - img[src*="wp-content/uploads"]
+  price_selectors: []
+  section_label_map:
+    description:
+      labels:
+      - "indica\xE7\xE3o"
+      - "descri\xE7\xE3o"
+      - sobre o produto
+      - detalhes
+    care_usage:
+      labels:
+      - como usar
+      - "como usar e precau\xE7\xF5es"
+      - modo de uso
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - principais ativos
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: inci_standard
+  platform_detail: wordpress_yootheme
+  inci_available: true
+  inci_note: "INCI lists are in tab-based layout using uk-switcher component. Ingredientes tab is typically the last tab (3rd). Content is server-rendered HTML, no JS required. 79 product URLs in sitemap."
+  parent_brand: "Agilise Cosm\xE9ticos"
+  product_focus: professional_haircare
+  hair_lines: "Unika, Dreamy Curls, Glam Colors, Keep Control, Deep Hydration, Deep Treatment, Perfect Reconstruction, Intense Care, Matching Colors, Final Touch, Daily Wash, Agi Immediate, Agi Styling, Agi Support, Agi Wash"
+  waf: none
+  total_product_urls: 79
+version: 1

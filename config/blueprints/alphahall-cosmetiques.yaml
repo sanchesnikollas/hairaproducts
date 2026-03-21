@@ -1,0 +1,34 @@
+brand_slug: alphahall-cosmetiques
+brand_name: "Alphahall Cosmétiques"
+platform: shopify
+domain: compre.alphahall.com.br
+allowed_domains:
+- compre.alphahall.com.br
+entrypoints:
+- https://compre.alphahall.com.br/collections/all
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://compre.alphahall.com.br/sitemap.xml
+  product_url_pattern: /products/
+  max_pages: 500
+  pagination:
+    type: page
+    max_pages: 20
+extraction:
+  inci_selectors:
+  - '#tab-1 p'
+  - '.ishi-tab-pane p'
+  - '.ishi-tab-content p'
+  - '.product-description p'
+  name_selectors:
+  - h1.product-single__title
+  - h1.product__title
+  - h1
+  image_selectors:
+  - .product-single__media img
+  - .product__media img
+  - img.product-img
+  wait_for_selector: null
+  use_llm_fallback: true
+version: 1

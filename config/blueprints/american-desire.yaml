@@ -1,0 +1,79 @@
+brand_slug: american-desire
+brand_name: American Desire
+platform: loja_integrada
+domain: www.americandesire.com.br
+allowed_domains:
+- www.americandesire.com.br
+entrypoints:
+- https://www.americandesire.com.br/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.americandesire.com.br/sitemap/product-1.xml
+  product_url_pattern: ^https://www\.americandesire\.com\.br/[\w%-]+$
+  max_pages: 100
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: false
+  delay_seconds: 3
+  inci_selectors:
+  - div.product-description p
+  - div#descricao p
+  - div.description p
+  - div.product-info p
+  - "[itemprop='description'] p"
+  name_selectors:
+  - h1
+  - h1.product-name
+  - "[itemprop='name']"
+  image_selectors:
+  - img.product-image
+  - "[itemprop='image']"
+  - img[src*="awsli.com.br"]
+  price_selectors:
+  - "[itemprop='price']"
+  - span.product-price
+  - "[class*='price']"
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+    ingredients_inci:
+      labels:
+      - "composi\xE7\xE3o"
+      - "composi\xE7\xE3o*"
+      - ingredientes
+      - ingredients
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: mixed_portuguese_inci
+  platform_detail: loja_integrada
+  inci_available: true
+  inci_note: "Site uses Loja Integrada platform (cdn.awsli.com.br). INCI lists expected in product description section. 50 product URLs in sitemap. SITE IS IN MAINTENANCE MODE as of 2026-03-19 - scraping blocked until site is back online."
+  product_focus: professional_haircare
+  hair_lines: "Fusion Brush, Blond Way, Curl Control, Architecture, In Force Plus, Revision Color"
+  total_product_urls: 50
+  maintenance_mode: true
+version: 1

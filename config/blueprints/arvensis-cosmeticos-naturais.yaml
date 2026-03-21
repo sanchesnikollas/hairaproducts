@@ -1,0 +1,85 @@
+brand_slug: arvensis-cosmeticos-naturais
+brand_name: "Arvensis Cosm\xE9ticos Naturais"
+platform: shopify
+domain: arvensiscosmeticos.com.br
+allowed_domains:
+- arvensiscosmeticos.com.br
+entrypoints:
+- https://arvensiscosmeticos.com.br/collections/produtos
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://arvensiscosmeticos.com.br/sitemap.xml
+  - https://arvensiscosmeticos.com.br/sitemap_products_1.xml
+  product_url_pattern: '/products/'
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+  exclude_patterns:
+  - /products/gift-card
+  - /products/.*kit-.*
+extraction:
+  requires_js: false
+  headless: false
+  delay_seconds: 2
+  inci_selectors:
+  - .product-description p
+  - .rte p
+  - '[data-product-description] p'
+  name_selectors:
+  - h1
+  - h1.product__title
+  - '[data-product-title]'
+  image_selectors:
+  - .product__media img
+  - .product-image img
+  - img[src*="cdn.shopify.com"]
+  price_selectors:
+  - '[class*="price"]'
+  - .product-price
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+      - o produto
+    care_usage:
+      labels:
+      - modo de uso
+      - como usar
+      - modo de aplicacao
+      - instrucoes de uso
+    composition:
+      labels:
+      - principais ativos
+      - ativos
+      - "f\xF3rmula"
+      - "composi\xE7\xE3o do produto"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - inci
+      - "composi\xE7\xE3o completa"
+      - "lista de ingredientes"
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - "indica\xE7\xE3o"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  inci_available: false
+  inci_note: "Products do not have INCI lists on the site. Brand registry notes inci_on_site=nao. Products will be catalog_only status. Descriptions contain marketing text, active ingredients, and usage instructions but no full INCI."
+  parent_brand: "Arvensis Professional"
+  product_focus: haircare
+  hair_lines: "Cachos Naturais, Tec Oil, BB Hair Revolution, Color Protection, Hidratacao Intensiva, Reconstrucao, Pos Progressiva, Sol a Sol, Sangue de Dragao, WOW, Desamarelador"
+version: 1

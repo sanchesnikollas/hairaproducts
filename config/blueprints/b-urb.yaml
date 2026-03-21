@@ -1,0 +1,72 @@
+brand_slug: b-urb
+brand_name: B.URB
+platform: custom
+domain: www.newoldman.com.br
+allowed_domains:
+- www.newoldman.com.br
+entrypoints:
+- https://www.newoldman.com.br/cabelo-masculino
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.newoldman.com.br/loja/arquivos/1384371/sitemaps/sitemap_1.xml
+  product_url_pattern: "b-urb"
+  max_pages: 100
+  pagination:
+    type: url_param
+    max_pages: 5
+  notes: >
+    Site is newoldman.com.br (retailer). Only URLs containing "b-urb" belong
+    to this brand. Sitemap has 677 total URLs from all brands.
+extraction:
+  inci_selectors:
+  - '#descricao'
+  - .tab.description-tab
+  - .product__description
+  - .rte
+  name_selectors:
+  - h1.product__name
+  - h1
+  - .product-title
+  - .product__name
+  image_selectors:
+  - .product__image img
+  - .product-image img
+  - img.product-img
+  section_label_map:
+    description:
+      labels:
+      - descricao
+      - sobre o produto
+      - detalhes do produto
+      - o produto
+    care_usage:
+      labels:
+      - modo de uso
+      - como usar
+      - modo de aplicacao
+      - instrucoes de uso
+    composition:
+      labels:
+      - principios ativos
+      - ativos
+      - formula
+      - tecnologia
+    ingredients_inci:
+      labels:
+      - composicao
+      - ingredientes
+      - ingredients
+      - inci
+      - composicao completa
+      validators:
+      - has_separators
+      - min_length_30
+      - no_marketing_verbs
+  wait_for_selector: null
+  use_llm_fallback: true
+  notes: >
+    INCI is embedded inside the description tab (#descricao) as HTML-encoded
+    content, typically after a "Composicao:" label. The section_classifier
+    should detect it via the "composicao" label pattern.
+version: 1

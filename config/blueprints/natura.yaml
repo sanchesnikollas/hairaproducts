@@ -1,0 +1,77 @@
+brand_slug: natura
+brand_name: Natura
+platform: custom
+domain: www.natura.com.br
+allowed_domains:
+- www.natura.com.br
+entrypoints:
+- https://www.natura.com.br/c/cabelos
+- https://www.natura.com.br/c/cabelos/shampoo
+- https://www.natura.com.br/c/cabelos/condicionador
+- https://www.natura.com.br/c/cabelos/tratamento
+- https://www.natura.com.br/c/cabelos/leave-in-e-creme-para-pentear
+- https://www.natura.com.br/c/cabelos/finalizador
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.natura.com.br/on/demandware.store/Sites-NatBrazil-Site/default/Feed-SiteMap
+  product_url_pattern: (?i)^https://www\.natura\.com\.br/p/.+/natbra-[a-z]*\d+
+  max_pages: 500
+  pagination:
+    type: scroll
+    max_pages: 10
+extraction:
+  requires_js: true
+  headless: false
+  inci_selectors: []
+  name_selectors:
+  - h1
+  - .product-name
+  image_selectors:
+  - img[src*="natura.com"]
+  - img[src*="rede.natura.net"]
+  - .product-image img
+  price_selectors:
+  - '[class*="price"]'
+  - '[class*="Price"]'
+  section_label_map:
+    description:
+      labels:
+      - detalhes
+      - sobre o produto
+      - "descrição"
+      - o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - "conselho de aplicação"
+    composition:
+      labels:
+      - "composição"
+      - "fórmula"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composição completa"
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "ação / resultado"
+      - "benefícios"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: portuguese_names
+  waf: akamai
+  requires_headed_browser: true
+  sitemap_source: demandware
+  product_url_format: "/p/{product-slug}/NATBRA-{id}"
+  ssr: true
+  framework: nextjs
+version: 1
