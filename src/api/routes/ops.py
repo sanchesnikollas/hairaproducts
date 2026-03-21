@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, case
 from sqlalchemy.orm import Session
 from src.api.auth import get_current_user, require_admin
 from src.api.dependencies import get_ops_session
@@ -96,11 +96,27 @@ class OpsProductUpdate(BaseModel):
     product_name: str | None = None
     description: str | None = None
     usage_instructions: str | None = None
+    composition: str | None = None
     inci_ingredients: str | None = None
     product_category: str | None = None
+    size_volume: str | None = None
     status_editorial: StatusEditorial | None = None
     status_publicacao: StatusPublicacao | None = None
     status_operacional: StatusOperacional | None = None
+
+
+class OpsProductCreate(BaseModel):
+    brand_slug: str
+    product_name: str
+    product_url: str | None = None
+    description: str | None = None
+    usage_instructions: str | None = None
+    composition: str | None = None
+    inci_ingredients: list[str] | None = None
+    product_category: str | None = None
+    image_url_main: str | None = None
+    size_volume: str | None = None
+    price: float | None = None
 
 
 class BatchStatusUpdate(BaseModel):
@@ -128,6 +144,22 @@ def ops_list_products(
         q = q.filter(ProductORM.product_name.ilike(f"%{search}%"))
     total = q.count()
     items = q.order_by(ProductORM.confidence.asc()).offset((page - 1) * per_page).limit(per_page).all()
+
+    def _data_quality(p: ProductORM) -> dict:
+        """Calculate which fields are present/missing for data quality indicator."""
+        fields = {
+            "nome": bool(p.product_name),
+            "descricao": bool(p.description),
+            "ingredientes": bool(p.inci_ingredients),
+            "composicao": bool(p.composition),
+            "modo_de_uso": bool(p.usage_instructions),
+            "categoria": bool(p.product_category),
+            "imagem": bool(p.image_url_main),
+            "preco": p.price is not None,
+        }
+        filled = sum(1 for v in fields.values() if v)
+        return {"fields": fields, "filled": filled, "total": len(fields), "pct": round(filled / len(fields) * 100)}
+
     return {
         "items": [
             {
@@ -136,6 +168,7 @@ def ops_list_products(
                 "status_operacional": p.status_operacional, "status_editorial": p.status_editorial,
                 "status_publicacao": p.status_publicacao, "confidence": p.confidence,
                 "assigned_to": p.assigned_to,
+                "data_quality": _data_quality(p),
             }
             for p in items
         ],
@@ -169,6 +202,44 @@ def ops_batch_update(
     return {"status": "ok", "updated": len(products)}
 
 
+@router.post("/products")
+def ops_create_product(
+    body: OpsProductCreate,
+    user: dict = Depends(get_current_user),
+    session: Session = Depends(get_ops_session),
+):
+    import uuid
+    product_url = body.product_url or f"manual://{body.brand_slug}/{uuid.uuid4().hex[:8]}"
+    existing = session.query(ProductORM).filter(ProductORM.product_url == product_url).first()
+    if existing:
+        raise HTTPException(status_code=409, detail="Product URL already exists")
+    product = ProductORM(
+        id=str(uuid.uuid4()),
+        brand_slug=body.brand_slug,
+        product_name=body.product_name,
+        product_url=product_url,
+        description=body.description,
+        usage_instructions=body.usage_instructions,
+        composition=body.composition,
+        inci_ingredients=body.inci_ingredients,
+        product_category=body.product_category,
+        image_url_main=body.image_url_main,
+        size_volume=body.size_volume,
+        price=body.price,
+        verification_status="catalog_only",
+        status_operacional="bruto",
+        status_editorial="pendente",
+        status_publicacao="rascunho",
+        extraction_method="manual",
+    )
+    _recalculate_confidence(session, product)
+    session.add(product)
+    create_revisions(session, "product", product.id, {}, {"product_name": body.product_name}, user["sub"], "human",
+                     change_reason="Produto criado manualmente")
+    session.commit()
+    return {"status": "ok", "product_id": product.id}
+
+
 @router.get("/products/{product_id}")
 def ops_get_product(
     product_id: str,
@@ -178,9 +249,21 @@ def ops_get_product(
     product = session.query(ProductORM).filter(ProductORM.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+    fields_quality = {
+        "nome": bool(product.product_name),
+        "descricao": bool(product.description),
+        "ingredientes": bool(product.inci_ingredients),
+        "composicao": bool(product.composition),
+        "modo_de_uso": bool(product.usage_instructions),
+        "categoria": bool(product.product_category),
+        "imagem": bool(product.image_url_main),
+        "preco": product.price is not None,
+    }
+    filled = sum(1 for v in fields_quality.values() if v)
     return {
         "id": product.id, "product_name": product.product_name, "brand_slug": product.brand_slug,
         "description": product.description, "usage_instructions": product.usage_instructions,
+        "composition": product.composition,
         "product_category": product.product_category, "verification_status": product.verification_status,
         "inci_ingredients": product.inci_ingredients, "image_url_main": product.image_url_main,
         "status_operacional": product.status_operacional, "status_editorial": product.status_editorial,
@@ -190,6 +273,11 @@ def ops_get_product(
         "application_data": product.application_data,
         "decision_data": product.decision_data,
         "assigned_to": product.assigned_to,
+        "size_volume": product.size_volume,
+        "price": product.price,
+        "product_url": product.product_url,
+        "extraction_method": product.extraction_method,
+        "data_quality": {"fields": fields_quality, "filled": filled, "total": len(fields_quality), "pct": round(filled / len(fields_quality) * 100)},
     }
 
 

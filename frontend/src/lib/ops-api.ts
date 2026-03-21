@@ -56,12 +56,20 @@ export async function getDashboard(): Promise<DashboardData> {
   return res.json();
 }
 
+export interface DataQuality {
+  fields: Record<string, boolean>;
+  filled: number;
+  total: number;
+  pct: number;
+}
+
 export async function opsListProducts(params?: { brand?: string; status_editorial?: string; search?: string; page?: number }): Promise<{
   items: {
     id: string; product_name: string; brand_slug: string;
     verification_status: string; status_operacional: string | null;
     status_editorial: string | null; status_publicacao: string | null;
     confidence: number; assigned_to: string | null;
+    data_quality?: DataQuality;
   }[];
   total: number; page: number; per_page: number;
 }> {
@@ -86,6 +94,12 @@ export async function opsGetProduct(id: string): Promise<{
   application_data: Record<string, unknown> | null;
   decision_data: Record<string, unknown> | null;
   assigned_to: string | null;
+  composition: string | null;
+  extraction_method: string | null;
+  product_url: string | null;
+  size_volume: string | null;
+  price: number | null;
+  data_quality?: DataQuality;
 }> {
   const res = await authFetch(`${BASE}/ops/products/${id}`);
   return res.json();
@@ -93,6 +107,16 @@ export async function opsGetProduct(id: string): Promise<{
 
 export async function opsUpdateProduct(id: string, data: Record<string, unknown>): Promise<void> {
   await authFetch(`${BASE}/ops/products/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+}
+
+export async function opsCreateProduct(data: {
+  brand_slug: string; product_name: string; product_url?: string;
+  description?: string; usage_instructions?: string; composition?: string;
+  inci_ingredients?: string[]; product_category?: string;
+  image_url_main?: string; size_volume?: string; price?: number;
+}): Promise<{ product_id: string }> {
+  const res = await authFetch(`${BASE}/ops/products`, { method: "POST", body: JSON.stringify(data) });
+  return res.json();
 }
 
 export async function getUsers(): Promise<(OpsUser & { is_active?: boolean })[]> {

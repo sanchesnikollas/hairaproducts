@@ -20,8 +20,7 @@ from src.api.routes.stats import router as stats_router
 from src.api.routes.auth import router as auth_router
 from src.api.routes.ops import router as ops_router
 from src.api.routes.ops_ingredients import router as ops_ingredients_router
-# Migration endpoint (temporary, remove when done):
-# from src.api.routes.admin_migrate import router as admin_migrate_router
+from src.api.routes.admin_migrate import router as admin_migrate_router
 
 logger = logging.getLogger("haira.api")
 
@@ -85,7 +84,7 @@ app.include_router(stats_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
 app.include_router(ops_router, prefix="/api")
 app.include_router(ops_ingredients_router, prefix="/api")
-# app.include_router(admin_migrate_router, prefix="/api")  # temporary migration
+app.include_router(admin_migrate_router, prefix="/api")  # temporary migration
 
 
 @app.on_event("startup")
