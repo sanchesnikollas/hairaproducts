@@ -15,3 +15,4 @@ data/
 tests/
 docs/
 *.md
+scripts/migration_data.json

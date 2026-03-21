@@ -56,7 +56,7 @@ USAGE_VERBS_EN = [
 ALL_REJECTION_VERBS = MARKETING_VERBS_PT + USAGE_VERBS_PT + MARKETING_VERBS_EN + USAGE_VERBS_EN
 
 # Heading-like elements to search for section labels
-HEADING_TAGS = ["h2", "h3", "h4", "button", "strong", "b"]
+HEADING_TAGS = ["h2", "h3", "h4", "button", "strong", "b", "span"]
 
 
 def _normalize_label(text: str) -> str:
@@ -97,33 +97,26 @@ def _get_soup(html: str):
 def _extract_content_after_heading(el) -> str | None:
     """Extract text content following a heading element."""
     # Strategy 0: <details>/<summary> accordion pattern
-    # Structure: <details><summary><h2>Label</h2></summary><div class="accordion__content">...</div></details>
-    if el.parent and el.parent.name == "summary":
-        details = el.parent.parent
-        if details and details.name == "details":
-            content_div = details.find("div", class_=re.compile(r"accordion"))
-            if content_div:
-                content = content_div.get_text(strip=True)
-                if content:
-                    return content
+    # Structure: <details><summary>...<span>Label</span>...</summary><div class="accordion__content">...</div></details>
+    # Walk up to find <summary> ancestor (may be nested inside toggle divs)
+    ancestor = el.parent
+    for _ in range(4):
+        if ancestor is None:
+            break
+        if ancestor.name == "summary":
+            details = ancestor.parent
+            if details and details.name == "details":
+                content_div = details.find("div", class_=re.compile(r"accordion.*(content|body|panel)"))
+                if content_div:
+                    content = content_div.get_text(strip=True)
+                    if content:
+                        return content
+            break
+        ancestor = ancestor.parent
 
-    # Strategy 1: Next sibling element
-    sibling = el.find_next_sibling()
-    if sibling:
-        content = sibling.get_text(strip=True)
-        if content:
-            return content
-
-    # Strategy 2: Next <p> in DOM (for headings like strong/b)
-    if el.name in ("strong", "b"):
-        next_p = el.find_next("p")
-        if next_p:
-            content = next_p.get_text(strip=True)
-            if content:
-                return content
-
-    # Strategy 3: Parent's text after the label
-    if el.parent:
+    # Strategy 1: For inline labels (strong/b), prefer parent's text after the label
+    # This handles <p><strong>Ingredientes:</strong> Aqua, Cetearyl Alcohol, ...</p>
+    if el.name in ("strong", "b") and el.parent:
         parent_text = el.parent.get_text(strip=True)
         el_text = el.get_text(strip=True)
         idx = parent_text.find(el_text)
@@ -132,7 +125,32 @@ def _extract_content_after_heading(el) -> str | None:
             if after:
                 return after
 
-    # Strategy 4: Walk up to an accordion/container parent and find <p> content
+    # Strategy 2: Next sibling element
+    sibling = el.find_next_sibling()
+    if sibling:
+        content = sibling.get_text(strip=True)
+        if content:
+            return content
+
+    # Strategy 3: Next <p> in DOM (for headings like strong/b)
+    if el.name in ("strong", "b"):
+        next_p = el.find_next("p")
+        if next_p:
+            content = next_p.get_text(strip=True)
+            if content:
+                return content
+
+    # Strategy 4: Parent's text after the label (for non-inline elements)
+    if el.name not in ("strong", "b") and el.parent:
+        parent_text = el.parent.get_text(strip=True)
+        el_text = el.get_text(strip=True)
+        idx = parent_text.find(el_text)
+        if idx >= 0:
+            after = parent_text[idx + len(el_text):].strip()
+            if after:
+                return after
+
+    # Strategy 5: Walk up to an accordion/container parent and find <p> content
     # (handles structures like Boticário where h3 is nested deep inside buttons/labels)
     ancestor = el.parent
     for _ in range(5):  # max 5 levels up

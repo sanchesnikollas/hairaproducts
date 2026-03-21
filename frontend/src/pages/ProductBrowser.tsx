@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ArrowUpDown, ChevronLeft, ChevronRight, Package } from 'lucide-react';
 import { getProducts, getBrands } from '@/lib/api';
@@ -19,7 +19,6 @@ import {
 import StatusBadge from '@/components/StatusBadge';
 import { ErrorState } from '@/components/LoadingState';
 import ProductFilters, { type StatusFilter } from '@/components/products/ProductFilters';
-import ProductSheet from '@/components/products/ProductSheet';
 import type { Product } from '@/types/api';
 
 const PER_PAGE = 50;
@@ -62,9 +61,7 @@ export default function ProductBrowser() {
   const [sortKey, setSortKey] = useState<SortKey>('product_name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
-  // Sheet
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const navigate = useNavigate();
 
   // Debounce search
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -155,8 +152,7 @@ export default function ProductBrowser() {
   };
 
   const handleRowClick = (product: Product) => {
-    setSelectedProductId(product.id);
-    setSheetOpen(true);
+    navigate(`/brands/${product.brand_slug}/products/${product.id}`);
   };
 
   // Pagination info
@@ -416,13 +412,6 @@ export default function ProductBrowser() {
         )}
       </motion.div>
 
-      {/* Product Detail Sheet */}
-      <ProductSheet
-        productId={selectedProductId}
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        onProductUpdated={refetch}
-      />
     </div>
   );
 }

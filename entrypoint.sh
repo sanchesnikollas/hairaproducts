@@ -1,5 +1,5 @@
 #!/bin/sh
-echo "=== HAIRA v2 Starting ==="
+echo "=== HAIRA v2 Starting (build 20260320) ==="
 echo "Working directory: $(pwd)"
 echo "Python: $(python --version)"
 echo "PORT: ${PORT:-8000}"

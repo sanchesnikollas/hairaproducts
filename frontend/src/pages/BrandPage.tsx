@@ -4,7 +4,6 @@ import { motion } from 'motion/react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import ProductCard from '@/components/ProductCard';
-import ProductSheet from '@/components/products/ProductSheet';
 import QuarantineTab from '@/components/QuarantineTab';
 import CoverageTab from '@/components/CoverageTab';
 import LoadingState, { ErrorState, EmptyState } from '@/components/LoadingState';
@@ -37,8 +36,6 @@ export default function BrandPage() {
   const [category, setCategory] = useState('');
   const [page, setPage] = useState(1);
   const [quarantineCount, setQuarantineCount] = useState<number | null>(null);
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
 
   const filters: Omit<ProductFilters, 'brand'> = useMemo(
     () => ({
@@ -56,7 +53,7 @@ export default function BrandPage() {
     [slug]
   );
 
-  const { data: productsResponse, loading: productsLoading, error: productsError, refetch: refetchProducts } = useAPI(
+  const { data: productsResponse, loading: productsLoading, error: productsError } = useAPI(
     () => getBrandProducts(slug!, filters),
     [slug, search, verifiedOnly, category, page]
   );
@@ -221,13 +218,9 @@ export default function BrandPage() {
                       transition={{ duration: 0.3, delay: 0.02 * i }}
                     >
                       <ProductCard
-                      product={product}
-                      brandSlug={slug!}
-                      onClick={() => {
-                        setSelectedProductId(product.id);
-                        setSheetOpen(true);
-                      }}
-                    />
+                        product={product}
+                        brandSlug={slug!}
+                      />
                     </motion.div>
                   ))}
                 </div>
@@ -272,13 +265,6 @@ export default function BrandPage() {
         </Tabs>
       </motion.div>
 
-      {/* Product Detail Sheet */}
-      <ProductSheet
-        productId={selectedProductId}
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        onProductUpdated={refetchProducts}
-      />
     </div>
   );
 }

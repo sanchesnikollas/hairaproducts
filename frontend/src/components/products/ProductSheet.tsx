@@ -64,6 +64,13 @@ function formatBrandName(slug: string): string {
     .join(' ');
 }
 
+function formatFieldValue(value: string | null | undefined): string {
+  if (!value || value === 'unknown') return '--';
+  return value
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function sanitizeText(text: string): string {
   if (!text) return text;
   const doc = new DOMParser().parseFromString(text, 'text/html');
@@ -96,10 +103,9 @@ export default function ProductSheet({
     verification_status: '',
   });
 
-  // Collapsible sections
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     info: false,
-    inci: false,
+    inci: true,
     labels: false,
     quality: false,
     evidence: false,
@@ -110,7 +116,6 @@ export default function ProductSheet({
     setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // Fetch full product detail when ID changes
   useEffect(() => {
     if (!productId || !open) {
       setProduct(null);
@@ -171,12 +176,12 @@ export default function ProductSheet({
 
   const qualityBgColor =
     qualityScore === undefined
-      ? 'bg-neutral-50'
+      ? 'bg-neutral-50 border-neutral-200'
       : qualityScore === 100
-        ? 'bg-emerald-50'
+        ? 'bg-emerald-50 border-emerald-200'
         : qualityScore >= 70
-          ? 'bg-amber-50'
-          : 'bg-red-50';
+          ? 'bg-amber-50 border-amber-200'
+          : 'bg-red-50 border-red-200';
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -186,36 +191,37 @@ export default function ProductSheet({
             <SheetLoadingSkeleton />
           ) : !product ? (
             <div className="flex items-center justify-center py-24">
-              <span className="text-sm text-ink-muted">No product selected</span>
+              <span className="text-sm text-neutral-400">No product selected</span>
             </div>
           ) : (
             <div className="pb-8">
-              {/* Hero Header */}
-              <div className="relative bg-neutral-50 border-b border-neutral-100">
-                {product.image_url_main ? (
-                  <img
-                    src={product.image_url_main}
-                    alt={product.product_name}
-                    className="w-full h-[200px] object-contain p-6"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-[140px] flex items-center justify-center">
-                    <Package className="size-10 text-neutral-300" />
+              {/* Header: image thumbnail + title side by side */}
+              <div className="px-5 pt-5 pb-4 border-b border-neutral-100">
+                <div className="flex gap-4">
+                  {/* Thumbnail */}
+                  <div className="shrink-0 w-20 h-20 rounded-lg bg-neutral-50 border border-neutral-100 overflow-hidden flex items-center justify-center">
+                    {product.image_url_main ? (
+                      <img
+                        src={product.image_url_main}
+                        alt={product.product_name}
+                        className="w-full h-full object-contain p-1.5"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          (e.target as HTMLImageElement).parentElement!.innerHTML =
+                            '<div class="text-neutral-300 flex items-center justify-center w-full h-full"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>';
+                        }}
+                      />
+                    ) : (
+                      <Package className="size-6 text-neutral-300" />
+                    )}
                   </div>
-                )}
-              </div>
 
-              {/* Title & Status */}
-              <SheetHeader className="px-5 pt-4 pb-0 space-y-0">
-                <div className="flex items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <SheetTitle className="text-base font-semibold text-neutral-900 leading-snug">
+                  {/* Title + brand */}
+                  <SheetHeader className="flex-1 min-w-0 space-y-0 p-0">
+                    <SheetTitle className="text-[15px] font-semibold text-neutral-900 leading-snug line-clamp-2">
                       {sanitizeText(product.product_name)}
                     </SheetTitle>
-                    <SheetDescription className="flex items-center gap-2 mt-1.5">
+                    <SheetDescription className="flex items-center gap-1.5 mt-1">
                       <span className="text-sm text-neutral-500">
                         {formatBrandName(product.brand_slug)}
                       </span>
@@ -228,48 +234,42 @@ export default function ProductSheet({
                         </>
                       )}
                     </SheetDescription>
-                  </div>
-                  <StatusBadge status={product.verification_status} size="sm" />
+                    <div className="pt-1.5">
+                      <StatusBadge status={product.verification_status} size="sm" />
+                    </div>
+                  </SheetHeader>
                 </div>
 
-                {/* Quick Stats */}
-                <div className="flex items-center gap-3 pt-3 pb-1">
-                  <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md ${qualityBgColor}`}>
-                    <span className={`text-sm font-semibold tabular-nums ${qualityColor}`}>
-                      {qualityScore ?? '--'}
-                    </span>
-                    <span className="text-[10px] text-neutral-400 uppercase">quality</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-50">
-                    <span className="text-sm font-semibold tabular-nums text-neutral-700">
-                      {product.inci_ingredients?.length ?? 0}
-                    </span>
-                    <span className="text-[10px] text-neutral-400 uppercase">INCI</span>
-                  </div>
+                {/* Stat pills */}
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs font-medium ${qualityBgColor} ${qualityColor}`}>
+                    {qualityScore ?? '--'} <span className="font-normal text-[10px] opacity-60">quality</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-neutral-200 bg-neutral-50 text-xs font-medium text-neutral-700">
+                    {product.inci_ingredients?.length ?? 0} <span className="font-normal text-[10px] text-neutral-400">INCI</span>
+                  </span>
                   {product.price != null && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-50">
-                      <span className="text-sm font-semibold tabular-nums text-neutral-700">
-                        {product.currency ?? 'R$'} {product.price.toFixed(2)}
-                      </span>
-                    </div>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded border border-neutral-200 bg-neutral-50 text-xs font-medium text-neutral-700">
+                      {product.currency ?? 'BRL'} {product.price.toFixed(2)}
+                    </span>
+                  )}
+                  {product.product_url && (
+                    <a
+                      href={product.product_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-neutral-200 bg-white text-xs text-neutral-400 hover:text-neutral-600 hover:border-neutral-300 transition-colors ml-auto"
+                    >
+                      <ExternalLink className="size-3" />
+                      <span>Abrir</span>
+                    </a>
                   )}
                 </div>
+              </div>
 
-                {product.product_url && (
-                  <a
-                    href={product.product_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-neutral-400 hover:text-neutral-600 transition-colors pt-1"
-                  >
-                    <ExternalLink className="size-3" />
-                    Ver pagina do produto
-                  </a>
-                )}
-              </SheetHeader>
-
-              <div className="px-5 pt-4 space-y-0">
-                {/* Basic Info Section */}
+              {/* Sections */}
+              <div className="px-5 pt-1 space-y-0">
+                {/* Basic Info */}
                 <CollapsibleSection
                   title="Basic Info"
                   icon={<Package className="size-3.5" />}
@@ -277,20 +277,21 @@ export default function ProductSheet({
                   onToggle={() => toggleSection('info')}
                   status={product.description ? 'ok' : 'warning'}
                 >
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                    <InfoItem label="Category" value={product.product_category} />
-                    <InfoItem label="Type" value={product.product_type_normalized} />
-                    <InfoItem label="Gender" value={product.gender_target} />
-                    <InfoItem label="Size" value={product.size_volume} />
-                  </div>
-                  {product.description && (
-                    <div className="mt-3 pt-3 border-t border-neutral-100">
-                      <span className="text-[11px] text-neutral-400 uppercase tracking-wider">Description</span>
-                      <p className="text-sm text-neutral-500 mt-1 leading-relaxed line-clamp-4">
-                        {sanitizeText(product.description)}
-                      </p>
+                  <div className="space-y-2.5">
+                    <div className="grid grid-cols-2 gap-2">
+                      <InfoItem label="Category" value={formatFieldValue(product.product_category)} />
+                      <InfoItem label="Type" value={formatFieldValue(product.product_type_normalized)} />
+                      <InfoItem label="Gender" value={formatFieldValue(product.gender_target)} />
+                      <InfoItem label="Size" value={product.size_volume || '--'} />
                     </div>
-                  )}
+                    {product.description && (
+                      <div className="pt-2 border-t border-neutral-100">
+                        <p className="text-[13px] text-neutral-500 leading-relaxed line-clamp-4">
+                          {sanitizeText(product.description)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </CollapsibleSection>
 
                 {/* INCI Ingredients */}
@@ -302,11 +303,11 @@ export default function ProductSheet({
                   status={product.inci_ingredients && product.inci_ingredients.length > 0 ? 'ok' : 'warning'}
                 >
                   {product.inci_ingredients && product.inci_ingredients.length > 0 ? (
-                    <div className="flex flex-wrap gap-1 max-h-[240px] overflow-y-auto">
+                    <div className="flex flex-wrap gap-1 max-h-[260px] overflow-y-auto">
                       {product.inci_ingredients.map((ingredient, i) => (
                         <span
                           key={i}
-                          className="text-[11px] font-normal bg-neutral-50 text-neutral-600 px-2 py-0.5 rounded-md"
+                          className="text-[11px] bg-neutral-100 text-neutral-600 px-2 py-0.5 rounded"
                         >
                           {ingredient}
                         </span>
@@ -331,7 +332,7 @@ export default function ProductSheet({
                       <div className="space-y-3">
                         {product.product_labels.detected?.length > 0 && (
                           <div>
-                            <span className="text-[10px] uppercase tracking-wider text-ink-faint mb-1.5 block font-medium">
+                            <span className="text-[10px] uppercase tracking-wider text-neutral-400 mb-1.5 block font-medium">
                               Detected
                             </span>
                             <div className="flex flex-wrap gap-1.5">
@@ -340,8 +341,8 @@ export default function ProductSheet({
                                   key={seal}
                                   className={
                                     POSITIVE_SEALS.has(seal)
-                                      ? 'bg-sage/10 text-sage border-sage/20'
-                                      : 'bg-coral/10 text-coral border-coral/20'
+                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      : 'bg-red-50 text-red-600 border-red-200'
                                   }
                                   variant="outline"
                                 >
@@ -353,8 +354,8 @@ export default function ProductSheet({
                         )}
                         {product.product_labels.inferred?.length > 0 && (
                           <div>
-                            <span className="text-[10px] uppercase tracking-wider text-ink-faint mb-1.5 block font-medium">
-                              Inferred
+                            <span className="text-[10px] uppercase tracking-wider text-neutral-400 mb-1.5 block font-medium">
+                              Inferred from INCI
                             </span>
                             <div className="flex flex-wrap gap-1.5">
                               {product.product_labels.inferred.map((seal) => (
@@ -362,8 +363,8 @@ export default function ProductSheet({
                                   key={seal}
                                   className={
                                     POSITIVE_SEALS.has(seal)
-                                      ? 'bg-sage/10 text-sage border-sage/20'
-                                      : 'bg-coral/10 text-coral border-coral/20'
+                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      : 'bg-red-50 text-red-600 border-red-200'
                                   }
                                   variant="outline"
                                 >
@@ -375,7 +376,7 @@ export default function ProductSheet({
                         )}
                       </div>
                     ) : (
-                      <p className="text-sm text-ink-faint">No labels detected</p>
+                      <p className="text-sm text-neutral-400">No labels detected</p>
                     )}
                   </CollapsibleSection>
                 )}
@@ -400,10 +401,10 @@ export default function ProductSheet({
                             key={i}
                             className={`text-xs px-3 py-2 rounded-lg flex items-start gap-2 ${
                               issue.severity === 'error'
-                                ? 'bg-coral/8 text-coral border border-coral/10'
+                                ? 'bg-red-50 text-red-600 border border-red-100'
                                 : issue.severity === 'warning'
-                                  ? 'bg-amber/8 text-amber border border-amber/10'
-                                  : 'bg-ink/3 text-ink-muted border border-ink/5'
+                                  ? 'bg-amber-50 text-amber-700 border border-amber-100'
+                                  : 'bg-neutral-50 text-neutral-500 border border-neutral-100'
                             }`}
                           >
                             <span className="font-medium shrink-0">{issue.field}:</span>
@@ -412,7 +413,7 @@ export default function ProductSheet({
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-sage">All quality checks passed</p>
+                      <p className="text-sm text-emerald-600">All quality checks passed</p>
                     )}
                   </CollapsibleSection>
                 )}
@@ -429,13 +430,13 @@ export default function ProductSheet({
                       {product.evidence.map((ev) => (
                         <div
                           key={ev.id}
-                          className="text-xs p-3 rounded-lg bg-cream/70 border border-ink/5 space-y-1"
+                          className="text-xs p-3 rounded-lg bg-neutral-50 border border-neutral-100 space-y-1"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-medium text-ink">
+                            <span className="font-medium text-neutral-700">
                               {ev.field_name}
                             </span>
-                            <Badge variant="outline" className="text-[10px] h-auto py-0 px-1.5">
+                            <Badge variant="outline" className="text-[10px] h-auto py-0 px-1.5 border-neutral-200 text-neutral-400">
                               {ev.extraction_method}
                             </Badge>
                           </div>
@@ -444,7 +445,7 @@ export default function ProductSheet({
                               href={ev.source_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-champagne-dark hover:underline truncate block"
+                              className="text-neutral-400 hover:text-neutral-600 hover:underline truncate block"
                             >
                               {ev.source_url}
                             </a>
@@ -515,7 +516,7 @@ export default function ProductSheet({
                       />
 
                       <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-ink-muted">
+                        <label className="text-xs font-medium text-neutral-500">
                           Verification Status
                         </label>
                         <Select
@@ -619,43 +620,35 @@ function CollapsibleSection({
 
 function SheetLoadingSkeleton() {
   return (
-    <div className="space-y-6 p-6">
-      <Skeleton className="w-full h-[180px] rounded-lg" />
-      <div className="space-y-2">
-        <Skeleton className="h-6 w-3/4" />
-        <Skeleton className="h-4 w-1/3" />
-      </div>
-      <div className="flex gap-3">
-        <Skeleton className="h-10 w-20 rounded-lg" />
-        <Skeleton className="h-10 w-20 rounded-lg" />
-      </div>
-      <Separator />
-      <div className="grid grid-cols-2 gap-3">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="space-y-1">
-            <Skeleton className="h-3 w-16" />
-            <Skeleton className="h-4 w-24" />
-          </div>
-        ))}
-      </div>
-      <Separator />
-      <div className="space-y-2">
-        <Skeleton className="h-3 w-32" />
-        <div className="flex flex-wrap gap-1.5">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-5 w-20 rounded-full" />
-          ))}
+    <div className="p-5 space-y-5">
+      <div className="flex gap-4">
+        <Skeleton className="w-20 h-20 rounded-lg shrink-0" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-5 w-4/5" />
+          <Skeleton className="h-4 w-1/3" />
+          <Skeleton className="h-5 w-20 rounded" />
         </div>
+      </div>
+      <div className="flex gap-2">
+        <Skeleton className="h-6 w-16 rounded" />
+        <Skeleton className="h-6 w-16 rounded" />
+        <Skeleton className="h-6 w-20 rounded" />
+      </div>
+      <Separator />
+      <div className="space-y-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-8 w-full rounded" />
+        ))}
       </div>
     </div>
   );
 }
 
-function InfoItem({ label, value }: { label: string; value: string | null | undefined }) {
+function InfoItem({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <span className="text-[11px] text-neutral-400 uppercase tracking-wider">{label}</span>
-      <p className="text-sm text-neutral-700 mt-0.5">{value || '--'}</p>
+    <div className="bg-neutral-50 rounded-md px-3 py-2">
+      <span className="text-[10px] text-neutral-400 uppercase tracking-wider block">{label}</span>
+      <span className="text-[13px] text-neutral-700 font-medium">{value}</span>
     </div>
   );
 }
@@ -744,7 +737,7 @@ function EditField({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-medium text-ink-muted">{label}</label>
+      <label className="text-xs font-medium text-neutral-500">{label}</label>
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}

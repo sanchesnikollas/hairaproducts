@@ -121,6 +121,10 @@ def _extract_inci_by_tab_labels(soup) -> tuple[str | None, str | None]:
 
     # Strategy 1: Button/heading with label, content in nearby elements
     for el in soup.find_all(["button", "h2", "h3", "h4", "a", "span", "div", "strong", "p", "b"]):
+        # Skip UI filter/topic elements (e.g., Shopify FAQ tab filters)
+        el_classes = " ".join(el.get("class", []))
+        if _re.search(r"filter[-_]?topic|faq[-_]?topic|tab[-_]?filter", el_classes):
+            continue
         el_text_original = el.get_text(strip=True)
         el_text = el_text_original.lower()
         for label in INCI_TAB_LABELS:

@@ -63,14 +63,18 @@ def classify_url(url: str, product_url_pattern: str | None = None) -> URLType:
         if seg_clean in NON_PRODUCT_PATHS:
             return URLType.OTHER
 
-    # Check blueprint product_url_pattern first (takes priority over generic indicators)
-    if product_url_pattern:
+    # Check blueprint product_url_pattern first (takes priority over generic indicators).
+    # When a pattern is provided, it acts as a strict filter: URLs that don't match
+    # are never classified as PRODUCT — they fall through to CATEGORY/OTHER.
+    has_strict_pattern = product_url_pattern is not None
+    if has_strict_pattern:
         if re.search(product_url_pattern, lower):
             return URLType.PRODUCT
 
     # Shopify /products/{slug} detection — a slug after /products/ is a product page
-    if re.search(r'/products/[\w][\w-]+', path) and not path.rstrip("/").endswith("/products"):
-        return URLType.PRODUCT
+    if not has_strict_pattern:
+        if re.search(r'/products/[\w][\w-]+', path) and not path.rstrip("/").endswith("/products"):
+            return URLType.PRODUCT
 
     # Check for search/category query patterns (e.g., busca/?cgid=...)
     if "cgid=" in query or "category=" in query:
@@ -88,18 +92,20 @@ def classify_url(url: str, product_url_pattern: str | None = None) -> URLType:
                 if not is_product:
                     return URLType.CATEGORY
 
-    for pattern in PRODUCT_INDICATORS:
-        if re.search(pattern, lower):
-            return URLType.PRODUCT
+    if not has_strict_pattern:
+        for pattern in PRODUCT_INDICATORS:
+            if re.search(pattern, lower):
+                return URLType.PRODUCT
 
     # Check hair relevance by keywords in URL
     has_hair_keyword = any(kw.replace(" ", "-") in lower or kw.replace(" ", "") in lower for kw in HAIR_KEYWORDS[:20])
     if has_hair_keyword:
-        segments = [s for s in path.split("/")[3:] if s]  # skip domain
-        if len(segments) >= 2:
-            return URLType.PRODUCT
-        if segments and len(segments[0].split("-")) >= 3:
-            return URLType.PRODUCT
+        if not has_strict_pattern:
+            segments = [s for s in path.split("/")[3:] if s]  # skip domain
+            if len(segments) >= 2:
+                return URLType.PRODUCT
+            if segments and len(segments[0].split("-")) >= 3:
+                return URLType.PRODUCT
         return URLType.CATEGORY
 
     return URLType.OTHER
