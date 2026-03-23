@@ -106,6 +106,7 @@ def _serialize_product_list_item(p: ProductORM) -> dict:
 @router.get("/products")
 def list_products(
     brand_slug: str | None = None,
+    brand: str | None = Query(None, description="Alias for brand_slug (deprecated, prefer brand_slug)"),
     verified_only: bool = False,
     exclude_kits: bool = True,
     search: str | None = None,
@@ -114,9 +115,11 @@ def list_products(
     offset: int = Query(default=0, ge=0),
     session: Session = Depends(_get_session),
 ):
+    # Accept both ?brand= and ?brand_slug= for filtering
+    effective_brand = brand_slug or brand
     repo = ProductRepository(session)
     products = repo.get_products(
-        brand_slug=brand_slug,
+        brand_slug=effective_brand,
         verified_only=verified_only,
         search=search,
         category=category,
@@ -125,14 +128,14 @@ def list_products(
         offset=offset,
     )
     total = repo.count_products(
-        brand_slug=brand_slug,
+        brand_slug=effective_brand,
         verified_only=verified_only,
         search=search,
         category=category,
         exclude_kits=exclude_kits,
     )
     status_counts = repo.count_products_by_status(
-        brand_slug=brand_slug, search=search, category=category, exclude_kits=exclude_kits,
+        brand_slug=effective_brand, search=search, category=category, exclude_kits=exclude_kits,
     )
     items = [_serialize_product_list_item(p) for p in products]
     return {"items": items, "total": total, "limit": limit, "offset": offset, "status_counts": status_counts}
@@ -150,14 +153,16 @@ _EXPORT_COLUMNS = [
 @router.get("/products/export")
 def export_products(
     brand_slug: str | None = None,
+    brand: str | None = Query(None, description="Alias for brand_slug (deprecated, prefer brand_slug)"),
     verified_only: bool = False,
     search: str | None = None,
     format: str = Query(default="csv", pattern="^(csv|json)$"),
     session: Session = Depends(_get_session),
 ):
+    effective_brand = brand_slug or brand
     repo = ProductRepository(session)
     products = repo.get_products(
-        brand_slug=brand_slug,
+        brand_slug=effective_brand,
         verified_only=verified_only,
         search=search,
         limit=10000,

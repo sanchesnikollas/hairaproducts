@@ -93,6 +93,92 @@ def migrate_json(body: MigrateRequest):
     }
 
 
+class DeleteBrandRequest(BaseModel):
+    secret: str
+    brand_slug: str
+
+
+@router.post("/migrate-delete-brand")
+def migrate_delete_brand(body: DeleteBrandRequest):
+    """Delete all data for a brand — for re-import after re-scrape."""
+    if not MIGRATION_SECRET or body.secret != MIGRATION_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid migration secret")
+
+    engine = get_engine()
+    deleted = {}
+    try:
+        with engine.begin() as conn:
+            # Delete in FK order
+            for table in ["product_ingredients", "product_claims", "product_images",
+                          "product_compositions", "product_evidence", "quarantine_details"]:
+                try:
+                    r = conn.execute(text(
+                        f"DELETE FROM {table} WHERE product_id IN (SELECT id FROM products WHERE brand_slug = :slug)"
+                    ), {"slug": body.brand_slug})
+                    deleted[table] = r.rowcount
+                except Exception:
+                    pass
+            r = conn.execute(text("DELETE FROM products WHERE brand_slug = :slug"), {"slug": body.brand_slug})
+            deleted["products"] = r.rowcount
+            r = conn.execute(text("DELETE FROM brand_coverage WHERE brand_slug = :slug"), {"slug": body.brand_slug})
+            deleted["brand_coverage"] = r.rowcount
+    except Exception as e:
+        return {"error": str(e)[:500]}
+
+    return {"deleted": deleted}
+
+
+class UpdateRequest(BaseModel):
+    secret: str
+    updates: list[dict]  # [{id: str, field: value, ...}]
+
+
+@router.post("/migrate-update")
+def migrate_update(body: UpdateRequest):
+    """Update existing products by ID — for enrichment of fields like usage_instructions, size_volume."""
+    if not MIGRATION_SECRET or body.secret != MIGRATION_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid migration secret")
+
+    if not body.updates:
+        return {"updated": 0}
+
+    ALLOWED_FIELDS = {
+        "usage_instructions", "size_volume", "composition", "care_usage",
+        "description", "product_category", "product_labels",
+    }
+
+    engine = get_engine()
+    updated = 0
+    errors = []
+
+    try:
+        with engine.begin() as conn:
+            for row in body.updates:
+                pid = row.get("id")
+                if not pid:
+                    continue
+                sets = []
+                params = {"pid": pid}
+                for k, v in row.items():
+                    if k == "id":
+                        continue
+                    if k not in ALLOWED_FIELDS:
+                        continue
+                    if isinstance(v, (dict, list)):
+                        v = json.dumps(v, ensure_ascii=False)
+                    sets.append(f"{k} = :{k}")
+                    params[k] = v
+                if not sets:
+                    continue
+                sql = text(f"UPDATE products SET {', '.join(sets)} WHERE id = :pid")
+                result = conn.execute(sql, params)
+                updated += result.rowcount
+    except Exception as e:
+        errors.append(str(e)[:500])
+
+    return {"updated": updated, "errors": errors[:5]}
+
+
 @router.get("/migrate-status")
 def migrate_status(secret: str = ""):
     if not MIGRATION_SECRET or secret != MIGRATION_SECRET:
