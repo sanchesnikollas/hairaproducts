@@ -60,11 +60,15 @@ HEADING_TAGS = ["h2", "h3", "h4", "button", "strong", "b", "span"]
 
 
 def _normalize_label(text: str) -> str:
-    """Lowercase, strip accents, normalize whitespace."""
+    """Lowercase, strip accents, strip emojis/symbols, normalize whitespace."""
     # NFD decomposition then strip combining marks
     nfkd = unicodedata.normalize("NFD", text)
     stripped = "".join(c for c in nfkd if unicodedata.category(c) != "Mn")
-    return re.sub(r"\s+", " ", stripped).strip().lower()
+    result = re.sub(r"\s+", " ", stripped).strip().lower()
+    # Strip leading emojis, symbols, and other non-alphanumeric characters
+    # (e.g., "🧴 composição:" -> "composicao:")
+    result = re.sub(r"^[^\w]+", "", result)
+    return result
 
 
 def validate_inci_content(text: str | None) -> bool:
@@ -221,6 +225,13 @@ def extract_sections_from_html(
                     # Reclassify to composition if INCI validation fails
                     actual_field = "composition"
 
+            # Promote composition -> ingredients_inci when content looks like INCI
+            # This handles cases where "composição" label is shared between
+            # composition and ingredients_inci in the blueprint, and the
+            # composition entry wins the label_lookup sort order.
+            if taxonomy_field == "composition" and validate_inci_content(content):
+                actual_field = "ingredients_inci"
+
             section = PageSection(
                 label=norm_label,
                 content=content,
@@ -242,5 +253,56 @@ def extract_sections_from_html(
                 result.ingredients_inci_raw = content
 
             break  # Only match the first (most specific) label per heading
+
+    # Strategy 2: Table-based sections (e.g., Nuvemshop stores with label|content table rows)
+    # First column is the section label, second column is the content
+    for tr in soup.find_all("tr"):
+        tds = tr.find_all("td")
+        if len(tds) < 2:
+            continue
+        label_text = tds[0].get_text(strip=True)
+        if not label_text:
+            continue
+        label_normalized = _normalize_label(label_text)
+
+        for norm_label, taxonomy_field, original_label, validators in label_lookup:
+            if not label_normalized.startswith(norm_label):
+                continue
+
+            content = tds[-1].get_text(strip=True)
+            if not content:
+                break
+
+            actual_field = taxonomy_field
+
+            if taxonomy_field == "ingredients_inci":
+                if validate_inci_content(content):
+                    actual_field = "ingredients_inci"
+                else:
+                    actual_field = "composition"
+
+            if taxonomy_field == "composition" and validate_inci_content(content):
+                actual_field = "ingredients_inci"
+
+            section = PageSection(
+                label=norm_label,
+                content=content,
+                selector=f"table td:{label_text}",
+                element_tag="td",
+                taxonomy_field=actual_field,
+                source_section_label=label_text,
+            )
+            result.sections.append(section)
+
+            if actual_field == "description" and result.description is None:
+                result.description = content
+            elif actual_field == "care_usage" and result.care_usage is None:
+                result.care_usage = content
+            elif actual_field == "composition" and result.composition is None:
+                result.composition = content
+            elif actual_field == "ingredients_inci" and result.ingredients_inci_raw is None:
+                result.ingredients_inci_raw = content
+
+            break
 
     return result

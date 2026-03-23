@@ -193,7 +193,9 @@ def _extract_inci_by_tab_labels(soup) -> tuple[str | None, str | None]:
             if prev:
                 prev_text = prev.get_text().lower()
                 for label in INCI_TAB_LABELS:
-                    if label in prev_text:
+                    # Use word boundary match to avoid false positives
+                    # (e.g., "inci" matching inside "principais")
+                    if _re.search(r"(?:^|\b)" + _re.escape(label) + r"(?:\b|$)", prev_text):
                         content = _clean_tab_content(el.get_text(strip=True))
                         if _looks_like_inci(content):
                             priority = _label_priority(label)
@@ -276,6 +278,29 @@ def extract_by_selectors(
     return result
 
 
+def _is_waf_challenge_page(html: str) -> bool:
+    """Detect Cloudflare/WAF challenge pages that don't contain real product content."""
+    lower = html[:5000].lower()
+    challenge_markers = [
+        "just a moment",
+        "um momento",
+        "cf-challenge",
+        "cf-turnstile",
+        "challenges.cloudflare.com",
+        "_cf_chl_opt",
+    ]
+    return any(marker in lower for marker in challenge_markers)
+
+
+def _is_domain_name(text: str) -> bool:
+    """Check if text looks like a domain name rather than a product name."""
+    if not text:
+        return False
+    text = text.strip().lower()
+    # Matches patterns like "www.example.com" or "example.com.br"
+    return bool(re.match(r'^(www\.)?[a-z0-9-]+\.[a-z]{2,}(\.[a-z]{2,})?$', text))
+
+
 def extract_product_deterministic(
     html: str,
     url: str,
@@ -297,6 +322,11 @@ def extract_product_deterministic(
         "evidence": evidence_list,
         "extraction_method": None,
     }
+
+    # Detect WAF/Cloudflare challenge pages early
+    if _is_waf_challenge_page(html):
+        logger.warning(f"WAF challenge page detected for {url}, skipping extraction")
+        return result
 
     # Try JSON-LD first
     jsonld = extract_jsonld(html)
@@ -392,5 +422,13 @@ def extract_product_deterministic(
         og_img = soup.find("meta", property="og:image")
         if og_img and og_img.get("content"):
             result["image_url_main"] = og_img["content"]
+
+    # Guard: reject product names that are actually domain names (WAF artifact)
+    if result["product_name"] and _is_domain_name(result["product_name"]):
+        logger.warning(
+            f"Product name looks like a domain name: '{result['product_name']}' "
+            f"for {url} — likely a WAF challenge page, clearing extraction"
+        )
+        result["product_name"] = None
 
     return result

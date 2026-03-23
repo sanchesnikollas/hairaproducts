@@ -203,8 +203,13 @@ def scrape(brand: str | None, priority: int | None, max_brands: int, headless: b
         # Use httpx when blueprint says JS is not required (avoids WAF/CAPTCHA blocks)
         extraction_config = bp.get("extraction", {})
         ssl_verify = extraction_config.get("ssl_verify", True)
+        http_client = extraction_config.get("http_client", "")
         brand_browser = browser
-        if not extraction_config.get("requires_js", True) and extraction_config.get("headless") is False:
+        if http_client == "curl_cffi":
+            from src.core.browser import BrowserClient as BC
+            brand_browser = BC(use_curl_cffi=True, ssl_verify=ssl_verify)
+            click.echo("  Using curl_cffi (WAF bypass)")
+        elif not extraction_config.get("requires_js", True) and extraction_config.get("headless") is False:
             from src.core.browser import BrowserClient as BC
             brand_browser = BC(use_httpx=True, ssl_verify=ssl_verify)
             click.echo("  Using httpx (requires_js=false)")

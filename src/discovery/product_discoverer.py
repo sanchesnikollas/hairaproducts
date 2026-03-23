@@ -26,11 +26,12 @@ class ProductDiscoverer:
         discovery_config = blueprint.get("discovery", {})
         extraction_config = blueprint.get("extraction", {})
         ssl_verify = extraction_config.get("ssl_verify", True)
+        use_curl_cffi = extraction_config.get("http_client") == "curl_cffi"
 
-        # Rebuild adapters if ssl_verify differs from init
-        if ssl_verify != self._ssl_verify:
+        # Rebuild adapters if config differs from init
+        if ssl_verify != self._ssl_verify or use_curl_cffi:
             self._adapters = [
-                SitemapAdapter(ssl_verify=ssl_verify),
+                SitemapAdapter(ssl_verify=ssl_verify, use_curl_cffi=use_curl_cffi),
                 DOMCrawlerAdapter(browser=self._browser),
             ]
 

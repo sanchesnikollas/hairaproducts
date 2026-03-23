@@ -16,14 +16,16 @@ _DEFAULT_USER_AGENT = (
 
 
 class BrowserClient:
-    def __init__(self, delay_seconds: float | None = None, headless: bool = True, use_httpx: bool = False, ssl_verify: bool = True):
+    def __init__(self, delay_seconds: float | None = None, headless: bool = True, use_httpx: bool = False, ssl_verify: bool = True, use_curl_cffi: bool = False):
         self._delay = delay_seconds or float(os.environ.get("REQUEST_DELAY_SECONDS", "3"))
         self._headless = headless
         self._use_httpx = use_httpx
+        self._use_curl_cffi = use_curl_cffi
         self._ssl_verify = ssl_verify
         self._browser = None
         self._page = None
         self._httpx_client = None
+        self._curl_session = None
         self._last_request_time: float = 0
 
     def _rate_limit(self) -> None:
@@ -64,6 +66,20 @@ class BrowserClient:
                 verify=self._ssl_verify,
             )
 
+    def _ensure_curl_cffi(self):
+        if self._curl_session is None:
+            from curl_cffi.requests import Session
+            self._curl_session = Session(impersonate="chrome", verify=self._ssl_verify)
+
+    def _fetch_page_curl_cffi(self, url: str) -> str:
+        """Fetch page HTML using curl_cffi (bypasses Akamai/Cloudflare WAFs)."""
+        self._ensure_curl_cffi()
+        self._rate_limit()
+        logger.info(f"Fetching (curl_cffi): {url}")
+        resp = self._curl_session.get(url, timeout=30)
+        resp.raise_for_status()
+        return resp.text
+
     def _fetch_page_httpx(self, url: str) -> str:
         """Fetch page HTML using httpx (bypasses WAFs that block headless browsers)."""
         self._ensure_httpx()
@@ -74,6 +90,8 @@ class BrowserClient:
         return resp.text
 
     def fetch_page(self, url: str, wait_for: str | None = None, expand_accordions: bool = False) -> str:
+        if self._use_curl_cffi:
+            return self._fetch_page_curl_cffi(url)
         if self._use_httpx:
             return self._fetch_page_httpx(url)
         self._ensure_browser()
@@ -160,15 +178,29 @@ class BrowserClient:
 
     def get_links(self, url: str, allowed_domains: list[str] | None = None) -> list[str]:
         """Fetch a page and extract all links, optionally filtered by domain."""
-        self._ensure_browser()
-        self._rate_limit()
-        try:
-            self._page.goto(url, timeout=45000, wait_until="domcontentloaded")
-            self._page.wait_for_timeout(2000)
-        except Exception as e:
-            logger.warning(f"Navigation issue for {url}: {e}")
-            return []
-        links = self._page.eval_on_selector_all('a[href]', 'els => els.map(e => e.href)')
+        if self._use_curl_cffi or self._use_httpx:
+            # Use HTML parser instead of browser for non-JS clients
+            from urllib.parse import urljoin
+            try:
+                from bs4 import BeautifulSoup as BS
+            except ImportError:
+                return []
+            html = self.fetch_page(url)
+            soup = BS(html, "lxml")
+            links = []
+            for a in soup.find_all("a", href=True):
+                full = urljoin(url, a["href"])
+                links.append(full)
+        else:
+            self._ensure_browser()
+            self._rate_limit()
+            try:
+                self._page.goto(url, timeout=45000, wait_until="domcontentloaded")
+                self._page.wait_for_timeout(2000)
+            except Exception as e:
+                logger.warning(f"Navigation issue for {url}: {e}")
+                return []
+            links = self._page.eval_on_selector_all('a[href]', 'els => els.map(e => e.href)')
         if allowed_domains:
             links = [l for l in links if self.is_allowed_domain(l, allowed_domains)]
         return list(set(links))
@@ -188,3 +220,6 @@ class BrowserClient:
         if self._httpx_client:
             self._httpx_client.close()
             self._httpx_client = None
+        if self._curl_session:
+            self._curl_session.close()
+            self._curl_session = None

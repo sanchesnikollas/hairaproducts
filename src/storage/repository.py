@@ -195,6 +195,7 @@ class ProductRepository:
                 or_(
                     ProductORM.inci_ingredients.is_(None),
                     ProductORM.inci_ingredients == "[]",
+                    ProductORM.inci_ingredients == "null",
                 ),
             )
             .all()

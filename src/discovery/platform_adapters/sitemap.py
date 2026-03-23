@@ -19,15 +19,25 @@ SITEMAP_NS = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
 class SitemapAdapter(BaseAdapter):
     name = "sitemap"
 
-    def __init__(self, timeout: float = 15.0, ssl_verify: bool = True):
+    def __init__(self, timeout: float = 15.0, ssl_verify: bool = True, use_curl_cffi: bool = False):
         self._timeout = timeout
         self._ssl_verify = ssl_verify
+        self._use_curl_cffi = use_curl_cffi
+        self._curl_session = None
 
     def _fetch_sitemap(self, url: str) -> str | None:
         try:
-            resp = httpx.get(url, timeout=self._timeout, follow_redirects=True, verify=self._ssl_verify)
-            if resp.status_code == 200 and resp.text.strip():
-                return resp.text
+            if self._use_curl_cffi:
+                if self._curl_session is None:
+                    from curl_cffi.requests import Session
+                    self._curl_session = Session(impersonate="chrome", verify=self._ssl_verify)
+                resp = self._curl_session.get(url, timeout=self._timeout)
+                if resp.status_code == 200 and resp.text.strip():
+                    return resp.text
+            else:
+                resp = httpx.get(url, timeout=self._timeout, follow_redirects=True, verify=self._ssl_verify)
+                if resp.status_code == 200 and resp.text.strip():
+                    return resp.text
         except Exception as e:
             logger.debug(f"Failed to fetch sitemap {url}: {e}")
         return None
