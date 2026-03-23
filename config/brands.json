@@ -901,14 +901,14 @@
   {
     "brand_name": "Clear",
     "brand_slug": "clear",
-    "official_url_root": "https://www.clearhaircare.com/br/home.html",
+    "official_url_root": "https://www.clear.com.br/",
     "country": "Brasil",
     "priority": 23,
     "catalog_entrypoints": [
-      "https://www.clearhaircare.com/br/produtos.html"
+      "https://www.clear.com.br/produtos.html"
     ],
     "status": "active",
-    "notes": null
+    "notes": "Site behind Akamai WAF, requires curl_cffi or Playwright"
   },
   {
     "brand_name": "Cless",
@@ -3605,12 +3605,12 @@
     "brand_slug": "pantene",
     "official_url_root": "https://pantene.com.br/pt-br",
     "country": "Brasil",
-    "priority": 11,
+    "priority": 2,
     "catalog_entrypoints": [
       "https://pantene.com.br/pt-br/produtos"
     ],
     "status": "active",
-    "notes": "informações em imagens e não texto"
+    "notes": "inci_on_site=sim. Next.js + Contentful CMS. INCI in __NEXT_DATA__ JSON (allIngredients field). Bilingual format. Requires JS rendering."
   },
   {
     "brand_name": "Papel para Mechas",
@@ -3715,14 +3715,16 @@
   {
     "brand_name": "Physalis",
     "brand_slug": "physalis",
-    "official_url_root": "https://www.physalisbrasil.com.br/produto/listar/cabelos",
+    "official_url_root": "https://loja.physalisbrasil.com.br/",
     "country": "Brasil",
-    "priority": 30,
+    "priority": 3,
     "catalog_entrypoints": [
-      "https://www.physalisbrasil.com.br/produto/listar/cabelos"
+      "https://loja.physalisbrasil.com.br/cabelo/",
+      "https://loja.physalisbrasil.com.br/cabelo/shampoo/",
+      "https://loja.physalisbrasil.com.br/cabelo/condicionador/"
     ],
     "status": "active",
-    "notes": null
+    "notes": "inci_on_site=parcial. Nuvemshop platform. Natural/organic personal care including hair."
   },
   {
     "brand_name": "Phytobelle",
@@ -4253,7 +4255,7 @@
     "brand_slug": "seda",
     "official_url_root": "https://www.seda.com.br/home.html",
     "country": "Brasil",
-    "priority": 21,
+    "priority": 2,
     "catalog_entrypoints": [
       "https://www.seda.com.br/hair-products/shampoo.html",
       "https://www.seda.com.br/hair-products/condicionador.html",
@@ -4262,7 +4264,7 @@
       "https://www.seda.com.br/hair-products/cremes-para-pentear-e-finalizadores.html"
     ],
     "status": "active",
-    "notes": null
+    "notes": "inci_on_site=js_only, platform=unilever_aem, waf=akamai, json_ld=Product"
   },
   {
     "brand_name": "Segredo Dela",
@@ -5558,13 +5560,17 @@
     "brand_name": "Dove",
     "brand_slug": "dove",
     "official_url_root": "https://www.dove.com/br/home.html",
-    "country": "Reino Unido/Holanda (Unilever)",
-    "priority": 13,
+    "country": "BR",
+    "priority": 2,
     "catalog_entrypoints": [
-      "https://www.dove.com/br/cuidado-para-os-cabelos.html"
+      "https://www.dove.com/br/cuidado-para-os-cabelos.html",
+      "https://www.dove.com/br/cuidado-para-os-cabelos/shampoo.html",
+      "https://www.dove.com/br/cuidado-para-os-cabelos/Condicionador.html",
+      "https://www.dove.com/br/cuidado-para-os-cabelos/creme-de-tratamento.html",
+      "https://www.dove.com/br/men-care/cuidado-para-os-cabelos/shampoo.html"
     ],
     "status": "active",
-    "notes": "Unilever / tem categoria por tipo de cabelo e  principio ativo ppal"
+    "notes": "Unilever AEM CMS. INCI not available on product pages (template exists but data field empty). ~49 hair products. Akamai WAF requires curl_cffi."
   },
   {
     "brand_name": "Dr ZERO",
@@ -5629,14 +5635,14 @@
   {
     "brand_name": "Elseve",
     "brand_slug": "elseve",
-    "official_url_root": "https://www.loreal-paris.com.br/cabelo/cuidados-com-o-cabelo",
+    "official_url_root": "https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve",
     "country": "França",
-    "priority": 6,
+    "priority": 2,
     "catalog_entrypoints": [
-      "https://www.loreal-paris.com.br/cabelo/cuidados-com-o-cabelo"
+      "https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve"
     ],
     "status": "active",
-    "notes": null
+    "notes": "inci_on_site=sim, parent_brand=L'Oreal Paris, ingredients_language=pt-BR"
   },
   {
     "brand_name": "Elvis + Elvin",
@@ -6728,7 +6734,7 @@
     "brand_name": "TRESemmé",
     "brand_slug": "tresemme",
     "official_url_root": "https://www.tresemme.com/br/home.html",
-    "country": "Estados Unidos",
+    "country": "Brasil",
     "priority": 12,
     "catalog_entrypoints": [
       "https://www.tresemme.com/br/produtos/shampoo.html",
@@ -6737,7 +6743,7 @@
       "https://www.tresemme.com/br/produtos/leave-in-conditioner.html"
     ],
     "status": "active",
-    "notes": "Unilever"
+    "notes": "Unilever. AEM platform. inci_on_site=sim. WAF=Akamai (requires curl_cffi). ~32 products."
   },
   {
     "brand_name": "Trevor Sorbie",
@@ -7036,12 +7042,12 @@
   {
     "brand_name": "USK",
     "brand_slug": "usk",
-    "official_url_root": "Neosil shampoo",
-    "country": null,
+    "official_url_root": "https://usk.com.br/",
+    "country": "Brasil",
     "priority": 43,
     "catalog_entrypoints": [],
-    "status": "active",
-    "notes": null
+    "status": "blocked",
+    "notes": "USK Under Skin - pharmaceutical brand. No functioning e-commerce site (usk.com.br returns 403). Products (Neosil shampoo) sold via drugstores only. Cannot scrape."
   },
   {
     "brand_name": "L'Occitane (US)",

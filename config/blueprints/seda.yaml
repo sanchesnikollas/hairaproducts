@@ -1,0 +1,105 @@
+brand_slug: seda
+brand_name: Seda
+platform: custom
+domain: www.seda.com.br
+allowed_domains:
+- www.seda.com.br
+entrypoints:
+- https://www.seda.com.br/hair-products/shampoo.html
+- https://www.seda.com.br/hair-products/condicionador.html
+- https://www.seda.com.br/hair-products/super-condicionadores.html
+- https://www.seda.com.br/hair-products/mascaras-de-tratamento.html
+- https://www.seda.com.br/hair-products/cremes-para-pentear-e-finalizadores.html
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.seda.com.br/sitemap-index.xml
+  - https://www.seda.com.br/sitemap.products-product-page-sitemap.xml
+  product_url_pattern: ^https://www\.seda\.com\.br/p/[\w%-]+\.html/\d+$
+  max_pages: 200
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  http_client: curl_cffi
+  headless: false
+  delay_seconds: 3
+  use_curl_cffi: true
+  curl_cffi_impersonate: chrome
+  inci_selectors:
+  - .cmp-accordion__panel .product-info-item-content
+  name_selectors:
+  - h1
+  - .product-info-item__item.retailer1VOTEcommerceTitle
+  image_selectors:
+  - img[src*="unileversolutions.com"]
+  - .productmediagallery-root-item img
+  - .cmp-productmediagallery img
+  price_selectors: []
+  json_ld_type: Product
+  json_ld_fields:
+    name: name
+    description: description
+    image: image.url.@id
+    gtin: gtin
+    sku: sku
+    brand: brand.name
+    ingredients: ingredients
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+      - mais informa\xE7\xF5es
+    care_usage:
+      labels:
+      - como eu uso esse produto?
+      - como usar
+      - modo de uso
+    ingredients_inci:
+      labels:
+      - o que tem dentro?
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o"
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  accordion_selectors:
+    container: .cmp-accordion__item
+    title: .cmp-accordion__title
+    panel: .cmp-accordion__panel
+  wait_for_selector: .cmp-accordion__panel
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: inci_standard
+  platform_detail: unilever_aem_cms
+  inci_available: uncertain
+  inci_note: >-
+    Seda uses Unilever's global AEM (Adobe Experience Manager) CMS. Product pages
+    have JSON-LD with Product schema including an "ingredients" field, but it is
+    currently empty for all products tested. The "O Que Tem Dentro?" accordion
+    section exists in the HTML structure but its content is loaded via JavaScript.
+    Playwright headless browser is required to render the accordion content.
+    The site uses Akamai WAF -- plain curl/requests are blocked (403).
+    curl_cffi with chrome impersonation bypasses the WAF for static HTML.
+    113 product URLs found in the product sitemap.
+  parent_brand: Unilever
+  product_focus: haircare
+  hair_lines: "Ceramidas, Liso Perfeito, Cachos Definidos, Crescimento Saudavel, CrespoForce, Boom, Luminous UV"
+  waf: akamai
+  total_products_sitemap: 113
+  product_categories:
+  - shampoo
+  - condicionador
+  - super-condicionadores
+  - mascaras-de-tratamento
+  - cremes-para-pentear-e-finalizadores
+version: 1

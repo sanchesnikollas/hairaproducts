@@ -1,0 +1,100 @@
+brand_slug: physalis
+brand_name: Physalis
+platform: nuvemshop
+domain: loja.physalisbrasil.com.br
+allowed_domains:
+- loja.physalisbrasil.com.br
+- physalisbrasil.com.br
+entrypoints:
+- https://loja.physalisbrasil.com.br/cabelo/
+- https://loja.physalisbrasil.com.br/cabelo/shampoo/
+- https://loja.physalisbrasil.com.br/cabelo/condicionador/
+- https://loja.physalisbrasil.com.br/produtos/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://loja.physalisbrasil.com.br/sitemap.xml
+  product_url_pattern: ^https://loja\.physalisbrasil\.com\.br/produtos/[\w%-]+/$
+  category_url_pattern: ^https://loja\.physalisbrasil\.com\.br/(cabelo|corpo|linhas)/
+  max_pages: 200
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: true
+  headless: true
+  ssl_verify: false
+  delay_seconds: 3
+  inci_selectors:
+  - ".product-description table td:last-child"
+  - "#product-description table td p"
+  - "#product-description .product-description p"
+  - "#product-description p"
+  - ".user-content p"
+  name_selectors:
+  - h1.js-product-name
+  - h1
+  - .product-name
+  image_selectors:
+  - img.js-product-slide-img
+  - "img[src*='mitiendanube.com']"
+  - "img[src*='physalis']"
+  - .product-image img
+  price_selectors:
+  - span.js-price-display
+  - '[class*="price"]'
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+      - o produto
+    care_usage:
+      labels:
+      - modo de usar
+      - como usar
+      - "modo de aplica\xE7\xE3o"
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o"
+      - "composi\xE7\xE3o completa"
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: portuguese_names
+  platform_detail: nuvemshop_tiendanube
+  inci_available: partial
+  inci_note: >-
+    Physalis is a natural/organic personal care brand from Brazil. Their store
+    runs on Nuvemshop (Tiendanube). Product pages are JS-rendered and require
+    Playwright. INCI availability is partial -- ingredient lists may be in the
+    product description section. The SSL certificate may require ssl_verify=false.
+    CDN images hosted on acdn-us.mitiendanube.com (store ID 001/323/634).
+    Hair products include shampoo, condicionador lines: Puro Cuidado,
+    Pura Vitalidade, Puro Equilibrio.
+  product_focus: natural_personal_care_haircare
+  parent_company: Physalis Brasil
+  waf: none
+  ssl_note: "SSL handshake may fail with older TLS stacks. Use ssl_verify=false."
+  hair_lines: "Puro Cuidado, Pura Vitalidade, Puro Equil\xEDbrio"
+  product_categories:
+  - cabelo
+  - corpo
+  - bebe
+  - dental
+version: 1

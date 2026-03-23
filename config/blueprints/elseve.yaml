@@ -1,0 +1,95 @@
+brand_slug: elseve
+brand_name: Elseve
+platform: custom
+domain: www.loreal-paris.com.br
+allowed_domains:
+- www.loreal-paris.com.br
+entrypoints:
+- https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve
+- https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve/bond-repair
+- https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve/glycolic-gloss
+- https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve/hidra-hialuronico
+- https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve/reparacao-total-5
+- https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve/oleo-extraordinario
+- https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve/longo-dos-sonhos
+- https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve/liso-dos-sonhos
+- https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve/cachos-longos-dos-sonhos
+- https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve/collagen-lifter
+- https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve/pure-hialuronico
+- https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve/arginina-resist
+- https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve/hydra-detox
+- https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve/hydra-detox-anti-caspa
+- https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve/quera-liso-mq-230-c
+- https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve/oleo-extraordinario-nutricao-intensa
+- https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve/oleo-extraordinario-cachos
+- https://www.loreal-paris.com.br/cuidados-com-o-cabelo/elseve/colorvive
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.loreal-paris.com.br/sitemap.xml
+  product_url_pattern: ^https://www\.loreal-paris\.com\.br/elseve/[\w-]+/[\w-]+
+  category_url_pattern: ^https://www\.loreal-paris\.com\.br/cuidados-com-o-cabelo/elseve/[\w-]+$
+  max_pages: 200
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: false
+  delay_seconds: 3
+  inci_selectors:
+  - .oap-collapsible__content .field-text p
+  - .oap-collapsible__content .rich-text p
+  - .oap-collapsible__content p
+  name_selectors:
+  - h1.oap-product-hero__title
+  - span.oap-product-hero__name
+  - h1
+  image_selectors:
+  - picture.oap-product-hero__image img
+  - picture.oap-product-hero__image source
+  - .oap-product-hero__image-wrapper img
+  price_selectors: []
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - "benef\xEDcios"
+      - detalhes
+      - sobre o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - "indica\xE7\xE3o"
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - ingredientes
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o"
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: portuguese_names
+  platform_detail: loreal_sitecore_vue3
+  inci_available: true
+  inci_note: "Ingredients are listed in Portuguese (not INCI nomenclature) under the 'Ingredientes' collapsible tab on product pages. Not all products have ingredients listed -- some show only a disclaimer. JSON-LD structured data is available with product name, image, description, and SKU/EAN."
+  parent_brand: "L'Or\xE9al Paris"
+  product_focus: haircare
+  hair_lines: "Bond Repair, Glycolic Gloss, Hidra Hialuronico, Reparacao Total 5, Oleo Extraordinario, Longo dos Sonhos, Liso dos Sonhos, Cachos Longos dos Sonhos, Collagen Lifter, Pure Hialuronico, Arginina Resist, Hydra Detox, Quera Liso MQ 230C, ColorVive"
+  waf: none
+  json_ld: true
+  estimated_products: 42
+version: 1

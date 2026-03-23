@@ -21,12 +21,7 @@ extraction:
   headless: false
   ssl_verify: true
   delay_seconds: 3
-  inci_selectors:
-  - ".vtex-store-components-3-x-productDescriptionText p"
-  - ".vtex-tab-layout-0-x-contentItem p"
-  - ".vtex-rich-text-0-x-paragraph"
-  - ".product-description p"
-  - ".productDescriptionContainer p"
+  inci_selectors: []
   name_selectors:
   - "h1 .vtex-store-components-3-x-productBrand"
   - h1
@@ -44,17 +39,19 @@ extraction:
   section_label_map:
     description:
       labels:
+      - "descri\xE7\xE3o do produto"
       - detalhes
       - sobre o produto
       - "descri\xE7\xE3o"
       - o produto
     care_usage:
       labels:
-      - como usar
       - modo de uso
+      - como usar
       - "modo de aplica\xE7\xE3o"
     composition:
       labels:
+      - ativos principais
       - "composi\xE7\xE3o"
       - "f\xF3rmula"
       - "princ\xEDpio ativo"
@@ -71,21 +68,25 @@ extraction:
       - no_marketing_verbs
     benefits:
       labels:
+      - "principais benef\xEDcios"
       - "a\xE7\xE3o / resultado"
       - "benef\xEDcios"
       - resultado
-  wait_for_selector: ".vtex-store-components-3-x-productDescriptionText"
+      - dica do expert
+  wait_for_selector: ".accordion-container"
   use_llm_fallback: true
 notes:
   ingredients_language: pt-BR
   ingredients_format: inci_standard
   platform_detail: vtex_io
-  inci_available: unknown
+  inci_available: false
   inci_note: >-
-    VTEX IO site. Product data is rendered client-side. INCI availability
-    needs to be confirmed during recon. The site has ~69 individual products
-    and ~98 kits. Some products may be makeup (palettes, eyeshadow) rather
-    than haircare -- these should be filtered out.
+    VTEX IO site with custom accordion sections. Product pages contain
+    description, ativos principais, beneficios, and modo de uso but NO
+    INCI ingredient lists. Confirmed 2026-03-22 across multiple product
+    types (shampoo, conditioner, leave-in, oil, powder). All products
+    will be catalog_only. The site has ~69 individual products and ~98 kits.
+    Some products may be makeup (palettes, eyeshadow) rather than haircare.
   product_focus: haircare
   waf: none
   requires_headed_browser: true

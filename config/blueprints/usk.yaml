@@ -1,0 +1,79 @@
+brand_slug: usk
+brand_name: USK
+platform: custom
+domain: usk.com.br
+allowed_domains:
+- usk.com.br
+entrypoints: []
+discovery:
+  strategy: manual
+  sitemap_urls: []
+  product_url_pattern: ""
+  max_pages: 50
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: false
+  ssl_verify: false
+  delay_seconds: 3
+  inci_selectors: []
+  name_selectors:
+  - h1
+  - .product-name
+  image_selectors:
+  - .product-image img
+  price_selectors:
+  - '[class*="price"]'
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+    care_usage:
+      labels:
+      - modo de usar
+      - como usar
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o"
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: false
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: unknown
+  platform_detail: iis_server_down
+  inci_available: false
+  inci_note: >-
+    USK (USK Under Skin) is a pharmaceutical/dermatological brand. Their main
+    hair product is Neosil (anti-hair-loss shampoo). The official site usk.com.br
+    runs on IIS and currently returns HTTP 403 Forbidden -- the site is
+    misconfigured or intentionally down. Products are sold exclusively through
+    drugstores and pharmacies (Droga Raia, Drogasil, Panvel, etc.).
+    No direct e-commerce site available for scraping. Brand status set to BLOCKED.
+  product_focus: pharmaceutical_haircare
+  parent_company: USK Under Skin Pharmaceuticals
+  waf: none
+  status: blocked
+  blocked_reason: >-
+    No functioning e-commerce website. usk.com.br returns 403 (IIS default page).
+    SSL connection also fails on port 443. Products only available through
+    third-party pharmacies and marketplaces.
+  known_products:
+  - Neosil Shampoo Antiqueda 200ml
+  - Neosil Attack
+  - Neosil Collagen
+version: 1

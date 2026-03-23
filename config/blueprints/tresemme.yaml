@@ -1,0 +1,94 @@
+brand_slug: tresemme
+brand_name: "TRESemm\xE9"
+platform: custom
+domain: www.tresemme.com
+allowed_domains:
+- www.tresemme.com
+entrypoints:
+- https://www.tresemme.com/br/produtos/shampoo.html
+- https://www.tresemme.com/br/produtos/condicionador.html
+- https://www.tresemme.com/br/produtos/creme-de-tratamento.html
+- https://www.tresemme.com/br/produtos/leave-in-conditioner.html
+discovery:
+  strategy: entrypoint_crawl
+  sitemap_urls:
+  - https://www.tresemme.com/br/sitemap.xml
+  product_url_pattern: ^https://www\.tresemme\.com/br/p/[\w%.-]+\.html/\d+$
+  max_pages: 100
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: false
+  delay_seconds: 3
+  http_client: curl_cffi
+  curl_cffi_impersonate: chrome
+  json_ld:
+    enabled: true
+    type: Product
+    field_map:
+      name: name
+      description: description
+      image: image.url.@id
+      gtin: gtin
+      sku: sku
+      brand: brand.name
+      category: category
+      ingredients: ingredients
+  inci_selectors:
+  - .cmp-accordion__panel p
+  - .cmp-accordion__panel
+  name_selectors:
+  - h1
+  - .product-title
+  - meta[property="og:title"]
+  image_selectors:
+  - img[src*="unileversolutions.com"]
+  - img[src*="assets.unileversolutions"]
+  - meta[property="og:image"]
+  price_selectors: []
+  section_label_map:
+    description:
+      labels:
+      - detalhes do produto
+      - "descri\xE7\xE3o"
+      - sobre o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+    composition:
+      labels:
+      - como funciona
+      - "f\xF3rmula"
+      - principais ativos
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o"
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: false
+notes:
+  ingredients_language: INCI
+  ingredients_format: standard_inci
+  platform_detail: unilever_aem_adobe_experience_manager
+  inci_available: true
+  inci_note: "Full INCI lists available on every product page via JSON-LD structured data (schema.org Product.ingredients) and in accordion section 'Ingredientes'. Standard INCI nomenclature. ~32 hair products across shampoo, conditioner, treatment masks, and styling."
+  parent_brand: "Unilever"
+  product_focus: haircare
+  hair_lines: "Blindagem Antiumidade, Brilho Lamelar, Cachos Definidos, Detox Capilar, Hidrata\xE7\xE3o Profunda, Reconstru\xE7\xE3o e For\xE7a, Tresplex Regenera\xE7\xE3o, Ultra Violeta Matizador, Frizz Resistance"
+  waf: akamai
+  waf_note: "Site blocked by Akamai WAF. Standard curl/requests fail. Requires curl_cffi with impersonate='chrome'. Domain tresemme.com.br redirects/blocks; use tresemme.com/br/ path instead."
+  product_count_estimate: 32
+  url_format: "/br/p/{product-slug}.html/{ean-code}"
+  sitemap_note: "Sitemap at /br/sitemap.xml only contains category pages, not individual products. Discovery must crawl entrypoint category pages to find /br/p/ product links."
+version: 1

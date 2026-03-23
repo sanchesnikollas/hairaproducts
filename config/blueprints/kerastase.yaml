@@ -1,37 +1,43 @@
 brand_slug: kerastase
 brand_name: Kérastase
-platform: custom
+platform: custom  # Salesforce Commerce Cloud (Demandware) + Cloudflare WAF
 domain: www.kerastase.com.br
 allowed_domains:
 - www.kerastase.com.br
 entrypoints:
 - https://www.kerastase.com.br/colecoes-linhas/?insertMode=true&start=0&sz=24
+- https://www.kerastase.com.br/produtos/colecoes/
 discovery:
-  strategy: sitemap_first
-  sitemap_urls:
-  - https://www.kerastase.com.br/sitemap.xml
-  product_url_pattern: null
+  strategy: dom_crawl  # Sitemap blocked by Cloudflare, use DOM crawling instead
+  sitemap_urls: []
+  product_url_pattern: '/produtos/.*\\.html$'
   max_pages: 500
   pagination:
     type: scroll
     max_pages: 10
 extraction:
+  requires_js: true
+  # IMPORTANT: Must run with --no-headless (Cloudflare blocks headless browsers)
   inci_selectors:
+  - .c-product-detail__ingredients p
   - .product-ingredients p
   - .product-ingredients
   - '#ingredientes p'
   - '#composicao p'
   - '[data-tab=''ingredientes''] p'
-  - .product-description p
   name_selectors:
+  - h1.c-product-main__name
   - h1.product-name
   - h1
-  - .product-title
-  - .product-name
   image_selectors:
+  - .c-product-main__image img
   - .product-image img
   - img.product-img
-  - .gallery img
-  wait_for_selector: null
+  wait_for_selector: h1.c-product-main__name
   use_llm_fallback: true
-version: 1
+notes: |
+  Kerastase.com.br uses Cloudflare WAF that blocks headless browsers.
+  Must scrape with: haira scrape --brand kerastase --no-headless
+  The site is Salesforce Commerce Cloud (Demandware). No Product JSON-LD available.
+  Product name lives in h1.c-product-main__name. og:image available as fallback.
+version: 2

@@ -1,0 +1,75 @@
+brand_slug: clear
+brand_name: Clear
+platform: custom
+domain: www.clear.com.br
+allowed_domains:
+- www.clear.com.br
+entrypoints:
+- https://www.clear.com.br/produtos.html
+discovery:
+  strategy: entrypoint_crawl
+  sitemap_urls: []
+  product_url_pattern: ^https://www\.clear\.com\.br/.*\.html$
+  max_pages: 100
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: true
+  headless: true
+  use_curl_cffi: true
+  delay_seconds: 5
+  inci_selectors:
+  - .ingredients-list
+  - .ingredients p
+  - '[class*="ingredient"]'
+  - .product-description p
+  name_selectors:
+  - h1
+  - .product-name
+  - .product-title
+  - '[class*="productName"]'
+  image_selectors:
+  - .product-image img
+  - img[src*="clear"]
+  - meta[property="og:image"]
+  price_selectors: []
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o"
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: unknown
+  ingredients_format: unknown
+  platform_detail: unilever_custom_cms
+  inci_available: unknown
+  inci_note: "Clear BR (Unilever) is behind a strict Akamai WAF that blocks all non-browser requests with 403. Requires curl_cffi with browser impersonation or Playwright with stealth. Site structure could not be analyzed via httpx/curl. Manual browser inspection needed before scrape."
+  parent_brand: Unilever
+  product_focus: anti_dandruff_haircare
+  hair_lines: "Limpeza Profunda, Anticaspa, Detox, Men"
+  waf: akamai_strict
+version: 1

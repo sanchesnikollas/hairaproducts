@@ -1,0 +1,110 @@
+brand_slug: dove
+brand_name: Dove
+platform: custom
+domain: www.dove.com
+allowed_domains:
+- www.dove.com
+entrypoints:
+- https://www.dove.com/br/cuidado-para-os-cabelos.html
+- https://www.dove.com/br/cuidado-para-os-cabelos/shampoo.html
+- https://www.dove.com/br/cuidado-para-os-cabelos/Condicionador.html
+- https://www.dove.com/br/cuidado-para-os-cabelos/creme-de-tratamento.html
+- https://www.dove.com/br/cuidado-para-os-cabelos/tratamento-para-cabelos-secos.html
+- https://www.dove.com/br/cuidado-para-os-cabelos/tratamento-para-cabelos-danificados.html
+- https://www.dove.com/br/cuidado-para-os-cabelos/tratamento-para-queda-de-cabelo.html
+- https://www.dove.com/br/cuidado-para-os-cabelos/super-condicionadores.html
+- https://www.dove.com/br/cuidado-para-os-cabelos/real-textures.html
+- https://www.dove.com/br/men-care/cuidado-para-os-cabelos/shampoo.html
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.dove.com/br/sitemap.xml
+  product_url_pattern: ^https://www\.dove\.com/br/p/.*\.html/\d+
+  category_url_pattern: ^https://www\.dove\.com/br/cuidado-para-os-cabelos/
+  max_pages: 200
+  pagination:
+    type: none
+    max_pages: 1
+  link_selector: a[href*="/br/p/"]
+extraction:
+  requires_js: false
+  http_client: curl_cffi
+  headless: false
+  delay_seconds: 3
+  use_curl_cffi: true
+  curl_cffi_impersonate: chrome
+  json_ld: true
+  inci_selectors:
+  - .cmp-product-nutrients .product-info-item__item pre
+  - .cmp-product-nutrients pre
+  - .cmp-accordion__panel .product-info-item__item pre
+  name_selectors:
+  - h1.product-info-item__item
+  - h1
+  - .cmp-product-nutrients h1
+  image_selectors:
+  - .productmediagallery-root-item.active .cmp-image img
+  - .cmp-productmediagallery .cmp-image img
+  - img[src*="unileversolutions"]
+  - .product-media-gallary img
+  price_selectors: []
+  description_selectors:
+  - .cmp-product-nutrients .product-info-item__item
+  - '[data-productinfo-value] pre'
+  section_label_map:
+    description:
+      labels:
+      - sobre o produto
+      - detalhes
+      - "descri\xE7\xE3o"
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - ingredientes
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o"
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - perfeito para
+      - "benef\xEDcios"
+  wait_for_selector: null
+  use_llm_fallback: true
+  product_variant_data:
+    enabled: true
+    selector: '[data-productvariants]'
+    attribute: data-productvariants
+    fields:
+      name: retailerproductdata.retailer1VOTEcommerceTitle
+      description: retailerproductdata.retailerProductDescription
+      how_to_use: retailerproductdata.retailerHowToUseDescription
+      size: retailerproductdata.retailerSize
+      category: retailerproductdata.retailerCategory
+      subcategory: retailerproductdata.retailerSubCategory
+      ean: gtin
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: inci_or_portuguese
+  platform_detail: unilever_aem_cms
+  inci_available: false
+  inci_note: >-
+    INCI ingredient lists are NOT currently populated on Dove BR product pages.
+    The HTML template includes placeholders for retailerIngredientStatement and
+    ingredientStatement fields, but the data is empty across all products tested.
+    Products will likely be catalog_only status until INCI data becomes available.
+    The site uses Akamai WAF — requires curl_cffi with browser impersonation.
+  parent_brand: Unilever
+  product_focus: haircare
+  hair_lines: "Bond Intense Repair, Hidratacao Hialuron+Vit, Nutricao Tri-Oleos, Umectacao Coco Antioxi, Reconstrucao+Aminoacido, Cachos Ativos Biotina, UV Repair Glow Ferulico, Real Textures, Men+Care"
+  waf: akamai
+  estimated_hair_products: 49
+version: 1

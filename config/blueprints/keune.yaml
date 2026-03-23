@@ -1,0 +1,81 @@
+brand_slug: keune
+brand_name: Keune
+platform: vnda
+domain: www.keune.com.br
+allowed_domains:
+- www.keune.com.br
+entrypoints:
+- https://www.keune.com.br/nossas-marcas-keune
+- https://www.keune.com.br/linha-so-pure
+- https://www.keune.com.br/linha-1922
+- https://www.keune.com.br/linha-coloracao
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.keune.com.br/sitemap.xml
+  product_url_pattern: ^https://www\.keune\.com\.br/produto/[\w%-]+-\d+$
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: false
+  delay_seconds: 3
+  inci_selectors:
+  - .ingredients p
+  - .ingredients
+  - .product-description p
+  name_selectors:
+  - h1.product-name
+  - h1
+  - .product-name
+  image_selectors:
+  - img[src*="cdn.vnda.com.br"]
+  - .product-images img
+  - .image img
+  price_selectors:
+  - .wrapper-price
+  - '[class*="price"]'
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o"
+      - a formula contem
+      - "a f\xF3rmula cont\xE9m"
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+      - ingredientes ativos
+  wait_for_selector: null
+  use_llm_fallback: true
+notes:
+  ingredients_language: INCI
+  ingredients_format: inci_standard
+  platform_detail: vnda_ecommerce
+  inci_available: true
+  inci_note: "INCI lists are published on product pages inside .ingredients div, under 'A formula contem:' heading. Content is server-side rendered. httpx mode works. Cloudflare WAF present but permissive for bots."
+  parent_brand: Keune Haircosmetics (Netherlands, founded 1922)
+  product_focus: professional_haircare
+  hair_lines: "Care, So Pure, 1922 by J.M. Keune, Style, Color, Blend"
+  waf: cloudflare
+version: 1

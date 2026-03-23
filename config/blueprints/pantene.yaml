@@ -1,0 +1,93 @@
+brand_slug: pantene
+brand_name: Pantene
+platform: custom
+domain: pantene.com.br
+allowed_domains:
+- pantene.com.br
+- www.pantene.com.br
+entrypoints:
+- https://pantene.com.br/pt-br/produtos
+- https://pantene.com.br/pt-br/produtos/shampoo
+- https://pantene.com.br/pt-br/produtos/condicionador
+- https://pantene.com.br/pt-br/produtos/creme-para-pentear
+- https://pantene.com.br/pt-br/produtos/tratamentos
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://pantene.com.br/pt-br/sitemap.xml
+  product_url_pattern: ^https://pantene\.com\.br/pt-br/produtos/(shampoo|condicionador|creme-para-pentear|tratamentos)/[\w%-]+(/[\w%-]+)?$
+  max_pages: 200
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: true
+  headless: true
+  delay_seconds: 3
+  inci_selectors:
+  - .ingredients-table
+  - '[class*="ingredient"]'
+  - .product-ingredients
+  name_selectors:
+  - h1
+  - h1 p
+  - '[id="topHeaderTextBig"]'
+  - '[id="topHeaderTextBig"] p'
+  image_selectors:
+  - img[src*="ctfassets.net"]
+  - img[src*="images.ctfassets.net"]
+  - .product-image img
+  price_selectors:
+  - '[class*="price"]'
+  - '[class*="Price"]'
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o"
+      - "composi\xE7\xE3o completa"
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: h1
+  use_llm_fallback: true
+notes:
+  ingredients_language: bilingual
+  ingredients_format: inci_parenthesized_portuguese
+  platform_detail: nextjs_contentful_cms
+  inci_available: true
+  inci_note: >-
+    INCI lists are available in the __NEXT_DATA__ JSON payload under
+    "allIngredients" field. Format is bilingual with INCI name followed by
+    Portuguese translation in parentheses, e.g. "Aqua (Agua), Sodium Laureth
+    Sulfate (Lauriletersulfato De Sodio)". Content is JS-rendered (Next.js with
+    Contentful CMS). Requires Playwright headless browser for extraction.
+    Ingredients section renders client-side under an "Ingredientes" tab.
+    The site redirects www.pantene.com.br to pantene.com.br (no www).
+  parent_brand: "Procter & Gamble (P&G)"
+  product_focus: haircare
+  hair_lines: >-
+    Colageno Hidrata e Resgata, Queratina Preenche e Blinda, Bond Repair,
+    Cachos Hidra-Vitaminados, Liso Extremo, Brilho Extremo, Restauracao,
+    Hidratacao, Hidro-Cauterizacao, Nutre e Cresce, Biotinamina Antiqueda,
+    Equilibrio Raiz e Pontas
+  waf: none
+version: 1

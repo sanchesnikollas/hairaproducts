@@ -1,0 +1,86 @@
+brand_slug: head-and-shoulders
+brand_name: Head and Shoulders
+platform: custom
+domain: www.headandshoulders.com.br
+allowed_domains:
+- www.headandshoulders.com.br
+entrypoints:
+- https://www.headandshoulders.com.br/pt-br/produtos-para-cabelo
+- https://www.headandshoulders.com.br/pt-br/produtos-para-cabelo/shampoos
+discovery:
+  strategy: entrypoint_crawl
+  sitemap_urls: []
+  product_url_pattern: ^https://www\.headandshoulders\.com\.br/pt-br/produtos-para-cabelo/shampoos/[\w%-]+$
+  max_pages: 100
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: false
+  delay_seconds: 3
+  inci_selectors: []
+  name_selectors:
+  - .styles_title__HWWnX
+  - .title
+  - h1
+  image_selectors:
+  - .styles_selectedImageDesktop__ZDuVN img
+  - .styles_images__D_v35 img
+  - img[src*="ctfassets.net"]
+  - meta[property="og:image"]
+  price_selectors: []
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: null
+  use_llm_fallback: true
+  custom_extraction:
+    method: next_data_json
+    ingredients_path: props.pageProps.content.product.ingredients
+    name_path: props.pageProps.content.product.name
+    image_path: props.pageProps.content.product.image.fields.file.url
+notes:
+  ingredients_language: INCI_with_portuguese
+  ingredients_format: inci_bilingual
+  platform_detail: nextjs_contentful_cms
+  inci_available: true
+  inci_note: "Head & Shoulders BR (P&G) uses Next.js with Contentful CMS. Product data including full INCI ingredient lists is embedded in __NEXT_DATA__ JSON on each product page. Ingredients are bilingual format: 'INCI NAME (Portuguese name)'. No sitemap.xml available - product URLs must be crawled from category pages. Server-side rendered, httpx works."
+  parent_brand: Procter & Gamble
+  product_focus: anti_dandruff_haircare
+  hair_lines: "Limpeza Eficaz, Menthol Refrescante, Anti-coceira, Hidratacao, Old Spice, Protecao contra Queda, Crescimento Forte"
+  waf: azure_front_door
+  product_urls_known:
+  - https://www.headandshoulders.com.br/pt-br/produtos-para-cabelo/shampoos/shampoo-limpeza-eficaz
+  - https://www.headandshoulders.com.br/pt-br/produtos-para-cabelo/shampoos/shampoo-anti-coceira
+  - https://www.headandshoulders.com.br/pt-br/produtos-para-cabelo/shampoos/shampoo-crescimento-forte-desde-a-raiz
+  - https://www.headandshoulders.com.br/pt-br/produtos-para-cabelo/shampoos/shampoo-hidratacao-instantanea
+  - https://www.headandshoulders.com.br/pt-br/produtos-para-cabelo/shampoos/shampoo-limpeza-eficaz
+  - https://www.headandshoulders.com.br/pt-br/produtos-para-cabelo/shampoos/shampoo-menthol-refrescante-limpeza-total
+  - https://www.headandshoulders.com.br/pt-br/produtos-para-cabelo/shampoos/shampoo-para-homens-3-em-1-contra-a-caspa
+  - https://www.headandshoulders.com.br/pt-br/produtos-para-cabelo/shampoos/shampoo-para-homens-old-spice
+  - https://www.headandshoulders.com.br/pt-br/produtos-para-cabelo/shampoos/shampoo-para-homens-protecao-contra-a-queda
+  - https://www.headandshoulders.com.br/pt-br/produtos-para-cabelo/shampoos/shampoo-remocao-da-oleosidade-no-cabelo
+version: 1

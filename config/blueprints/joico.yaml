@@ -1,0 +1,81 @@
+brand_slug: joico
+brand_name: Joico
+platform: wake
+domain: www.joico.com.br
+allowed_domains:
+- www.joico.com.br
+entrypoints:
+- https://www.joico.com.br/shampoo
+- https://www.joico.com.br/condicionador
+- https://www.joico.com.br/tratamento
+- https://www.joico.com.br/finalizador
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.joico.com.br/sitemap.xml
+  product_url_pattern: ^https://www\.joico\.com\.br/produto/[\w%-]+-\d+$
+  max_pages: 200
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: true
+  headless: true
+  delay_seconds: 3
+  inci_selectors:
+  - .conteudoAbasProduto p
+  - .descricao__produto p
+  - .description-content p
+  - '#description-box p'
+  name_selectors:
+  - h1.fbits-produto-nome
+  - .fbits-produto-nome
+  - h1.prodTitle
+  - h1
+  image_selectors:
+  - .fbits-componente-imagem img
+  - .fbits-produto-imagensMinicarrossel img
+  - meta[property="og:image"]
+  price_selectors:
+  - .fbits-preco
+  - '[class*="preco"]'
+  - '[class*="price"]'
+  section_label_map:
+    description:
+      labels:
+      - "descri\xE7\xE3o"
+      - detalhes
+      - sobre o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+    composition:
+      labels:
+      - "composi\xE7\xE3o"
+      - "f\xF3rmula"
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - "composi\xE7\xE3o"
+      validators:
+      - has_separators
+      - min_length_30
+    benefits:
+      labels:
+      - "benef\xEDcios"
+      - resultado
+  wait_for_selector: .fbits-produto-nome
+  use_llm_fallback: true
+notes:
+  ingredients_language: unknown
+  ingredients_format: unknown
+  platform_detail: wake_commerce_tray
+  inci_available: unknown
+  inci_note: "Joico BR runs on Wake Commerce (formerly Tray Corp / Fbits). Product pages use JS-rendered tabs (.conteudoAbasProduto). INCI availability not confirmed from initial scrape - may need LLM fallback. Requires Playwright for tab rendering."
+  parent_brand: Henkel (Joico is a US professional haircare brand)
+  product_focus: professional_haircare
+  hair_lines: "K-PAK, Blonde Life, Defy Damage, Moisture Recovery, Hydra Splash, Color Balance, JoiFull, InnerJoi, YouthLock"
+  waf: azion_edge
+version: 1
