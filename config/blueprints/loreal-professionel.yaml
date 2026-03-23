@@ -20,7 +20,7 @@ discovery:
     type: none
     max_pages: 1
 extraction:
-  requires_js: false
+  requires_js: true
   headless: true
   delay_seconds: 3
   inci_selectors: []

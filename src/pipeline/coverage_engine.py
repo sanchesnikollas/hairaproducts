@@ -51,12 +51,12 @@ class CoverageEngine:
             url_type = classify_url(url, product_url_pattern=product_url_pattern)
             if url_type == URLType.KIT:
                 report.kits_total += 1
+                hair_urls.append(url)  # Extract kits too
             elif url_type == URLType.NON_HAIR:
                 report.non_hair_total += 1
             elif url_type in (URLType.PRODUCT, URLType.CATEGORY):
                 report.hair_total += 1
-                if url_type == URLType.PRODUCT:
-                    hair_urls.append(url)
+                hair_urls.append(url)  # Extract both products and categories
             else:
                 report.non_hair_total += 1
 
