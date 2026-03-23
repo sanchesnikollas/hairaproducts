@@ -68,7 +68,7 @@ extraction:
       labels:
       - "benef\xEDcios"
       - resultado
-  wait_for_selector: null
+  wait_for_selector: "button[data-state]"
   use_llm_fallback: true
 notes:
   ingredients_language: pt-BR

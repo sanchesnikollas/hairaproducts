@@ -150,7 +150,10 @@ class BrowserClient:
                 "[class*='accordion'] [class*='header']",
                 "[class*='collapse'] [class*='trigger']",
                 "button[aria-expanded='false']",
+                "button[data-state='closed']",
+                "details:not([open]) > summary",
             ]
+            clicked_any = False
             for selector in accordion_selectors:
                 elements = self._page.query_selector_all(selector)
                 if elements:
@@ -158,11 +161,11 @@ class BrowserClient:
                         try:
                             el.click()
                             self._page.wait_for_timeout(200)
+                            clicked_any = True
                         except Exception:
                             pass
-                    if elements:
-                        self._page.wait_for_timeout(500)
-                        break
+            if clicked_any:
+                self._page.wait_for_timeout(500)
         except Exception as e:
             logger.debug(f"Accordion expansion failed: {e}")
 

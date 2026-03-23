@@ -161,8 +161,10 @@ class CoverageEngine:
             logger.debug(f"No browser, skipping {url}")
             return None
 
-        wait_for = (blueprint_config or {}).get("extraction", {}).get("wait_for_selector")
-        expand = bool(wait_for)  # If there's a wait_for_selector, likely needs accordion expansion
+        extraction_cfg = (blueprint_config or {}).get("extraction", {})
+        wait_for = extraction_cfg.get("wait_for_selector")
+        requires_js = extraction_cfg.get("requires_js", False)
+        expand = bool(wait_for) or requires_js  # Expand accordions for JS-rendered pages
         try:
             html = self._browser.fetch_page(url, wait_for=wait_for, expand_accordions=expand)
         except Exception as e:

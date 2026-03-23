@@ -43,6 +43,7 @@ extraction:
       - o produto
     care_usage:
       labels:
+      - dicas de uso
       - como usar
       - modo de uso
       - "conselho de aplicação"
@@ -60,6 +61,7 @@ extraction:
       - min_length_30
     benefits:
       labels:
+      - resultados
       - "ação / resultado"
       - "benefícios"
       - resultado

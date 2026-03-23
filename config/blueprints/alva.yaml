@@ -16,8 +16,8 @@ discovery:
     type: none
     max_pages: 1
 extraction:
-  requires_js: false
-  headless: false
+  requires_js: true
+  headless: true
   ssl_verify: true
   delay_seconds: 3
   inci_selectors: []
@@ -33,6 +33,7 @@ extraction:
   section_label_map:
     description:
       labels:
+      - "o que voc\xEA precisa saber"
       - sobre o produto
       - detalhes
       - porque comprar

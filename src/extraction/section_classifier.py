@@ -305,4 +305,119 @@ def extract_sections_from_html(
 
             break
 
+    # Strategy 3: Web-component panels (e.g., L'Occitane's <o-side-panel headertitle="...">)
+    # Some sites use custom elements with a headertitle attribute as labeled content panels.
+    for panel in soup.find_all(attrs={"headertitle": True}):
+        panel_title = panel.get("headertitle", "")
+        if not panel_title:
+            continue
+        panel_normalized = _normalize_label(panel_title)
+
+        for norm_label, taxonomy_field, original_label, validators in label_lookup:
+            if not panel_normalized.startswith(norm_label):
+                continue
+
+            content = panel.get_text(strip=True)
+            if not content:
+                break
+
+            actual_field = taxonomy_field
+
+            if taxonomy_field == "ingredients_inci":
+                if validate_inci_content(content):
+                    actual_field = "ingredients_inci"
+                else:
+                    actual_field = "composition"
+
+            if taxonomy_field == "composition" and validate_inci_content(content):
+                actual_field = "ingredients_inci"
+
+            section = PageSection(
+                label=norm_label,
+                content=content,
+                selector=f"[headertitle]:{panel_title}",
+                element_tag=panel.name,
+                taxonomy_field=actual_field,
+                source_section_label=panel_title,
+            )
+            result.sections.append(section)
+
+            if actual_field == "description" and result.description is None:
+                result.description = content
+            elif actual_field == "care_usage" and result.care_usage is None:
+                result.care_usage = content
+            elif actual_field == "composition" and result.composition is None:
+                result.composition = content
+            elif actual_field == "ingredients_inci" and result.ingredients_inci_raw is None:
+                result.ingredients_inci_raw = content
+
+            break
+
+    # Strategy 4: FAQ / Q&A containers (e.g., Alva Shopify FAQ accordion)
+    # Structure: container div > header div (with label) + content div (with text)
+    # Matches patterns like: div.question-container > div.question-header + div.question-text
+    faq_header_patterns = re.compile(
+        r"question.*(header|title)|faq.*(header|title|label)|accordion.*(header|title)",
+        re.IGNORECASE,
+    )
+    faq_content_patterns = re.compile(
+        r"question.*(text|content|body|answer)|faq.*(text|content|body|answer)|accordion.*(text|content|body|panel)",
+        re.IGNORECASE,
+    )
+    for header_div in soup.find_all("div", class_=faq_header_patterns):
+        label_text = header_div.get_text(strip=True)
+        if not label_text or len(label_text) > 80:
+            continue
+        label_normalized = _normalize_label(label_text)
+
+        for norm_label, taxonomy_field, original_label, validators in label_lookup:
+            if not label_normalized.startswith(norm_label):
+                continue
+
+            # Find sibling content div
+            content_div = header_div.find_next_sibling("div", class_=faq_content_patterns)
+            if not content_div:
+                # Also check parent's next sibling (if header is inside a wrapper)
+                parent = header_div.parent
+                if parent:
+                    content_div = parent.find("div", class_=faq_content_patterns)
+            if not content_div:
+                break
+
+            content = content_div.get_text(strip=True)
+            if not content:
+                break
+
+            actual_field = taxonomy_field
+
+            if taxonomy_field == "ingredients_inci":
+                if validate_inci_content(content):
+                    actual_field = "ingredients_inci"
+                else:
+                    actual_field = "composition"
+
+            if taxonomy_field == "composition" and validate_inci_content(content):
+                actual_field = "ingredients_inci"
+
+            section = PageSection(
+                label=norm_label,
+                content=content,
+                selector=f"faq:{label_text}",
+                element_tag="div",
+                taxonomy_field=actual_field,
+                source_section_label=label_text,
+            )
+            result.sections.append(section)
+
+            if actual_field == "description" and result.description is None:
+                result.description = content
+            elif actual_field == "care_usage" and result.care_usage is None:
+                result.care_usage = content
+            elif actual_field == "composition" and result.composition is None:
+                result.composition = content
+            elif actual_field == "ingredients_inci" and result.ingredients_inci_raw is None:
+                result.ingredients_inci_raw = content
+
+            break
+
     return result

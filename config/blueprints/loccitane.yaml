@@ -47,6 +47,7 @@ extraction:
       - o produto
     care_usage:
       labels:
+      - "dicas de aplica\xE7\xE3o"
       - como usar
       - modo de uso
       - "conselho de aplica\xE7\xE3o"
