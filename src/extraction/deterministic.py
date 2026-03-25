@@ -202,6 +202,35 @@ def _extract_inci_by_tab_labels(soup) -> tuple[str | None, str | None]:
                             candidates.append((content, f".{cls}", priority))
                         break
 
+    # Strategy 3: <details>/<summary> pattern
+    for details in soup.find_all("details"):
+        summary = details.find("summary")
+        if summary:
+            summary_text = summary.get_text(strip=True).lower()
+            for label in INCI_TAB_LABELS:
+                if label in summary_text:
+                    priority = _label_priority(label)
+                    content_parts = []
+                    for child in details.children:
+                        if child != summary and hasattr(child, "get_text"):
+                            content_parts.append(child.get_text(strip=True))
+                    content = " ".join(content_parts).strip()
+                    if content and len(content) >= 30:
+                        candidates.append((content, f"details_summary:{label}", priority))
+                    break
+
+    # Strategy 4: data-* attribute patterns
+    for attr in ["data-tab", "data-content", "data-accordion", "data-panel"]:
+        for el in soup.find_all(attrs={attr: True}):
+            attr_val = el.get(attr, "").lower()
+            for label in INCI_TAB_LABELS:
+                if label in attr_val:
+                    priority = _label_priority(label)
+                    content = el.get_text(strip=True)
+                    if content and len(content) >= 30:
+                        candidates.append((content, f"data_attr:{attr}:{label}", priority))
+                    break
+
     if not candidates:
         return None, None
 

@@ -343,3 +343,27 @@ class TestInciSource:
         """
         result = extract_product_deterministic(html, "https://example.com/p/test")
         assert result["image_url_main"] == "https://cdn.example.com/product.jpg"
+
+
+def test_details_summary_inci_extraction():
+    """INCI inside <details>/<summary> should be extracted."""
+    html = """<html><body>
+    <details>
+        <summary>Ingredientes</summary>
+        <p>Aqua, Sodium Laureth Sulfate, Cocamidopropyl Betaine, Glycerin, Parfum</p>
+    </details>
+    </body></html>"""
+    result = extract_product_deterministic(html, "https://example.com/product")
+    assert result.get("inci_raw") is not None
+    assert "Aqua" in result["inci_raw"]
+
+
+def test_data_attribute_tab_inci_extraction():
+    """INCI inside data-attribute tab content should be extracted."""
+    html = """<html><body>
+    <div data-tab="ingredientes">
+        <p>Aqua, Sodium Laureth Sulfate, Cocamidopropyl Betaine, Glycerin, Parfum</p>
+    </div>
+    </body></html>"""
+    result = extract_product_deterministic(html, "https://example.com/product")
+    assert result.get("inci_raw") is not None
