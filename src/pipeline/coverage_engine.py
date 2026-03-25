@@ -67,7 +67,10 @@ class CoverageEngine:
                 if not product_data:
                     continue
 
-                qa_result = run_product_qa(product_data, allowed_domains)
+                qa_result = run_product_qa(
+                    product_data, allowed_domains,
+                    has_section_context=getattr(product_data, "has_section_context", False),
+                )
                 product_id = self._repo.upsert_product(product_data, qa_result)
                 report.extracted_total += 1
 
@@ -201,8 +204,11 @@ class CoverageEngine:
         extraction_method = det_result.get("extraction_method")
         description = det_result.get("description")
 
+        inci_source = det_result.get("inci_source")
+        has_section_context = inci_source in ("section_classifier", "tab_label_heuristic")
+
         if inci_raw:
-            inci_result = extract_and_validate_inci(inci_raw)
+            inci_result = extract_and_validate_inci(inci_raw, has_section_context=has_section_context)
             if inci_result.valid:
                 inci_list = inci_result.cleaned
                 confidence = 0.90
@@ -249,5 +255,6 @@ class CoverageEngine:
             currency=det_result.get("currency"),
             confidence=confidence,
             extraction_method=extraction_method,
+            has_section_context=has_section_context,
             evidence=det_result.get("evidence", []),
         )

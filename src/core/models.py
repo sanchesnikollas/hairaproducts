@@ -89,6 +89,7 @@ class ProductExtraction(BaseModel):
     variants: Optional[list[dict]] = None
     confidence: float = 0.0
     extraction_method: Optional[str] = None
+    has_section_context: bool = False
     evidence: list[Evidence] = Field(default_factory=list)
     extracted_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 

@@ -106,3 +106,43 @@ class TestVerifiedInciQA:
         )
         result = run_product_qa(product, VALID_DOMAINS)
         assert result.status == QAStatus.QUARANTINED
+
+
+class TestSectionContext:
+    def test_3_ingredient_product_passes_with_section_context(self):
+        """Product with 3 INCI ingredients should pass QA when has_section_context=True."""
+        product = ProductExtraction(
+            brand_slug="test",
+            product_name="Test Shampoo",
+            product_url="https://www.amend.com.br/test",
+            image_url_main="https://www.amend.com.br/img/test.jpg",
+            hair_relevance_reason="shampoo in name",
+            inci_ingredients=["Aqua", "Sodium Laureth Sulfate", "Glycerin"],
+            confidence=0.90,
+            extraction_method="deterministic",
+        )
+        result = run_product_qa(
+            product,
+            allowed_domains=VALID_DOMAINS,
+            has_section_context=True,
+        )
+        assert result.status.value == "verified_inci"
+
+    def test_3_ingredient_product_fails_without_section_context(self):
+        """Product with 3 INCI ingredients should fail QA without section context."""
+        product = ProductExtraction(
+            brand_slug="test",
+            product_name="Test Shampoo",
+            product_url="https://www.amend.com.br/test",
+            image_url_main="https://www.amend.com.br/img/test.jpg",
+            hair_relevance_reason="shampoo in name",
+            inci_ingredients=["Aqua", "Sodium Laureth Sulfate", "Glycerin"],
+            confidence=0.90,
+            extraction_method="deterministic",
+        )
+        result = run_product_qa(
+            product,
+            allowed_domains=VALID_DOMAINS,
+            has_section_context=False,
+        )
+        assert result.status.value == "quarantined"

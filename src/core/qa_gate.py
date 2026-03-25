@@ -34,6 +34,7 @@ def run_product_qa(
     product: ProductExtraction,
     allowed_domains: list[str],
     config: QAConfig | None = None,
+    has_section_context: bool = False,
 ) -> QAResult:
     if config is None:
         config = QAConfig()
@@ -86,7 +87,7 @@ def run_product_qa(
         )
 
     # Full INCI checks
-    inci_result = validate_inci_list(product.inci_ingredients)
+    inci_result = validate_inci_list(product.inci_ingredients, has_section_context=has_section_context)
     if not inci_result.valid:
         failed.append(f"inci_invalid:{inci_result.rejection_reason}")
         return QAResult(
