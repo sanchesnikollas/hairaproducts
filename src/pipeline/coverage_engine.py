@@ -135,15 +135,21 @@ class CoverageEngine:
             tag.decompose()
         page_text = soup.get_text(separator="\n", strip=True)
 
-        prompt = (
-            "Extract the following fields from this hair product page.\n"
-            f"Product: {product_name}\n\n"
-            "Return JSON with these fields:\n"
-            "- inci_ingredients: list of individual INCI ingredient names (strings), or null if not found\n"
-            "- description: product description text, or null if not found\n\n"
-            "IMPORTANT: Only extract INCI ingredients if you find a complete ingredient list "
-            "(typically starting with 'Aqua' or 'Water'). Do NOT guess or infer ingredients."
-        )
+        prompt = f"""Extract product data from this page text.
+
+Return JSON with:
+- "inci_ingredients": list of ingredients (ONLY if you find a complete ingredient list)
+- "description": product description string
+- "separator": the separator character used between ingredients (e.g. ",", ";", "/")
+
+Rules:
+- Accept ingredient names in Portuguese (e.g. "sulfato de sodio laurete") as well as standard INCI names
+- Ignore marketing text, usage instructions, and benefits — only extract the actual ingredient list
+- Do NOT guess or infer ingredients. Only extract what is explicitly listed.
+- A complete list typically starts with "Aqua" or "Water" and contains 5+ ingredients
+
+Product: {product_name}
+"""
         result = self._llm_client.extract_structured(page_text=page_text, prompt=prompt, max_tokens=2048)
         if result and (result.get("inci_ingredients") or result.get("description")):
             return result
