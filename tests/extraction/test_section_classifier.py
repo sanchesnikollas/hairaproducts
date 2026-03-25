@@ -172,3 +172,17 @@ class TestExtractSectionsFromHtml:
         """
         result = extract_sections_from_html(html, SECTION_LABEL_MAP)
         assert result.care_usage == "Aplique nos cabelos e massageie gentilmente."
+
+    def test_composition_with_verbs_promoted_via_anchors(self):
+        """Composition section that FAILS validate_inci_content (has marketing verbs)
+        but HAS anchor INCI ingredients should still be promoted to ingredients_inci."""
+        html = """<html><body>
+        <h2>Composicao</h2>
+        <p>Descubra a formula: Aqua, Sodium Laureth Sulfate, Glycerin, Parfum, Dimethicone, Cetearyl Alcohol</p>
+        </body></html>"""
+        section_map = {
+            "composition": {"labels": ["composicao"]},
+        }
+        result = extract_sections_from_html(html, section_map)
+        assert result.ingredients_inci_raw is not None
+        assert "Aqua" in result.ingredients_inci_raw

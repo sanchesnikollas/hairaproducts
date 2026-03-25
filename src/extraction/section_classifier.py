@@ -55,6 +55,14 @@ USAGE_VERBS_EN = [
 
 ALL_REJECTION_VERBS = MARKETING_VERBS_PT + USAGE_VERBS_PT + MARKETING_VERBS_EN + USAGE_VERBS_EN
 
+# Anchor INCI ingredients: near-universal in hair products, unambiguously signal real INCI content
+INCI_ANCHOR_INGREDIENTS = {
+    "aqua", "water", "sodium", "glycerin", "cetearyl", "dimethicone",
+    "parfum", "tocopherol", "phenoxyethanol", "behentrimonium",
+    "stearyl", "cetyl", "isopropyl", "polyquaternium", "panthenol",
+    "cocamidopropyl", "laureth", "amodimethicone", "fragrance", "citric",
+}
+
 # Heading-like elements to search for section labels
 HEADING_TAGS = ["h2", "h3", "h4", "button", "strong", "b", "span"]
 
@@ -71,24 +79,31 @@ def _normalize_label(text: str) -> str:
     return result
 
 
-def validate_inci_content(text: str | None) -> bool:
+def validate_inci_content(text: str | None, has_section_context: bool = False) -> bool:
     """Check if text is a valid INCI ingredient list.
 
     Anti-error checks:
     - Must have ingredient-like separators (, or ● or • or ·)
     - Must be at least 30 chars long
-    - Must not contain marketing or usage verbs
+    - Must not contain marketing or usage verbs (skipped when has_section_context=True)
+
+    Args:
+        text: The text to validate.
+        has_section_context: When True, skip the marketing/usage verb rejection check.
+            Use this when the content is already confirmed to be in an INCI section
+            by structural context (e.g., a heading that explicitly labels it as ingredients).
     """
     if not text or len(text) < 30:
         return False
     # Must contain ingredient-like separators
     if not any(sep in text for sep in [",", ";", "●", "•", "·"]):
         return False
-    # Reject if contains marketing or usage verbs
-    text_lower = text.lower()
-    for verb in ALL_REJECTION_VERBS:
-        if verb in text_lower:
-            return False
+    # Reject if contains marketing or usage verbs (skip when section context confirms INCI)
+    if not has_section_context:
+        text_lower = text.lower()
+        for verb in ALL_REJECTION_VERBS:
+            if verb in text_lower:
+                return False
     return True
 
 
@@ -229,8 +244,17 @@ def extract_sections_from_html(
             # This handles cases where "composição" label is shared between
             # composition and ingredients_inci in the blueprint, and the
             # composition entry wins the label_lookup sort order.
-            if taxonomy_field == "composition" and validate_inci_content(content):
-                actual_field = "ingredients_inci"
+            if taxonomy_field == "composition":
+                if validate_inci_content(content):
+                    actual_field = "ingredients_inci"
+                else:
+                    # Anchor ingredient fallback: if validate_inci_content fails,
+                    # check for anchor ingredients — enough of them signal real INCI
+                    # even when marketing verbs are present alongside the ingredient list.
+                    words = {w.lower().strip(",.;:") for w in content.split()}
+                    anchor_matches = words & INCI_ANCHOR_INGREDIENTS
+                    if len(anchor_matches) >= 3:
+                        actual_field = "ingredients_inci"
 
             section = PageSection(
                 label=norm_label,
@@ -281,8 +305,14 @@ def extract_sections_from_html(
                 else:
                     actual_field = "composition"
 
-            if taxonomy_field == "composition" and validate_inci_content(content):
-                actual_field = "ingredients_inci"
+            if taxonomy_field == "composition":
+                if validate_inci_content(content):
+                    actual_field = "ingredients_inci"
+                else:
+                    words = {w.lower().strip(",.;:") for w in content.split()}
+                    anchor_matches = words & INCI_ANCHOR_INGREDIENTS
+                    if len(anchor_matches) >= 3:
+                        actual_field = "ingredients_inci"
 
             section = PageSection(
                 label=norm_label,
@@ -329,8 +359,14 @@ def extract_sections_from_html(
                 else:
                     actual_field = "composition"
 
-            if taxonomy_field == "composition" and validate_inci_content(content):
-                actual_field = "ingredients_inci"
+            if taxonomy_field == "composition":
+                if validate_inci_content(content):
+                    actual_field = "ingredients_inci"
+                else:
+                    words = {w.lower().strip(",.;:") for w in content.split()}
+                    anchor_matches = words & INCI_ANCHOR_INGREDIENTS
+                    if len(anchor_matches) >= 3:
+                        actual_field = "ingredients_inci"
 
             section = PageSection(
                 label=norm_label,
@@ -396,8 +432,14 @@ def extract_sections_from_html(
                 else:
                     actual_field = "composition"
 
-            if taxonomy_field == "composition" and validate_inci_content(content):
-                actual_field = "ingredients_inci"
+            if taxonomy_field == "composition":
+                if validate_inci_content(content):
+                    actual_field = "ingredients_inci"
+                else:
+                    words = {w.lower().strip(",.;:") for w in content.split()}
+                    anchor_matches = words & INCI_ANCHOR_INGREDIENTS
+                    if len(anchor_matches) >= 3:
+                        actual_field = "ingredients_inci"
 
             section = PageSection(
                 label=norm_label,
