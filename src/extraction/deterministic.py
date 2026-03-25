@@ -314,6 +314,7 @@ def extract_product_deterministic(
         "product_name": None,
         "image_url_main": None,
         "inci_raw": None,
+        "inci_source": None,
         "description": None,
         "care_usage": None,
         "composition": None,
@@ -372,6 +373,7 @@ def extract_product_deterministic(
             result["composition"] = section_result.composition
         if section_result.ingredients_inci_raw and not result["inci_raw"]:
             result["inci_raw"] = section_result.ingredients_inci_raw
+            result["inci_source"] = "section_classifier"
         if section_result.description and not result["description"]:
             result["description"] = section_result.description
         # Create evidence entries for section-extracted fields
@@ -412,6 +414,14 @@ def extract_product_deterministic(
         ))
         if not result["extraction_method"]:
             result["extraction_method"] = "html_selector"
+        # Determine inci_source: tab label heuristic selectors start with "tab-" or "accordion-"
+        _inci_sel = sel_result.get("inci_selector") or ""
+        if _inci_sel.startswith(("tab-", "accordion-")) or _inci_sel.startswith(".") and any(
+            cls in _inci_sel for cls in ["collapse__content", "tab-content", "tab-pane", "accordion-content"]
+        ):
+            result["inci_source"] = "tab_label_heuristic"
+        else:
+            result["inci_source"] = "css_selector"
 
     if not result["image_url_main"] and sel_result.get("image"):
         result["image_url_main"] = sel_result["image"]

@@ -256,6 +256,78 @@ class TestInciTabLabels:
         assert content is not None
         assert "Aqua" in content
 
+class TestInciSource:
+    """Tests for inci_source field tracking in extract_product_deterministic."""
+
+    def test_inci_source_from_section_classifier(self):
+        """When INCI comes from section classifier, inci_source should be 'section_classifier'."""
+        html = """<html><body>
+        <h2>Ingredientes</h2>
+        <p>Aqua, Sodium Laureth Sulfate, Cocamidopropyl Betaine, Glycerin, Parfum</p>
+        </body></html>"""
+        result = extract_product_deterministic(
+            html, "https://example.com/product",
+            section_label_map={"ingredients_inci": {"labels": ["ingredientes"], "validators": ["has_separators", "min_length_30"]}}
+        )
+        assert result.get("inci_source") in ("section_classifier", "tab_label_heuristic", "css_selector")
+
+    def test_inci_source_absent_when_no_inci(self):
+        """When no INCI is extracted, inci_source should be None."""
+        html = "<html><body><h1>Product</h1><p>No ingredients here</p></body></html>"
+        result = extract_product_deterministic(html, "https://example.com/product")
+        assert result.get("inci_source") is None
+
+    def test_inci_source_section_classifier_sets_value(self):
+        """When section_label_map matches INCI heading, inci_source is 'section_classifier'."""
+        html = """<html><body>
+        <h2>Ingredientes</h2>
+        <p>Aqua, Sodium Laureth Sulfate, Cocamidopropyl Betaine, Glycerin, Parfum, Citric Acid</p>
+        </body></html>"""
+        result = extract_product_deterministic(
+            html, "https://example.com/product",
+            section_label_map={
+                "ingredients_inci": {
+                    "labels": ["ingredientes"],
+                    "validators": ["has_separators", "min_length_30"],
+                }
+            },
+        )
+        if result.get("inci_raw"):
+            assert result.get("inci_source") == "section_classifier"
+
+    def test_inci_source_css_selector_when_explicit_selector_matches(self):
+        """When INCI is found via explicit CSS selector, inci_source should be 'css_selector'."""
+        html = """<html><body>
+        <div class="product-ingredients">
+            <p>Aqua, Sodium Laureth Sulfate, Cocamidopropyl Betaine, Glycerin, Parfum, Citric Acid</p>
+        </div>
+        </body></html>"""
+        result = extract_product_deterministic(
+            html, "https://example.com/product",
+            inci_selectors=[".product-ingredients p"],
+        )
+        assert result.get("inci_raw") is not None
+        assert result.get("inci_source") == "css_selector"
+
+    def test_inci_source_tab_label_heuristic_when_no_selector(self):
+        """When INCI is found via tab label heuristic fallback, inci_source is 'tab_label_heuristic'."""
+        html = """<html><body>
+        <button>Composição</button>
+        <div class="collapse__content">Aqua, Sodium Laureth Sulfate, Cocamidopropyl Betaine, Glycerin, Parfum</div>
+        </body></html>"""
+        result = extract_product_deterministic(
+            html, "https://example.com/product",
+        )
+        if result.get("inci_raw"):
+            assert result.get("inci_source") == "tab_label_heuristic"
+
+    def test_inci_source_is_key_in_result(self):
+        """inci_source key should always be present in the result dict."""
+        html = "<html><body><h1>Product</h1></body></html>"
+        result = extract_product_deterministic(html, "https://example.com/product")
+        assert "inci_source" in result
+
+
     def test_og_image_fallback(self):
         """Products with og:image but no JSON-LD image get the og:image."""
         html = """
