@@ -137,3 +137,35 @@ class TestValidateInciList:
         result = validate_inci_list(block + block)
         assert result.valid is False
         assert "repetition" in result.rejection_reason
+
+
+class TestSectionContext:
+    def test_3_ingredients_rejected_without_context(self):
+        """3 ingredients should be rejected without section context (min 5)."""
+        result = validate_inci_list(["Aqua", "Sodium Laureth Sulfate", "Glycerin"])
+        assert not result.valid
+
+    def test_3_ingredients_accepted_with_context(self):
+        """3 ingredients should be accepted with section context (min 3)."""
+        result = validate_inci_list(
+            ["Aqua", "Sodium Laureth Sulfate", "Glycerin"],
+            has_section_context=True,
+        )
+        assert result.valid
+
+    def test_portuguese_verb_rejected_without_context(self):
+        """Ingredient containing verb should be rejected without context."""
+        result = validate_inci_list(
+            ["Aqua", "Sodium Laureth Sulfate", "Glycerin", "aplique no cabelo", "Parfum"]
+        )
+        # "aplique" is a verb indicator — ingredient should be removed
+        assert "aplique no cabelo" not in result.cleaned
+
+    def test_verb_ingredient_kept_with_context(self):
+        """With section context, verb check is relaxed — ingredient with verb word is kept."""
+        result = validate_inci_list(
+            ["Aqua", "Sodium Laureth Sulfate", "Glycerin", "aplique no cabelo", "Parfum"],
+            has_section_context=True,
+        )
+        # With context, verb check is skipped so "aplique no cabelo" is kept
+        assert "aplique no cabelo" in result.cleaned

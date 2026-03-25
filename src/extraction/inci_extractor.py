@@ -22,7 +22,10 @@ def _split_ingredients(text: str) -> list[str]:
     return [p.strip() for p in parts if p.strip()]
 
 
-def extract_and_validate_inci(raw_text: str | None) -> INCIValidationResult:
+def extract_and_validate_inci(
+    raw_text: str | None,
+    has_section_context: bool = False,
+) -> INCIValidationResult:
     if not raw_text or not raw_text.strip():
         return INCIValidationResult(valid=False, rejection_reason="no_inci_text")
 
@@ -31,4 +34,4 @@ def extract_and_validate_inci(raw_text: str | None) -> INCIValidationResult:
         return INCIValidationResult(valid=False, rejection_reason="empty_after_cleaning")
 
     ingredients = _split_ingredients(cleaned_text)
-    return validate_inci_list(ingredients)
+    return validate_inci_list(ingredients, has_section_context=has_section_context)

@@ -51,7 +51,7 @@ def clean_inci_text(raw: str) -> str:
     return text.strip()
 
 
-def validate_ingredient(ingredient: str) -> bool:
+def validate_ingredient(ingredient: str, has_section_context: bool = False) -> bool:
     s = ingredient.strip()
     if len(s) < 2 or len(s) > 80:
         return False
@@ -59,10 +59,11 @@ def validate_ingredient(ingredient: str) -> bool:
         return False
     if len(s.split()) > 8:
         return False
-    lower = s.lower()
-    for verb in VERB_INDICATORS:
-        if verb in lower and len(s.split()) > 3:
-            return False
+    if not has_section_context:
+        lower = s.lower()
+        for verb in VERB_INDICATORS:
+            if verb in lower and len(s.split()) >= 2:
+                return False
     return True
 
 
@@ -91,7 +92,10 @@ def detect_repetition(ingredients: list[str]) -> bool:
     return False
 
 
-def validate_inci_list(ingredients: list[str]) -> INCIValidationResult:
+def validate_inci_list(
+    ingredients: list[str],
+    has_section_context: bool = False,
+) -> INCIValidationResult:
     if detect_repetition(ingredients):
         return INCIValidationResult(
             valid=False, rejection_reason="repetition_detected"
@@ -111,12 +115,13 @@ def validate_inci_list(ingredients: list[str]) -> INCIValidationResult:
         if key in seen:
             removed.append(s)
             continue
-        if not validate_ingredient(s):
+        if not validate_ingredient(s, has_section_context=has_section_context):
             removed.append(s)
             continue
         seen.add(key)
         cleaned.append(s)
-    if len(cleaned) < 5:
+    min_count = 3 if has_section_context else 5
+    if len(cleaned) < min_count:
         return INCIValidationResult(
             valid=False,
             cleaned=cleaned,
