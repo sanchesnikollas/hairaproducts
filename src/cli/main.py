@@ -300,6 +300,83 @@ def audit(brand: str):
             click.echo(f"    {status}: {count}")
 
 
+@cli.command(name="audit-inci")
+@click.option("--brand", default=None, help="Filter by brand slug (omit for all brands)")
+def audit_inci(brand: str | None):
+    """Audit INCI extraction coverage and classify failure types."""
+    from src.storage.database import get_engine
+    from src.storage.orm_models import Base, ProductORM
+    from sqlalchemy.orm import Session as SASession
+    from collections import defaultdict
+
+    engine = get_engine()
+    Base.metadata.create_all(engine)
+
+    with SASession(engine) as session:
+        query = session.query(ProductORM)
+        if brand:
+            query = query.filter(ProductORM.brand_slug == brand)
+        products = query.all()
+
+        categories = {
+            "already_verified": [],
+            "extracted_rejected": [],
+            "extraction_missed": [],
+            "no_inci_on_page": [],
+        }
+
+        for p in products:
+            if p.verification_status == "verified_inci" and p.inci_ingredients:
+                categories["already_verified"].append(p)
+            elif p.inci_ingredients:
+                # Has INCI but not verified — validator rejected
+                categories["extracted_rejected"].append(p)
+            elif p.composition:
+                # Has composition text but no INCI — extraction missed
+                categories["extraction_missed"].append(p)
+            else:
+                categories["no_inci_on_page"].append(p)
+
+        # Group by brand + collect sample URLs
+        brand_stats = defaultdict(lambda: defaultdict(int))
+        brand_samples = defaultdict(lambda: defaultdict(list))
+        for cat, prods in categories.items():
+            for p in prods:
+                brand_stats[p.brand_slug][cat] += 1
+                if len(brand_samples[p.brand_slug][cat]) < 3:
+                    brand_samples[p.brand_slug][cat].append(p.product_url)
+
+        total = len(products)
+        click.echo(f"\n{'='*60}")
+        click.echo(f"INCI AUDIT — {total} products")
+        click.echo(f"{'='*60}\n")
+
+        for cat, prods in categories.items():
+            pct = len(prods) / total * 100 if total else 0
+            click.echo(f"  {cat}: {len(prods)} ({pct:.1f}%)")
+
+        # Recoverable products summary
+        recoverable = len(categories["extracted_rejected"]) + len(categories["extraction_missed"])
+        click.echo(f"\n  Recoverable (validator fix + extraction fix): {recoverable}")
+
+        click.echo(f"\n{'─'*60}")
+        click.echo("Per brand:\n")
+
+        for b_slug in sorted(brand_stats.keys()):
+            stats = brand_stats[b_slug]
+            b_total = sum(stats.values())
+            click.echo(f"  {b_slug} ({b_total} products):")
+            for cat in ["already_verified", "extracted_rejected", "extraction_missed", "no_inci_on_page"]:
+                count = stats.get(cat, 0)
+                pct = count / b_total * 100 if b_total else 0
+                click.echo(f"    {cat}: {count} ({pct:.0f}%)")
+                # Show sample URLs for actionable categories
+                if cat != "already_verified":
+                    for url in brand_samples[b_slug].get(cat, []):
+                        click.echo(f"      -> {url}")
+            click.echo()
+
+
 @cli.command()
 @click.option("--brand", help="Brand slug")
 @click.option("--all-brands", "all_brands", is_flag=True, help="Report for all brands")
