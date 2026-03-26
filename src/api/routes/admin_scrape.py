@@ -47,7 +47,7 @@ def _run_scrape(job_id: str, brand: str, run_labels: bool) -> None:
         from pathlib import Path
         from sqlalchemy.orm import Session as SASession
 
-        from src.core.blueprint import load_blueprint
+        from src.discovery.blueprint_engine import load_blueprint
         from src.discovery.product_discoverer import ProductDiscoverer
         from src.pipeline.coverage_engine import CoverageEngine
         from src.storage.database import get_engine as get_db_engine
