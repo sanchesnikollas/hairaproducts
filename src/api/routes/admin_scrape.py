@@ -118,8 +118,14 @@ def _run_scrape(job_id: str, brand: str, run_labels: bool) -> None:
                 updated = 0
                 for p in products:
                     if p.inci_ingredients:
-                        labels = label_engine.detect(p)
-                        repo.update_product_labels(p.id, labels)
+                        labels = label_engine.detect(
+                            description=p.description,
+                            product_name=p.product_name,
+                            benefits_claims=p.benefits_claims,
+                            usage_instructions=p.usage_instructions,
+                            inci_ingredients=p.inci_ingredients,
+                        )
+                        repo.update_product_labels(p.id, labels.to_dict())
                         updated += 1
                 session.commit()
                 _jobs[job_id]["labels_updated"] = updated
