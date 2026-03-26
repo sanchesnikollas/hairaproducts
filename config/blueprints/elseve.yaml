@@ -35,7 +35,8 @@ discovery:
     max_pages: 1
 extraction:
   requires_js: false
-  headless: false
+  http_client: curl_cffi
+  curl_cffi_impersonate: chrome
   delay_seconds: 3
   inci_selectors:
   - .oap-collapsible__content .field-text p

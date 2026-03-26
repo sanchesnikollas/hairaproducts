@@ -392,6 +392,66 @@ def extract_product_deterministic(
                 result["currency"] = offers.get("priceCurrency", "BRL")
         result["extraction_method"] = "jsonld"
 
+    # Try __NEXT_DATA__ extraction (Next.js sites like Pantene, H&S)
+    next_data_match = re.search(
+        r'<script\s+id="__NEXT_DATA__"\s+type="application/json">(.*?)</script>',
+        html, re.DOTALL,
+    )
+    if next_data_match:
+        try:
+            next_data = json.loads(next_data_match.group(1))
+            # Navigate common paths for product data
+            page_props = next_data.get("props", {}).get("pageProps", {})
+            # Path 1: Contentful CMS (P&G pattern)
+            items = (
+                page_props.get("data", {})
+                .get("productCollection", {})
+                .get("items", [])
+            )
+            if items and isinstance(items, list):
+                product = items[0]
+                if not result["product_name"] and product.get("productName"):
+                    result["product_name"] = product["productName"]
+                    evidence_list.append(create_evidence(
+                        "product_name", url, "__NEXT_DATA__ productName",
+                        product["productName"], ExtractionMethod.JSONLD,
+                    ))
+                if not result["inci_raw"] and product.get("allIngredients"):
+                    result["inci_raw"] = product["allIngredients"]
+                    result["inci_source"] = "section_classifier"
+                    evidence_list.append(create_evidence(
+                        "inci_raw", url, "__NEXT_DATA__ allIngredients",
+                        product["allIngredients"][:500], ExtractionMethod.JSONLD,
+                    ))
+                if not result["description"] and product.get("productDescription"):
+                    result["description"] = sanitize_text(product["productDescription"])
+                if not result["image_url_main"] and product.get("packshot"):
+                    img = product["packshot"]
+                    if isinstance(img, dict):
+                        img = img.get("url", "")
+                    if isinstance(img, str) and img:
+                        if img.startswith("//"):
+                            img = "https:" + img
+                        result["image_url_main"] = img
+            # Path 2: Direct product in pageProps
+            product2 = page_props.get("content", {}).get("product", {})
+            if product2:
+                if not result["product_name"] and product2.get("name"):
+                    result["product_name"] = product2["name"]
+                if not result["inci_raw"] and product2.get("ingredients"):
+                    result["inci_raw"] = product2["ingredients"]
+                    result["inci_source"] = "section_classifier"
+                if not result["image_url_main"] and product2.get("image"):
+                    img = product2["image"]
+                    if isinstance(img, dict):
+                        img = img.get("fields", {}).get("file", {}).get("url", "")
+                    if isinstance(img, str) and img:
+                        if img.startswith("//"):
+                            img = "https:" + img
+                        result["image_url_main"] = img
+        except (json.JSONDecodeError, KeyError, TypeError):
+            pass
+
     # Section classifier: extract taxonomy fields from headings
     if section_label_map:
         from src.extraction.section_classifier import extract_sections_from_html
