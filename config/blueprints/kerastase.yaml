@@ -8,16 +8,15 @@ entrypoints:
 - https://www.kerastase.com.br/colecoes-linhas/?insertMode=true&start=0&sz=24
 - https://www.kerastase.com.br/produtos/colecoes/
 discovery:
-  strategy: dom_crawl  # Sitemap blocked by Cloudflare, use DOM crawling instead
+  strategy: entrypoint_crawl
   sitemap_urls: []
-  product_url_pattern: '/produtos/.*\\.html$'
+  product_url_pattern: '/produtos/.*\.html$'
   max_pages: 500
-  pagination:
-    type: scroll
-    max_pages: 10
 extraction:
-  requires_js: true
-  # IMPORTANT: Must run with --no-headless (Cloudflare blocks headless browsers)
+  requires_js: false
+  http_client: curl_cffi
+  curl_cffi_impersonate: chrome
+  delay_seconds: 3
   inci_selectors:
   - .c-product-detail__ingredients p
   - .product-ingredients p
@@ -33,11 +32,28 @@ extraction:
   - .c-product-main__image img
   - .product-image img
   - img.product-img
-  wait_for_selector: h1.c-product-main__name
+  section_label_map:
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - composicao completa
+      - ingredients
+      - inci
+      validators:
+      - has_separators
+      - min_length_30
+    composition:
+      labels:
+      - composicao
+      - composição
+    description:
+      labels:
+      - descricao
+      - sobre o produto
+      - detalhes
   use_llm_fallback: true
 notes: |
-  Kerastase.com.br uses Cloudflare WAF that blocks headless browsers.
-  Must scrape with: haira scrape --brand kerastase --no-headless
-  The site is Salesforce Commerce Cloud (Demandware). No Product JSON-LD available.
-  Product name lives in h1.c-product-main__name. og:image available as fallback.
-version: 2
+  Kerastase.com.br uses Cloudflare WAF.
+  curl_cffi with chrome impersonation bypasses the WAF (same approach as TRESemmé/Seda).
+  Salesforce Commerce Cloud (Demandware). No Product JSON-LD available.
+version: 3
