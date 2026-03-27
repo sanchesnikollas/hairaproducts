@@ -221,6 +221,39 @@ class ProductCompositionORM(Base):
     product = relationship("ProductORM")
 
 
+class ExternalInciORM(Base):
+    __tablename__ = "external_inci"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    source = Column(String(50), nullable=False)
+    source_url = Column(Text, nullable=False)
+    brand_slug = Column(String(255), nullable=False, index=True)
+    product_name = Column(Text, nullable=True)
+    product_type = Column(String(100), nullable=True)
+    inci_raw = Column(Text, nullable=True)
+    inci_ingredients = Column(JSON, nullable=True)
+    ean = Column(String(50), nullable=True)
+    scraped_at = Column(DateTime, nullable=False, default=_utcnow)
+    updated_at = Column(DateTime, nullable=True, onupdate=_utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("source", "source_url", name="uq_external_inci_source_url"),
+    )
+
+
+class EnrichmentQueueORM(Base):
+    __tablename__ = "enrichment_queue"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    product_id = Column(String(36), nullable=False, index=True)
+    external_inci_id = Column(String(36), nullable=False)
+    match_score = Column(Float, nullable=False)
+    match_details = Column(JSON, nullable=True)
+    status = Column(String(20), nullable=False, default="pending")
+    reviewed_by = Column(String(100), nullable=True)
+    created_at = Column(DateTime, nullable=False, default=_utcnow)
+
+
 class ValidationComparisonORM(Base):
     __tablename__ = "validation_comparisons"
     id = Column(String(36), primary_key=True, default=_uuid)

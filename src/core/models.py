@@ -28,6 +28,7 @@ class ExtractionMethod(str, enum.Enum):
     JS_DOM = "js_dom"
     LLM_GROUNDED = "llm_grounded"
     MANUAL = "manual"
+    EXTERNAL_ENRICHMENT = "external_enrichment"
 
 
 class QAStatus(str, enum.Enum):
