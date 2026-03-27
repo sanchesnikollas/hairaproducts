@@ -24,16 +24,21 @@ class ProductRepository:
             .first()
         )
         if existing:
+            # Re-scrape protection: preserve externally-enriched INCI when new extraction has none
+            _preserve_inci = (
+                existing.extraction_method == "external_enrichment"
+                and existing.inci_ingredients
+                and not extraction.inci_ingredients
+            )
+
             existing.product_name = extraction.product_name
             existing.image_url_main = extraction.image_url_main
             existing.image_urls_gallery = extraction.image_urls_gallery or None
-            existing.verification_status = qa.status.value
             existing.product_type_raw = extraction.product_type_raw
             existing.product_type_normalized = extraction.product_type_normalized
             existing.product_category = extraction.product_category
             existing.gender_target = extraction.gender_target.value
             existing.hair_relevance_reason = extraction.hair_relevance_reason
-            existing.inci_ingredients = extraction.inci_ingredients
             existing.description = extraction.description
             existing.usage_instructions = extraction.usage_instructions
             existing.composition = extraction.composition
@@ -44,10 +49,14 @@ class ProductRepository:
             existing.currency = extraction.currency
             existing.line_collection = extraction.line_collection
             existing.variants = extraction.variants
-            existing.confidence = extraction.confidence
-            existing.extraction_method = extraction.extraction_method
             existing.extracted_at = extraction.extracted_at
             existing.updated_at = datetime.now(timezone.utc)
+
+            if not _preserve_inci:
+                existing.verification_status = qa.status.value
+                existing.inci_ingredients = extraction.inci_ingredients
+                existing.confidence = extraction.confidence
+                existing.extraction_method = extraction.extraction_method
             product_id = existing.id
         else:
             product = ProductORM(
