@@ -46,16 +46,24 @@ def scrape_source(
     brand_slug_map = bp.get("brand_slug_map", {})
     extraction_config = bp.get("extraction", {})
 
-    # Setup browser
+    # Setup browser — use curl_cffi for discovery (fast), Playwright for JS extraction
     http_client = extraction_config.get("http_client", "")
     ssl_verify = extraction_config.get("ssl_verify", True)
-    if http_client == "curl_cffi":
-        browser = BrowserClient(use_curl_cffi=True, ssl_verify=ssl_verify)
-    else:
-        browser = BrowserClient(use_httpx=True, ssl_verify=ssl_verify)
+    requires_js = extraction_config.get("requires_js", False)
 
-    # Discover URLs
-    discoverer = ProductDiscoverer(browser=browser)
+    # Discovery always uses curl_cffi (sitemaps are XML, no JS needed)
+    discovery_browser = BrowserClient(use_curl_cffi=True, ssl_verify=ssl_verify)
+
+    # Extraction browser: Playwright if requires_js, else curl_cffi
+    if requires_js:
+        extraction_browser = BrowserClient(use_httpx=False, ssl_verify=ssl_verify)
+    elif http_client == "curl_cffi":
+        extraction_browser = BrowserClient(use_curl_cffi=True, ssl_verify=ssl_verify)
+    else:
+        extraction_browser = BrowserClient(use_httpx=True, ssl_verify=ssl_verify)
+
+    # Discover URLs (fast, curl_cffi)
+    discoverer = ProductDiscoverer(browser=discovery_browser)
     discovered = discoverer.discover(bp)
 
     # Filter by brand if requested
@@ -79,7 +87,7 @@ def scrape_source(
             continue
 
         try:
-            html = browser.fetch_page(url)
+            html = extraction_browser.fetch_page(url)
             if not html or len(html) < 500:
                 continue
 

@@ -1,0 +1,70 @@
+source_name: epocacosmeticos
+source_slug: epocacosmeticos
+platform: vtex
+domain: www.epocacosmeticos.com.br
+allowed_domains:
+- www.epocacosmeticos.com.br
+- epocacosmeticos.com.br
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.epocacosmeticos.com.br/sitemap/product-0.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-1.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-2.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-3.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-4.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-5.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-6.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-7.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-8.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-9.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-10.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-11.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-12.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-13.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-14.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-15.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-16.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-17.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-18.xml
+  - https://www.epocacosmeticos.com.br/sitemap/product-19.xml
+  product_url_pattern: /p$
+  max_pages: 50000
+extraction:
+  requires_js: true
+  headless: true
+  delay_seconds: 5
+  wait_for_selector: '[class*="productSpecification"]'
+  inci_selectors:
+  - '[class*="specificationValue"]'
+  - '[class*="productSpecification"] td:last-child'
+  - .productSpecification .specificationValue
+  name_selectors:
+  - '[class*="productNameContainer"] [class*="productBrand"]'
+  - h1
+  image_selectors:
+  - '[class*="productImageTag"]'
+  - img[src*="epocacosmeticos"]
+  section_label_map:
+    ingredients_inci:
+      labels:
+      - composição
+      - composicao
+      - ingredientes
+      - ingredients
+      validators:
+      - has_separators
+      - min_length_30
+  use_llm_fallback: true
+brand_slug_map:
+  bio-extratus: bio-extratus
+  griffus: griffus
+  lola-cosmetics: lola-cosmetics
+  widi-care: widi-care
+  aneethun: aneethun
+  acquaflora: acquaflora
+  brae: brae
+  loccitane: loccitane
+  alva: alva
+  haskell: haskell
+  salon-line: salon-line
