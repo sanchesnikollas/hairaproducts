@@ -1,0 +1,53 @@
+source_name: belezanaweb
+source_slug: belezanaweb
+platform: vtex
+domain: www.belezanaweb.com.br
+allowed_domains:
+- www.belezanaweb.com.br
+- belezanaweb.com.br
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.belezanaweb.com.br/sitemap/product-0.xml
+  - https://www.belezanaweb.com.br/sitemap/product-1.xml
+  - https://www.belezanaweb.com.br/sitemap/product-2.xml
+  product_url_pattern: ^https://www\.belezanaweb\.com\.br/[\w%-]+$
+  max_pages: 5000
+extraction:
+  requires_js: false
+  http_client: curl_cffi
+  curl_cffi_impersonate: chrome
+  delay_seconds: 3
+  inci_selectors:
+  - '[data-specification-name="Composição"] .vtex-product-specifications-1-x-specificationValue'
+  - '[data-specification-name="Ingredientes"] .vtex-product-specifications-1-x-specificationValue'
+  - '[data-specification-name="Composição"]'
+  - '[data-specification-name="Ingredientes"]'
+  name_selectors:
+  - span.vtex-store-components-3-x-productBrand
+  - h1
+  image_selectors:
+  - img.vtex-store-components-3-x-productImageTag
+  section_label_map:
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - composição
+      - composicao
+      - ingredients
+      validators:
+      - has_separators
+      - min_length_30
+  use_llm_fallback: false
+brand_slug_map:
+  bio-extratus: bio-extratus
+  griffus: griffus
+  lola-cosmetics: lola-cosmetics
+  widi-care: widi-care
+  aneethun: aneethun
+  acquaflora: acquaflora
+  brae: brae
+  loccitane: loccitane
+  alva: alva
+  haskell: haskell
+  salon-line: salon-line
