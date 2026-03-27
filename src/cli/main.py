@@ -755,5 +755,154 @@ def validate(brand: str, limit: int | None, dry_run: bool):
     click.echo(f"  Divergences (review needed): {total_divergences}")
 
 
+@cli.command(name="source-scrape")
+@click.option("--source", required=True, help="Source slug (e.g., belezanaweb)")
+@click.option("--brand", default=None, help="Filter by brand slug")
+def source_scrape(source: str, brand: str | None):
+    """Scrape external source for INCI data."""
+    from src.enrichment.source_scraper import scrape_source
+    from src.storage.database import get_engine
+    from src.storage.orm_models import Base
+    from sqlalchemy.orm import Session as SASession
+
+    engine = get_engine()
+    Base.metadata.create_all(engine)
+
+    click.echo(f"Scraping source: {source}" + (f" (brand: {brand})" if brand else ""))
+
+    with SASession(engine) as session:
+        stats = scrape_source(session, source, brand_filter=brand)
+
+    click.echo(f"\nResults:")
+    click.echo(f"  Discovered: {stats['discovered']}")
+    click.echo(f"  Scraped:    {stats['scraped']}")
+    click.echo(f"  With INCI:  {stats['with_inci']}")
+    click.echo(f"  Skipped:    {stats['skipped']}")
+
+
+@cli.command(name="enrich-external")
+@click.option("--brand", default=None, help="Filter by brand slug")
+@click.option("--dry-run", is_flag=True, help="Show matches without applying")
+@click.option("--threshold", type=float, default=0.90, help="Auto-apply threshold")
+def enrich_external(brand: str | None, dry_run: bool, threshold: float):
+    """Match catalog_only products with external INCI sources."""
+    from src.enrichment.matcher import match_products
+    from src.storage.database import get_engine
+    from src.storage.orm_models import Base, ProductORM, ExternalInciORM, EnrichmentQueueORM, ProductEvidenceORM
+    from src.core.models import ExtractionMethod
+    from sqlalchemy.orm import Session as SASession
+
+    engine = get_engine()
+    Base.metadata.create_all(engine)
+
+    with SASession(engine) as session:
+        query = session.query(ProductORM).filter(
+            ProductORM.verification_status == "catalog_only"
+        )
+        if brand:
+            query = query.filter(ProductORM.brand_slug == brand)
+        products = query.all()
+
+        click.echo(f"Found {len(products)} catalog_only products" +
+                   (f" for {brand}" if brand else ""))
+
+        auto_applied = 0
+        queued = 0
+        no_match = 0
+
+        # Pre-load candidates by brand
+        brand_slugs = {p.brand_slug for p in products}
+        candidates_by_brand = {}
+        for slug in brand_slugs:
+            cands = (
+                session.query(ExternalInciORM)
+                .filter(
+                    ExternalInciORM.brand_slug == slug,
+                    ExternalInciORM.inci_ingredients.isnot(None),
+                )
+                .all()
+            )
+            candidates_by_brand[slug] = [
+                {
+                    "id": c.id,
+                    "product_name": c.product_name,
+                    "brand_slug": c.brand_slug,
+                    "inci_ingredients": c.inci_ingredients,
+                    "source": c.source,
+                    "source_url": c.source_url,
+                }
+                for c in cands
+            ]
+
+        for product in products:
+            cand_dicts = candidates_by_brand.get(product.brand_slug, [])
+
+            if not cand_dicts:
+                no_match += 1
+                continue
+
+            matches = match_products(
+                product_name=product.product_name or "",
+                product_brand=product.brand_slug,
+                candidates=cand_dicts,
+                auto_threshold=threshold,
+            )
+
+            if not matches:
+                no_match += 1
+                continue
+
+            best = matches[0]
+
+            if dry_run:
+                click.echo(
+                    f"  [{best['action']}] {product.product_name[:50]} "
+                    f"<> {best['cand_name'][:50]} (score={best['score']:.2f})"
+                )
+                if best["action"] == "auto_apply":
+                    auto_applied += 1
+                else:
+                    queued += 1
+                continue
+
+            if best["action"] == "auto_apply":
+                product.inci_ingredients = best["inci_ingredients"]
+                product.verification_status = "verified_inci"
+                product.confidence = 0.85
+                product.extraction_method = ExtractionMethod.EXTERNAL_ENRICHMENT.value
+                # Create evidence row for audit trail
+                evidence = ProductEvidenceORM(
+                    product_id=product.id,
+                    field_name="inci_ingredients",
+                    source_url=best.get("source_url", ""),
+                    evidence_locator=f"external_enrichment:{best['source']}",
+                    raw_source_text=str(best["inci_ingredients"])[:500],
+                    extraction_method=ExtractionMethod.EXTERNAL_ENRICHMENT.value,
+                )
+                session.add(evidence)
+                auto_applied += 1
+            else:
+                queue_entry = EnrichmentQueueORM(
+                    product_id=product.id,
+                    external_inci_id=best["external_id"],
+                    match_score=best["score"],
+                    match_details={
+                        "name_ratio": best["score"],
+                        "type_match": best["type_match"],
+                        "cand_name": best["cand_name"],
+                    },
+                )
+                session.add(queue_entry)
+                queued += 1
+
+        if not dry_run:
+            session.commit()
+
+        click.echo(f"\nResults:")
+        click.echo(f"  Auto-applied: {auto_applied}")
+        click.echo(f"  Queued:       {queued}")
+        click.echo(f"  No match:     {no_match}")
+
+
 if __name__ == "__main__":
     cli()
