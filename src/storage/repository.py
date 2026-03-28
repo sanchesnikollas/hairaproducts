@@ -1,7 +1,10 @@
 # src/storage/repository.py
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
+
+logger = logging.getLogger("haira.repository")
 
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
@@ -33,6 +36,12 @@ class ProductRepository:
                 and existing.verification_status == "verified_inci"
                 and not extraction.inci_ingredients
             )
+            if _preserve_inci:
+                logger.info(
+                    "INCI preserved for %s (had %d ingredients, new has none)",
+                    extraction.product_url[:80],
+                    len(existing.inci_ingredients) if isinstance(existing.inci_ingredients, list) else 0,
+                )
 
             existing.product_name = extraction.product_name
             existing.image_url_main = extraction.image_url_main
