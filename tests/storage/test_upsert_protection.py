@@ -108,9 +108,9 @@ def test_upsert_overwrites_inci_when_new_extraction_has_inci(tmp_path):
         assert refreshed.extraction_method == "jsonld"
 
 
-def test_upsert_overwrites_inci_when_existing_is_not_external(tmp_path):
-    """When existing product was scraped (not external enrichment), new extraction
-    should overwrite INCI fields normally even if new has no INCI."""
+def test_upsert_preserves_any_verified_inci_when_new_has_none(tmp_path):
+    """When existing product has verified INCI (from any source) and new extraction
+    has no INCI, the existing INCI should be preserved. Never downgrade."""
     from sqlalchemy import create_engine
     from sqlalchemy.orm import Session
     from src.storage.orm_models import Base, ProductORM
@@ -131,7 +131,7 @@ def test_upsert_overwrites_inci_when_existing_is_not_external(tmp_path):
             verification_status="verified_inci",
             inci_ingredients=["Aqua", "Glycerin"],
             extraction_method="jsonld",
-            confidence=0.75,
+            confidence=0.90,
             gender_target="all",
         )
         session.add(product)
@@ -152,7 +152,9 @@ def test_upsert_overwrites_inci_when_existing_is_not_external(tmp_path):
         session.commit()
 
         refreshed = session.query(ProductORM).filter_by(id="test-789").first()
-        # INCI overwritten (no protection since not external_enrichment)
-        assert refreshed.inci_ingredients is None
-        assert refreshed.verification_status == "catalog_only"
-        assert refreshed.confidence == 0.30
+        # INCI PRESERVED — never downgrade verified_inci to catalog_only
+        assert refreshed.inci_ingredients == ["Aqua", "Glycerin"]
+        assert refreshed.verification_status == "verified_inci"
+        assert refreshed.confidence == 0.90
+        # Non-INCI fields still update
+        assert refreshed.product_name == "Mascara Test Updated"

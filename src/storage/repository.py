@@ -24,10 +24,13 @@ class ProductRepository:
             .first()
         )
         if existing:
-            # Re-scrape protection: preserve externally-enriched INCI when new extraction has none
+            # Re-scrape protection: NEVER downgrade INCI data
+            # If existing product has verified INCI and new extraction has none,
+            # preserve the existing INCI regardless of source.
+            # Rule: only overwrite INCI when new data is BETTER (has INCI) or same.
             _preserve_inci = (
-                existing.extraction_method == "external_enrichment"
-                and existing.inci_ingredients
+                existing.inci_ingredients
+                and existing.verification_status == "verified_inci"
                 and not extraction.inci_ingredients
             )
 
