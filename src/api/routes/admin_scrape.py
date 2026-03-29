@@ -27,6 +27,7 @@ class ScrapeRequest(BaseModel):
     secret: str
     brand: str
     run_labels: bool = True
+    force: bool = False  # Required for brands with >50 verified products
 
 
 class JobStatus(BaseModel):
@@ -88,6 +89,19 @@ def _run_scrape(job_id: str, brand: str, run_labels: bool) -> None:
 
         url_dicts = [{"url": d.url} for d in discovered]
 
+        # Check existing verified count BEFORE scrape (for safety comparison)
+        from src.storage.orm_models import ProductORM
+        with SASession(db_engine) as session:
+            existing_verified = (
+                session.query(ProductORM)
+                .filter(
+                    ProductORM.brand_slug == brand,
+                    ProductORM.verification_status == "verified_inci",
+                )
+                .count()
+            )
+        _jobs[job_id]["existing_verified"] = existing_verified
+
         # Run coverage engine
         _jobs[job_id]["status"] = "scraping"
         with SASession(db_engine) as session:
@@ -101,7 +115,16 @@ def _run_scrape(job_id: str, brand: str, run_labels: bool) -> None:
             "verified_rate": f"{report.verified_inci_rate:.1%}",
             "catalog_only": report.catalog_only_total,
             "quarantined": report.quarantined_total,
+            "previous_verified": existing_verified,
         }
+
+        # Safety check: warn if scrape resulted in fewer verified products
+        if report.verified_inci_total < existing_verified:
+            logger.warning(
+                "SAFETY: scrape for %s resulted in FEWER verified products (%d -> %d). "
+                "Existing data preserved by never-downgrade rule.",
+                brand, existing_verified, report.verified_inci_total,
+            )
 
         # Run labels
         if run_labels:
@@ -147,9 +170,28 @@ def trigger_scrape(req: ScrapeRequest):
 
     job_id = f"{req.brand}-{int(time.time())}"
 
-    if any(j["brand"] == req.brand and j["status"] in ("scraping", "labeling")
+    if any(j["brand"] == req.brand and j["status"] in ("scraping", "labeling", "discovering")
            for j in _jobs.values()):
         raise HTTPException(status_code=409, detail=f"Scrape already running for {req.brand}")
+
+    # Safety guard: require force=true for brands with existing verified data
+    if not req.force:
+        from src.storage.database import get_engine as _get_engine
+        from src.storage.orm_models import Base as _Base, ProductORM as _ProductORM
+        from sqlalchemy.orm import Session as _Session
+        _eng = _get_engine()
+        _Base.metadata.create_all(_eng)
+        with _Session(_eng) as _sess:
+            _existing = _sess.query(_ProductORM).filter(
+                _ProductORM.brand_slug == req.brand,
+                _ProductORM.verification_status == "verified_inci",
+            ).count()
+        if _existing > 50:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Brand {req.brand} has {_existing} verified products. "
+                       f"Use force=true to re-scrape. Never-downgrade rule is active.",
+            )
 
     _jobs[job_id] = {
         "brand": req.brand,
