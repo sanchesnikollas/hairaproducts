@@ -179,6 +179,44 @@ def migrate_update(body: UpdateRequest):
     return {"updated": updated, "errors": errors[:5]}
 
 
+class CoverageUpdateRequest(BaseModel):
+    secret: str
+    brand_slug: str
+    updates: dict  # {field: value} for brand_coverage
+
+
+@router.post("/migrate-update-coverage")
+def migrate_update_coverage(body: CoverageUpdateRequest):
+    """Update brand_coverage fields for a brand without touching products."""
+    if not MIGRATION_SECRET or body.secret != MIGRATION_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid migration secret")
+
+    ALLOWED = {
+        "discovered_total", "hair_total", "kits_total", "non_hair_total",
+        "extracted_total", "verified_inci_total", "verified_inci_rate",
+        "catalog_only_total", "quarantined_total", "status", "blueprint_version",
+    }
+
+    engine = get_engine()
+    sets = []
+    params = {"slug": body.brand_slug}
+    for k, v in body.updates.items():
+        if k not in ALLOWED:
+            continue
+        sets.append(f"{k} = :{k}")
+        params[k] = v
+    if not sets:
+        return {"updated": 0, "error": "No valid fields to update"}
+
+    try:
+        with engine.begin() as conn:
+            sql = text(f"UPDATE brand_coverage SET {', '.join(sets)} WHERE brand_slug = :slug")
+            result = conn.execute(sql, params)
+            return {"updated": result.rowcount, "brand_slug": body.brand_slug}
+    except Exception as e:
+        return {"error": str(e)[:500]}
+
+
 @router.get("/migrate-status")
 def migrate_status(secret: str = ""):
     if not MIGRATION_SECRET or secret != MIGRATION_SECRET:
