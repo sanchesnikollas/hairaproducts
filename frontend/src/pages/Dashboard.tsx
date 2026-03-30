@@ -201,25 +201,22 @@ export default function Dashboard() {
   const loading = brandsLoading || productsLoading || quarantineLoading
   const error = brandsError || productsError
 
-  const brand = brands?.[0]
   const pendingCount = pendingQuarantine?.length ?? 0
 
-  // ── Computed Stats ──
+  // ── Computed Stats (aggregated across all brands) ──
 
   const stats = useMemo(() => {
-    if (!brand) return null
-    const total = brand.extracted_total
-    const rate = total > 0 ? (brand.verified_inci_total / total) * 100 : 0
-    return {
-      total,
-      verified: brand.verified_inci_total,
-      catalog: brand.catalog_only_total,
-      quarantined: brand.quarantined_total,
-      discovered: brand.discovered_total,
-      hair: brand.hair_total,
-      rate,
-    }
-  }, [brand])
+    if (!brands || brands.length === 0) return null
+    const total = brands.reduce((sum, b) => sum + b.extracted_total, 0)
+    const verified = brands.reduce((sum, b) => sum + b.verified_inci_total, 0)
+    const catalog = brands.reduce((sum, b) => sum + b.catalog_only_total, 0)
+    const quarantined = brands.reduce((sum, b) => sum + b.quarantined_total, 0)
+    const discovered = brands.reduce((sum, b) => sum + b.discovered_total, 0)
+    const hair = brands.reduce((sum, b) => sum + b.hair_total, 0)
+    const rate = total > 0 ? (verified / total) * 100 : 0
+    const above90 = brands.filter(b => b.verified_inci_rate >= 0.90 && b.extracted_total > 0).length
+    return { total, verified, catalog, quarantined, discovered, hair, rate, above90, brandCount: brands.length }
+  }, [brands])
 
   // ── Coverage Funnel ──
 
@@ -293,26 +290,38 @@ export default function Dashboard() {
     )
   }
 
-  if (!stats || !brand) return null
+  if (!stats) return null
 
-  const brandName = brand.brand_slug.charAt(0).toUpperCase() + brand.brand_slug.slice(1)
+  // ── Brand Tiers ──
+
+  const brandTiers = useMemo(() => {
+    if (!brands) return []
+    const activeBrands = brands.filter(b => b.extracted_total > 0)
+    const tiers = [
+      { label: '>= 90%', brands: activeBrands.filter(b => b.verified_inci_rate >= 0.90), color: 'bg-sage', textColor: 'text-sage' },
+      { label: '80-89%', brands: activeBrands.filter(b => b.verified_inci_rate >= 0.80 && b.verified_inci_rate < 0.90), color: 'bg-champagne', textColor: 'text-champagne-dark' },
+      { label: '70-79%', brands: activeBrands.filter(b => b.verified_inci_rate >= 0.70 && b.verified_inci_rate < 0.80), color: 'bg-amber-400', textColor: 'text-amber-600' },
+      { label: '< 70%', brands: activeBrands.filter(b => b.verified_inci_rate < 0.70), color: 'bg-coral', textColor: 'text-coral' },
+    ]
+    return tiers
+  }, [brands])
 
   const kpiCards = [
     {
-      label: 'Total Products',
-      value: stats.total,
-      percent: '100%',
-      icon: <PackageIcon className="text-ink" />,
-      color: 'text-ink',
-      bgColor: 'bg-ink/5',
-    },
-    {
-      label: 'Verified INCI',
-      value: stats.verified,
-      percent: `${Math.round((stats.verified / stats.total) * 100)}%`,
+      label: 'Brands >=90%',
+      value: stats.above90,
+      percent: `of ${stats.brandCount}`,
       icon: <CheckCircleIcon className="text-sage" />,
       color: 'text-sage',
       bgColor: 'bg-sage/10',
+    },
+    {
+      label: 'Total Products',
+      value: stats.total,
+      percent: `${stats.verified.toLocaleString()} with INCI`,
+      icon: <PackageIcon className="text-ink" />,
+      color: 'text-ink',
+      bgColor: 'bg-ink/5',
     },
     {
       label: 'Catalog Only',
@@ -350,10 +359,10 @@ export default function Dashboard() {
         transition={{ duration: 0.5 }}
       >
         <h1 className="font-display text-4xl font-semibold text-ink tracking-tight">
-          {brandName} Dashboard
+          HAIRA Dashboard
         </h1>
         <p className="text-ink-muted text-sm mt-1.5">
-          Overview of {stats.total.toLocaleString()} products &middot; {Math.round(stats.rate)}% INCI verification rate
+          {stats.brandCount} brands &middot; {stats.total.toLocaleString()} products &middot; {Math.round(stats.rate)}% INCI verified
         </p>
       </motion.div>
 
@@ -391,6 +400,42 @@ export default function Dashboard() {
           </motion.div>
         ))}
       </div>
+
+      {/* ── Brand INCI Tiers ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="font-display text-xl font-semibold">INCI Coverage by Brand</CardTitle>
+            <CardDescription>{stats.above90} of {stats.brandCount} brands above 90% target</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {brandTiers.map(tier => (
+                <div key={tier.label} className="flex items-start gap-3">
+                  <div className="flex items-center gap-2 w-20 shrink-0 pt-0.5">
+                    <span className={cn('w-2.5 h-2.5 rounded-full shrink-0', tier.color)} />
+                    <span className="text-xs font-semibold text-ink-muted">{tier.label}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className={cn('text-sm font-semibold tabular-nums', tier.textColor)}>
+                      {tier.brands.length}
+                    </span>
+                    {tier.brands.length > 0 && (
+                      <span className="text-xs text-ink-muted">
+                        — {tier.brands.map(b => b.brand_slug.replace(/-/g, ' ')).join(', ')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* ── Section 2: Coverage Funnel + Category Distribution ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
