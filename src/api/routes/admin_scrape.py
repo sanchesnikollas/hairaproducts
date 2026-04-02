@@ -220,3 +220,95 @@ def scrape_status(req: JobStatus):
 
     # Return all jobs
     return {"jobs": {k: v for k, v in _jobs.items()}}
+
+
+class MigrateRequest(BaseModel):
+    secret: str
+    products: list[dict]
+
+
+@router.post("/migrate")
+def migrate_products(req: MigrateRequest):
+    """Import products from JSON payload into production DB."""
+    if not MIGRATION_SECRET or req.secret != MIGRATION_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+
+    from datetime import datetime, timezone
+    from sqlalchemy.orm import Session as SASession
+    from src.storage.database import get_engine
+    from src.storage.orm_models import ProductORM, BrandCoverageORM
+
+    engine = get_engine()
+    datetime_cols = {"extracted_at", "created_at", "updated_at"}
+    inserted = 0
+    updated = 0
+    skipped = 0
+
+    with SASession(engine) as session:
+        for row in req.products:
+            product_id = row.get("id")
+            if not product_id:
+                continue
+
+            existing = session.query(ProductORM).filter(ProductORM.id == product_id).first()
+            if existing:
+                if existing.verification_status == "verified_inci":
+                    skipped += 1
+                    continue
+                for key, val in row.items():
+                    if key in ("id", "created_at"):
+                        continue
+                    if key in datetime_cols and isinstance(val, str):
+                        try:
+                            val = datetime.fromisoformat(val)
+                        except (ValueError, TypeError):
+                            val = None
+                    setattr(existing, key, val)
+                updated += 1
+            else:
+                for key in datetime_cols:
+                    val = row.get(key)
+                    if isinstance(val, str):
+                        try:
+                            row[key] = datetime.fromisoformat(val)
+                        except (ValueError, TypeError):
+                            row[key] = None
+                product = ProductORM(**row)
+                session.add(product)
+                inserted += 1
+
+        session.commit()
+
+        # Update coverage
+        brand_slugs = list({r["brand_slug"] for r in req.products if r.get("brand_slug")})
+        for slug in brand_slugs:
+            total = session.query(ProductORM).filter(ProductORM.brand_slug == slug).count()
+            verified = session.query(ProductORM).filter(
+                ProductORM.brand_slug == slug,
+                ProductORM.verification_status == "verified_inci",
+            ).count()
+            catalog = session.query(ProductORM).filter(
+                ProductORM.brand_slug == slug,
+                ProductORM.verification_status == "catalog_only",
+            ).count()
+
+            coverage = session.query(BrandCoverageORM).filter(
+                BrandCoverageORM.brand_slug == slug
+            ).first()
+            if coverage:
+                coverage.total_products = total
+                coverage.verified_inci_count = verified
+                coverage.catalog_only_count = catalog
+                coverage.updated_at = datetime.now(timezone.utc)
+            else:
+                coverage = BrandCoverageORM(
+                    brand_slug=slug,
+                    total_products=total,
+                    verified_inci_count=verified,
+                    catalog_only_count=catalog,
+                    status="done",
+                )
+                session.add(coverage)
+            session.commit()
+
+    return {"inserted": inserted, "updated": updated, "skipped": skipped, "brands": brand_slugs}
