@@ -20,6 +20,7 @@ dependencies = [
     "psycopg2-binary>=2.9",
     "beautifulsoup4>=4.12",
     "lxml>=5.0",
+    "curl_cffi>=0.7",
     "PyJWT>=2.8",
     "bcrypt>=4.0",
 ]
