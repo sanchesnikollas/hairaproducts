@@ -283,14 +283,15 @@ def migrate_products(req: MigrateRequest):
                                 row[key] = datetime.fromisoformat(val)
                             except (ValueError, TypeError):
                                 row[key] = None
-                    try:
-                        product = ProductORM(**row)
-                        session.add(product)
-                        inserted += 1
-                    except Exception:
-                        session.rollback()
-                        skipped += 1
-                        continue
+                    for key in datetime_cols:
+                        if key in row and row[key] is None:
+                            del row[key]
+                    product = ProductORM(**row)
+                    session.merge(product)
+                    inserted += 1
+
+                if (inserted + updated) % 100 == 0:
+                    session.flush()
 
         session.commit()
 
@@ -311,16 +312,18 @@ def migrate_products(req: MigrateRequest):
                 BrandCoverageORM.brand_slug == slug
             ).first()
             if coverage:
-                coverage.total_products = total
-                coverage.verified_inci_count = verified
-                coverage.catalog_only_count = catalog
-                coverage.updated_at = datetime.now(timezone.utc)
+                coverage.extracted_total = total
+                coverage.verified_inci_total = verified
+                coverage.catalog_only_total = catalog
+                coverage.verified_inci_rate = verified / total if total > 0 else 0
+                coverage.last_run = datetime.now(timezone.utc)
             else:
                 coverage = BrandCoverageORM(
                     brand_slug=slug,
-                    total_products=total,
-                    verified_inci_count=verified,
-                    catalog_only_count=catalog,
+                    extracted_total=total,
+                    verified_inci_total=verified,
+                    catalog_only_total=catalog,
+                    verified_inci_rate=verified / total if total > 0 else 0,
                     status="done",
                 )
                 session.add(coverage)
