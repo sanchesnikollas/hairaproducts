@@ -245,37 +245,52 @@ def migrate_products(req: MigrateRequest):
     skipped = 0
 
     with SASession(engine) as session:
-        for row in req.products:
-            product_id = row.get("id")
-            if not product_id:
-                continue
-
-            existing = session.query(ProductORM).filter(ProductORM.id == product_id).first()
-            if existing:
-                if existing.verification_status == "verified_inci":
-                    skipped += 1
+        with session.no_autoflush:
+            for row in req.products:
+                product_id = row.get("id")
+                if not product_id:
                     continue
-                for key, val in row.items():
-                    if key in ("id", "created_at"):
+
+                try:
+                    existing = (
+                        session.query(ProductORM).filter(ProductORM.id == product_id).first()
+                        or session.query(ProductORM).filter(
+                            ProductORM.product_url == row.get("product_url")
+                        ).first()
+                    )
+                except Exception:
+                    existing = None
+
+                if existing:
+                    if existing.verification_status == "verified_inci":
+                        skipped += 1
                         continue
-                    if key in datetime_cols and isinstance(val, str):
-                        try:
-                            val = datetime.fromisoformat(val)
-                        except (ValueError, TypeError):
-                            val = None
-                    setattr(existing, key, val)
-                updated += 1
-            else:
-                for key in datetime_cols:
-                    val = row.get(key)
-                    if isinstance(val, str):
-                        try:
-                            row[key] = datetime.fromisoformat(val)
-                        except (ValueError, TypeError):
-                            row[key] = None
-                product = ProductORM(**row)
-                session.add(product)
-                inserted += 1
+                    for key, val in row.items():
+                        if key in ("id", "created_at"):
+                            continue
+                        if key in datetime_cols and isinstance(val, str):
+                            try:
+                                val = datetime.fromisoformat(val)
+                            except (ValueError, TypeError):
+                                val = None
+                        setattr(existing, key, val)
+                    updated += 1
+                else:
+                    for key in datetime_cols:
+                        val = row.get(key)
+                        if isinstance(val, str):
+                            try:
+                                row[key] = datetime.fromisoformat(val)
+                            except (ValueError, TypeError):
+                                row[key] = None
+                    try:
+                        product = ProductORM(**row)
+                        session.add(product)
+                        inserted += 1
+                    except Exception:
+                        session.rollback()
+                        skipped += 1
+                        continue
 
         session.commit()
 
