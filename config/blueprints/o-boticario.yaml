@@ -4,6 +4,7 @@ platform: vtex
 domain: www.boticario.com.br
 allowed_domains:
 - www.boticario.com.br
+- data-exporter.belezanaweb.com.br
 entrypoints:
 - https://www.boticario.com.br/cabelos/shampoo/
 - https://www.boticario.com.br/cabelos/condicionador/
@@ -14,17 +15,18 @@ entrypoints:
 - https://www.boticario.com.br/cabelos/kits-de-tratamento/
 - https://www.boticario.com.br/cabelos/infantil/
 discovery:
-  strategy: dom_crawler
-  sitemap_urls: []
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://data-exporter.belezanaweb.com.br/sitemap/47/produto.xml
   product_url_pattern: ^https://www\.boticario\.com\.br/[\w-]+/?$
-  max_pages: 500
-  pagination:
-    type: scroll
-    max_pages: 10
+  max_pages: 3000
 extraction:
-  requires_js: true
-  headless: false
-  inci_selectors: []
+  requires_js: false
+  http_client: curl_cffi
+  curl_cffi_impersonate: chrome
+  delay_seconds: 3
+  inci_selectors:
+  - '#ingredients-region'
   name_selectors:
   - h1
   - .product-name

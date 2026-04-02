@@ -5,14 +5,14 @@ domain: www.belezanaweb.com.br
 allowed_domains:
 - www.belezanaweb.com.br
 - belezanaweb.com.br
+- data-exporter.belezanaweb.com.br
 discovery:
   strategy: sitemap_first
   sitemap_urls:
-  - https://www.belezanaweb.com.br/sitemap/product-0.xml
-  - https://www.belezanaweb.com.br/sitemap/product-1.xml
-  - https://www.belezanaweb.com.br/sitemap/product-2.xml
-  product_url_pattern: ^https://www\.belezanaweb\.com\.br/[\w%-]+$
-  max_pages: 5000
+  - https://data-exporter.belezanaweb.com.br/sitemap/1/produto1.xml
+  - https://data-exporter.belezanaweb.com.br/sitemap/1/produto2.xml
+  product_url_pattern: ^https://www\.belezanaweb\.com\.br/[\w%-]+/?$
+  max_pages: 80000
 extraction:
   requires_js: false
   http_client: curl_cffi
