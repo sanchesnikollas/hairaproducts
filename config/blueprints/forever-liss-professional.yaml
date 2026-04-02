@@ -1,0 +1,47 @@
+brand_slug: forever-liss-professional
+brand_name: Forever Liss Professional
+platform: custom
+domain: www.foreverliss.com.br
+allowed_domains:
+- www.foreverliss.com.br
+- foreverliss.com.br
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.foreverliss.com.br/xml/produtos.xml
+  product_url_pattern: ^https://www\.foreverliss\.com\.br/[\w-]+$
+  max_pages: 500
+extraction:
+  requires_js: false
+  http_client: curl_cffi
+  curl_cffi_impersonate: chrome
+  delay_seconds: 3
+  inci_selectors: []
+  name_selectors:
+  - h1.basic-information__name
+  - h1
+  image_selectors:
+  - img[src*="upload/produto"]
+  - .product-image img
+  section_label_map:
+    description:
+      labels:
+      - descrição
+      - sobre o produto
+      - detalhes
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+    ingredients_inci:
+      labels:
+      - composição
+      - ingredientes
+      validators:
+      - has_separators
+      - min_length_30
+  use_llm_fallback: false
+notes:
+  ingredients_language: pt-BR
+  ingredients_format: portuguese_names
+version: 1
