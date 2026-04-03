@@ -330,3 +330,50 @@ def migrate_products(req: MigrateRequest):
             session.commit()
 
     return {"inserted": inserted, "updated": updated, "skipped": skipped, "brands": brand_slugs}
+
+
+class MigrateExternalInciRequest(BaseModel):
+    secret: str
+    records: list[dict]
+
+
+@router.post("/migrate-external-inci")
+def migrate_external_inci(req: MigrateExternalInciRequest):
+    """Import external INCI records from JSON payload."""
+    if not MIGRATION_SECRET or req.secret != MIGRATION_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+
+    from datetime import datetime
+    from sqlalchemy.orm import Session as SASession
+    from src.storage.database import get_engine
+    from src.storage.orm_models import ExternalInciORM
+
+    engine = get_engine()
+    inserted = 0
+    skipped = 0
+
+    with SASession(engine) as session:
+        for row in req.records:
+            record_id = row.get("id")
+            if not record_id:
+                continue
+
+            existing = session.query(ExternalInciORM).filter(ExternalInciORM.id == record_id).first()
+            if existing:
+                skipped += 1
+                continue
+
+            for key in ("scraped_at", "updated_at"):
+                val = row.get(key)
+                if isinstance(val, str):
+                    try:
+                        row[key] = datetime.fromisoformat(val)
+                    except (ValueError, TypeError):
+                        row[key] = None
+
+            session.merge(ExternalInciORM(**row))
+            inserted += 1
+
+        session.commit()
+
+    return {"inserted": inserted, "skipped": skipped}
