@@ -377,3 +377,60 @@ def migrate_external_inci(req: MigrateExternalInciRequest):
         session.commit()
 
     return {"inserted": inserted, "skipped": skipped}
+
+
+class MigrateGenericRequest(BaseModel):
+    secret: str
+    table: str  # "evidence" or "quarantine"
+    records: list[dict]
+
+
+@router.post("/migrate-generic")
+def migrate_generic(req: MigrateGenericRequest):
+    """Import evidence or quarantine records from JSON payload."""
+    if not MIGRATION_SECRET or req.secret != MIGRATION_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+
+    from datetime import datetime
+    from sqlalchemy.orm import Session as SASession
+    from src.storage.database import get_engine
+    from src.storage.orm_models import ProductEvidenceORM, QuarantineDetailORM
+
+    table_map = {
+        "evidence": ProductEvidenceORM,
+        "quarantine": QuarantineDetailORM,
+    }
+    Model = table_map.get(req.table)
+    if not Model:
+        raise HTTPException(status_code=400, detail=f"Unknown table: {req.table}")
+
+    engine = get_engine()
+    inserted = 0
+    skipped = 0
+
+    datetime_cols = {c.key for c in Model.__table__.columns if "datetime" in str(c.type).lower() or c.key.endswith("_at")}
+
+    with SASession(engine) as session:
+        with session.no_autoflush:
+            for row in req.records:
+                record_id = row.get("id")
+                if not record_id:
+                    continue
+
+                for key in datetime_cols:
+                    val = row.get(key)
+                    if isinstance(val, str):
+                        try:
+                            row[key] = datetime.fromisoformat(val)
+                        except (ValueError, TypeError):
+                            row[key] = None
+
+                session.merge(Model(**row))
+                inserted += 1
+
+                if inserted % 500 == 0:
+                    session.flush()
+
+        session.commit()
+
+    return {"table": req.table, "inserted": inserted, "skipped": skipped}
