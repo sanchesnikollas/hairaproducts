@@ -97,7 +97,7 @@ class OpsProductUpdate(BaseModel):
     description: str | None = None
     usage_instructions: str | None = None
     composition: str | None = None
-    inci_ingredients: str | None = None
+    inci_ingredients: list[str] | None = None
     product_category: str | None = None
     size_volume: str | None = None
     status_editorial: StatusEditorial | None = None
@@ -129,6 +129,7 @@ class BatchStatusUpdate(BaseModel):
 def ops_list_products(
     brand: str | None = None,
     status_editorial: str | None = None,
+    verification_status: str | None = None,
     search: str | None = None,
     page: int = 1,
     per_page: int = 30,
@@ -140,6 +141,8 @@ def ops_list_products(
         q = q.filter(ProductORM.brand_slug == brand)
     if status_editorial:
         q = q.filter(ProductORM.status_editorial == status_editorial)
+    if verification_status:
+        q = q.filter(ProductORM.verification_status == verification_status)
     if search:
         q = q.filter(ProductORM.product_name.ilike(f"%{search}%"))
     total = q.count()
@@ -325,6 +328,11 @@ def ops_patch_product(
     old_values = {f: getattr(product, f) for f in updates}
     for field, value in updates.items():
         setattr(product, field, value)
+    # Auto-upgrade verification_status when INCI is manually entered
+    if "inci_ingredients" in updates and updates["inci_ingredients"] and product.verification_status != "verified_inci":
+        old_values["verification_status"] = product.verification_status
+        updates["verification_status"] = "verified_inci"
+        product.verification_status = "verified_inci"
     create_revisions(session, "product", product_id, old_values, updates, user["sub"], "human")
     _recalculate_confidence(session, product)
     session.commit()
@@ -335,6 +343,40 @@ class ResolveRequest(BaseModel):
     decision: Literal["approve", "correct", "reject"]
     notes: str | None = None
     corrections: dict | None = None
+
+
+@router.get("/inci-summary")
+def ops_inci_summary(
+    user: dict = Depends(get_current_user),
+    session: Session = Depends(get_ops_session),
+):
+    rows = (
+        session.query(
+            ProductORM.brand_slug,
+            func.count(ProductORM.id).label("total"),
+            func.sum(case((ProductORM.verification_status == "catalog_only", 1), else_=0)).label("pending"),
+            func.sum(case((ProductORM.verification_status == "verified_inci", 1), else_=0)).label("verified"),
+        )
+        .group_by(ProductORM.brand_slug)
+        .order_by(func.sum(case((ProductORM.verification_status == "catalog_only", 1), else_=0)).desc())
+        .all()
+    )
+    brands = []
+    total_pending = 0
+    for row in rows:
+        pending = int(row.pending or 0)
+        verified = int(row.verified or 0)
+        total = int(row.total or 0)
+        pct = round(verified / total * 100, 1) if total > 0 else 0.0
+        brands.append({
+            "brand_slug": row.brand_slug,
+            "total": total,
+            "pending": pending,
+            "verified": verified,
+            "pct": pct,
+        })
+        total_pending += pending
+    return {"brands": brands, "total_pending": total_pending}
 
 
 @router.get("/review-queue")
