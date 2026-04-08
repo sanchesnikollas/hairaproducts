@@ -1,11 +1,12 @@
 import { NavLink, Outlet, Navigate } from "react-router-dom";
 import { useAuth } from "../../lib/auth";
-import { LayoutDashboard, Package, ListChecks, FlaskConical, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, ListChecks, FlaskConical, ClipboardPen, Settings, LogOut } from "lucide-react";
 
 const NAV_ITEMS = [
   { to: "/ops", icon: LayoutDashboard, label: "Dashboard", end: true },
   { to: "/ops/products", icon: Package, label: "Produtos" },
   { to: "/ops/review", icon: ListChecks, label: "Revisao" },
+  { to: "/ops/inci", icon: ClipboardPen, label: "INCI Manual" },
   { to: "/ops/ingredients", icon: FlaskConical, label: "Ingredientes", admin: true },
   { to: "/ops/settings", icon: Settings, label: "Settings", admin: true },
 ];

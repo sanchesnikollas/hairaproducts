@@ -13,6 +13,7 @@ import OpsProducts from './pages/ops/OpsProducts'
 import OpsProductDetail from './pages/ops/OpsProductDetail'
 import OpsReview from './pages/ops/OpsReview'
 import OpsIngredients from './pages/ops/OpsIngredients'
+import OpsInciEntry from './pages/ops/OpsInciEntry'
 import OpsSettings from './pages/ops/OpsSettings'
 
 function NotFound() {
@@ -35,6 +36,7 @@ function App() {
           <Route path="products" element={<OpsProducts />} />
           <Route path="products/:id" element={<OpsProductDetail />} />
           <Route path="review" element={<OpsReview />} />
+          <Route path="inci" element={<OpsInciEntry />} />
           <Route path="ingredients" element={<OpsIngredients />} />
           <Route path="settings" element={<OpsSettings />} />
         </Route>

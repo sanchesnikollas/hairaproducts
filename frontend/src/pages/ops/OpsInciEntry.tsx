@@ -72,7 +72,7 @@ export default function OpsInciEntry() {
   };
 
   const sortedBrands = summary
-    ? [...summary.brands].sort((a, b) => b.pending - a.pending)
+    ? [...summary.brands].filter((b) => b.pending > 0).sort((a, b) => b.pending - a.pending)
     : [];
 
   const ingredientCount = inciText.trim() ? parseInci(inciText).length : 0;
