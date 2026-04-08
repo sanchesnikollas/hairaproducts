@@ -63,7 +63,23 @@ export interface DataQuality {
   pct: number;
 }
 
-export async function opsListProducts(params?: { brand?: string; status_editorial?: string; search?: string; page?: number }): Promise<{
+export interface InciSummaryBrand {
+  brand_slug: string;
+  total: number;
+  pending: number;
+  verified: number;
+  pct: number;
+}
+
+export async function opsGetInciSummary(): Promise<{
+  brands: InciSummaryBrand[];
+  total_pending: number;
+}> {
+  const res = await authFetch(`${BASE}/ops/inci-summary`);
+  return res.json();
+}
+
+export async function opsListProducts(params?: { brand?: string; status_editorial?: string; search?: string; page?: number; verification_status?: string; per_page?: number }): Promise<{
   items: {
     id: string; product_name: string; brand_slug: string;
     verification_status: string; status_operacional: string | null;
@@ -78,6 +94,8 @@ export async function opsListProducts(params?: { brand?: string; status_editoria
   if (params?.status_editorial) qs.set("status_editorial", params.status_editorial);
   if (params?.search) qs.set("search", params.search);
   if (params?.page) qs.set("page", String(params.page));
+  if (params?.verification_status) qs.set("verification_status", params.verification_status);
+  if (params?.per_page) qs.set("per_page", String(params.per_page));
   const res = await authFetch(`${BASE}/ops/products?${qs}`);
   return res.json();
 }
