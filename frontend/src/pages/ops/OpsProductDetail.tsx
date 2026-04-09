@@ -38,6 +38,8 @@ export default function OpsProductDetail() {
   const [saving, setSaving] = useState(false);
   const [showIngredients, setShowIngredients] = useState(false);
   const [showFullHistory, setShowFullHistory] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const [extractedData, setExtractedData] = useState<Record<string, unknown> | null>(null);
 
   const { data: product, loading, error, refetch } = useAPI(
     () => opsGetProduct(id!),
@@ -296,38 +298,105 @@ export default function OpsProductDetail() {
             </div>
           </div>
 
-          {/* Image */}
+          {/* Image + Photo Upload */}
           <div className={cardCls}>
-            <h3 className="text-sm font-semibold text-ink mb-3">Imagem</h3>
-            {form.image_url_main ? (
-              <div className="space-y-2">
-                <img
-                  src={form.image_url_main}
-                  alt=""
-                  className="w-full h-32 rounded-lg border border-cream-dark object-contain bg-cream"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                />
+            <h3 className="text-sm font-semibold text-ink mb-3">Imagem & Foto</h3>
+            {form.image_url_main && (
+              <img
+                src={form.image_url_main}
+                alt=""
+                className="w-full h-28 rounded-lg border border-cream-dark object-contain bg-cream mb-2"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
+            )}
+            <input
+              type="text"
+              value={form.image_url_main ?? ""}
+              onChange={(e) => updateField("image_url_main", e.target.value)}
+              className={`${inputCls} text-xs mb-2`}
+              placeholder="URL da imagem"
+            />
+            {/* Photo upload for INCI extraction */}
+            <div className="border-t border-cream-dark/50 pt-2 mt-1">
+              <label className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-cream-dark bg-cream/50 py-3 cursor-pointer hover:border-ink/30 transition-colors">
                 <input
-                  type="text"
-                  value={form.image_url_main}
-                  onChange={(e) => updateField("image_url_main", e.target.value)}
-                  className={`${inputCls} text-xs`}
-                  placeholder="URL da imagem"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setExtracting(true);
+                    setExtractedData(null);
+                    try {
+                      const token = localStorage.getItem("haira_token");
+                      const formData = new FormData();
+                      formData.append("file", file);
+                      const resp = await fetch(`/api/ops/products/${id}/extract-from-photo`, {
+                        method: "POST",
+                        headers: { Authorization: `Bearer ${token}` },
+                        body: formData,
+                      });
+                      const data = await resp.json();
+                      if (data.status === "ok" && data.extracted) {
+                        setExtractedData(data.extracted);
+                      } else {
+                        alert(data.message || "Erro na extração");
+                      }
+                    } catch (err) {
+                      alert("Erro ao enviar foto");
+                    } finally {
+                      setExtracting(false);
+                      e.target.value = "";
+                    }
+                  }}
                 />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-cream-dark bg-cream/50 py-6">
-                  <span className="text-2xl text-ink-muted/40">📷</span>
-                  <span className="mt-1 text-[10px] text-ink-muted">Colar URL abaixo</span>
+                {extracting ? (
+                  <span className="text-xs text-ink-muted">Extraindo com IA...</span>
+                ) : (
+                  <>
+                    <span className="text-lg">📷</span>
+                    <span className="text-[10px] text-ink-muted mt-1">Foto da embalagem → extrair INCI</span>
+                  </>
+                )}
+              </label>
+            </div>
+            {/* Extracted data confirmation */}
+            {extractedData && (
+              <div className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 space-y-2">
+                <p className="text-xs font-medium text-emerald-800">Dados extraídos da foto:</p>
+                {Array.isArray(extractedData.inci_ingredients) && (
+                  <p className="text-[10px] text-emerald-700">{(extractedData.inci_ingredients as string[]).length} ingredientes detectados</p>
+                )}
+                {typeof extractedData.product_name === "string" && (
+                  <p className="text-[10px] text-emerald-700">Nome: {extractedData.product_name.substring(0, 50)}</p>
+                )}
+                <div className="flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const ext = extractedData;
+                      if (ext.inci_ingredients && Array.isArray(ext.inci_ingredients)) {
+                        updateField("inci_raw", (ext.inci_ingredients as string[]).join(", "));
+                      }
+                      if (ext.product_name && !form.product_name) updateField("product_name", String(ext.product_name));
+                      if (ext.description) updateField("description", String(ext.description));
+                      if (ext.size_volume) updateField("size_volume", String(ext.size_volume));
+                      if (ext.product_category) updateField("product_category", String(ext.product_category));
+                      setExtractedData(null);
+                    }}
+                    className="rounded bg-emerald-600 px-2.5 py-1 text-[10px] font-medium text-white hover:bg-emerald-700"
+                  >
+                    Aplicar dados
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExtractedData(null)}
+                    className="rounded border border-emerald-200 px-2.5 py-1 text-[10px] text-emerald-700 hover:bg-emerald-100"
+                  >
+                    Descartar
+                  </button>
                 </div>
-                <input
-                  type="text"
-                  value={form.image_url_main ?? ""}
-                  onChange={(e) => updateField("image_url_main", e.target.value)}
-                  className={`${inputCls} text-xs`}
-                  placeholder="https://...imagem.jpg"
-                />
               </div>
             )}
           </div>

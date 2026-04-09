@@ -40,6 +40,27 @@ def cli(log_level: str):
     _setup_logging(log_level)
 
 
+@cli.command("reset-password")
+@click.option("--email", required=True, help="User email")
+@click.option("--new-password", prompt=True, hide_input=True, confirmation_prompt=True, help="New password")
+def reset_password(email: str, new_password: str):
+    """Reset a user's password (admin or reviewer)."""
+    import bcrypt as _bcrypt
+    from src.storage.database import get_engine
+    from sqlalchemy.orm import Session as SASession
+    from src.storage.ops_models import UserORM
+
+    engine = get_engine()
+    with SASession(engine) as session:
+        user = session.query(UserORM).filter(UserORM.email == email).first()
+        if not user:
+            click.echo(f"User {email} not found.")
+            return
+        user.password_hash = _bcrypt.hashpw(new_password.encode(), _bcrypt.gensalt()).decode()
+        session.commit()
+        click.echo(f"Password reset for {user.name} ({email}).")
+
+
 @cli.command()
 @click.option("--input", "input_path", required=True, help="Path to Excel file")
 @click.option("--output", "output_path", default="config/brands.json", help="Output JSON path")

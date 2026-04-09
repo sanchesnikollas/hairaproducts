@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Literal
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from pydantic import BaseModel
 from sqlalchemy import func, or_, case
 from sqlalchemy.orm import Session
@@ -646,4 +646,163 @@ def get_seal_products(
             }
             for p in page_items
         ],
+    }
+
+
+@router.post("/products/{product_id}/extract-from-photo")
+async def extract_from_photo(
+    product_id: str,
+    file: UploadFile,
+    user: dict = Depends(get_current_user),
+    session: Session = Depends(get_ops_session),
+):
+    """Upload a product photo and extract INCI + metadata using AI Vision."""
+    import anthropic
+    import base64
+    import os
+    import re
+    import json as _json
+
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not configured")
+
+    product = session.query(ProductORM).filter(ProductORM.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    # Read and validate image
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Image too large (max 10MB)")
+
+    mime = file.content_type or "image/jpeg"
+    if mime not in ("image/jpeg", "image/png", "image/webp"):
+        raise HTTPException(status_code=400, detail="Unsupported image type")
+
+    img_b64 = base64.standard_b64encode(content).decode()
+
+    client = anthropic.Anthropic(api_key=api_key)
+    message = client.messages.create(
+        model="claude-sonnet-4-5-20250929",
+        max_tokens=2048,
+        messages=[{
+            "role": "user",
+            "content": [
+                {"type": "image", "source": {"type": "base64", "media_type": mime, "data": img_b64}},
+                {"type": "text", "text": """Extract product data from this hair/cosmetic product photo.
+Return ONLY valid JSON with these fields:
+{
+  "product_name": "full product name if visible",
+  "brand": "brand name if visible",
+  "inci_ingredients": ["ingredient1", "ingredient2", ...],
+  "product_category": "shampoo|condicionador|mascara|tratamento|leave_in|oleo_serum|styling|coloracao|kit|null",
+  "size_volume": "e.g. 300ml",
+  "description": "product description if visible"
+}
+Only extract what is clearly readable. Use null for anything not visible.
+For INCI, extract the complete list in order. Keep original language (Portuguese or English/Latin INCI names).
+"""}
+            ],
+        }],
+    )
+
+    raw = message.content[0].text.strip()
+    # Parse JSON from response
+    match = re.search(r'\{.*\}', raw, re.DOTALL)
+    if not match:
+        return {"status": "error", "message": "Could not parse AI response", "raw": raw[:500]}
+
+    try:
+        extracted = _json.loads(match.group())
+    except _json.JSONDecodeError:
+        return {"status": "error", "message": "Invalid JSON from AI", "raw": raw[:500]}
+
+    return {
+        "status": "ok",
+        "product_id": product_id,
+        "current": {
+            "product_name": product.product_name,
+            "brand_slug": product.brand_slug,
+            "inci_ingredients": product.inci_ingredients,
+            "product_category": product.product_category,
+            "size_volume": product.size_volume,
+            "description": product.description,
+        },
+        "extracted": extracted,
+        "source": "photo_vision",
+        "tokens_used": message.usage.input_tokens + message.usage.output_tokens,
+    }
+
+
+@router.post("/products/create-from-photo")
+async def create_product_from_photo(
+    file: UploadFile,
+    brand_slug: str = "",
+    user: dict = Depends(get_current_user),
+):
+    """Upload a product photo to create a new product. Returns extracted data for review."""
+    import anthropic
+    import base64
+    import os
+    import re
+    import json as _json
+
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not configured")
+
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Image too large (max 10MB)")
+
+    mime = file.content_type or "image/jpeg"
+    if mime not in ("image/jpeg", "image/png", "image/webp"):
+        raise HTTPException(status_code=400, detail="Unsupported image type")
+
+    img_b64 = base64.standard_b64encode(content).decode()
+
+    client = anthropic.Anthropic(api_key=api_key)
+    message = client.messages.create(
+        model="claude-sonnet-4-5-20250929",
+        max_tokens=2048,
+        messages=[{
+            "role": "user",
+            "content": [
+                {"type": "image", "source": {"type": "base64", "media_type": mime, "data": img_b64}},
+                {"type": "text", "text": """Extract ALL product data from this hair/cosmetic product packaging photo.
+Return ONLY valid JSON:
+{
+  "product_name": "full product name",
+  "brand": "brand name",
+  "inci_ingredients": ["ingredient1", "ingredient2", ...],
+  "product_category": "shampoo|condicionador|mascara|tratamento|leave_in|oleo_serum|styling|coloracao|kit|null",
+  "size_volume": "e.g. 300ml",
+  "description": "product description/claims if visible"
+}
+Extract the COMPLETE INCI ingredient list in order. Keep original names.
+Use null for anything not readable.
+"""}
+            ],
+        }],
+    )
+
+    raw = message.content[0].text.strip()
+    match = re.search(r'\{.*\}', raw, re.DOTALL)
+    if not match:
+        return {"status": "error", "message": "Could not parse AI response"}
+
+    try:
+        extracted = _json.loads(match.group())
+    except _json.JSONDecodeError:
+        return {"status": "error", "message": "Invalid JSON from AI"}
+
+    if brand_slug:
+        extracted["brand_slug"] = brand_slug
+
+    return {
+        "status": "ok",
+        "extracted": extracted,
+        "source": "photo_vision",
+        "tokens_used": message.usage.input_tokens + message.usage.output_tokens,
     }
