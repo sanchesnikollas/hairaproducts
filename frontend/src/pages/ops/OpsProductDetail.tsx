@@ -112,6 +112,7 @@ export default function OpsProductDetail() {
 
   const p = product as ProductData;
   const dataQuality = p.data_quality as { fields: Record<string, boolean>; filled: number; total: number; pct: number } | undefined;
+  const productLabels = p.product_labels as { detected?: string[]; inferred?: string[] } | null;
   const inputCls = "w-full rounded-lg border border-cream-dark bg-cream px-3 py-2 text-sm text-ink outline-none focus:border-ink focus:bg-white transition-colors";
   const readonlyCls = "w-full rounded-lg border border-cream-dark/50 bg-cream/50 px-3 py-2 text-sm text-ink-muted";
   const labelCls = "mb-1 block text-xs text-ink-muted";
@@ -368,6 +369,45 @@ export default function OpsProductDetail() {
               </div>
             </div>
           )}
+
+          {/* Seals */}
+          {productLabels && (productLabels.detected?.length || productLabels.inferred?.length) ? (
+            <div className={cardCls}>
+              <h3 className="text-sm font-semibold text-ink mb-3">Selos</h3>
+              <div className="flex flex-wrap gap-1.5">
+                {[...(productLabels.detected || []), ...(productLabels.inferred || [])].map((seal) => {
+                  const info: Record<string, { label: string; color: string }> = {
+                    sulfate_free: { label: "Sem Sulfato", color: "bg-emerald-100 text-emerald-700" },
+                    silicone_free: { label: "Sem Silicone", color: "bg-blue-100 text-blue-700" },
+                    paraben_free: { label: "Sem Parabeno", color: "bg-green-100 text-green-700" },
+                    petrolatum_free: { label: "Sem Petrolato", color: "bg-teal-100 text-teal-700" },
+                    dye_free: { label: "Sem Corante", color: "bg-purple-100 text-purple-700" },
+                    low_poo: { label: "Low Poo", color: "bg-cyan-100 text-cyan-700" },
+                    no_poo: { label: "No Poo", color: "bg-indigo-100 text-indigo-700" },
+                    vegan: { label: "Vegano", color: "bg-lime-100 text-lime-700" },
+                    cruelty_free: { label: "Cruelty Free", color: "bg-pink-100 text-pink-700" },
+                    natural: { label: "Natural", color: "bg-amber-100 text-amber-700" },
+                    organic: { label: "Orgânico", color: "bg-yellow-100 text-yellow-700" },
+                    dermatologically_tested: { label: "Derma Testado", color: "bg-sky-100 text-sky-700" },
+                    uv_protection: { label: "Proteção UV", color: "bg-orange-100 text-orange-700" },
+                    thermal_protection: { label: "Proteção Térmica", color: "bg-red-100 text-red-700" },
+                    fragrance_free: { label: "Sem Fragrância", color: "bg-stone-100 text-stone-700" },
+                  };
+                  const s = info[seal] || { label: seal.replace(/_/g, " "), color: "bg-gray-100 text-gray-600" };
+                  return (
+                    <span key={seal} className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-medium ${s.color}`}>
+                      {s.label}
+                    </span>
+                  );
+                })}
+              </div>
+              {productLabels.detected && productLabels.detected.length > 0 && (
+                <p className="mt-2 text-[10px] text-ink-muted">
+                  {productLabels.detected.length} detectado{productLabels.detected.length > 1 ? "s" : ""} · {(productLabels.inferred || []).length} inferido{(productLabels.inferred || []).length > 1 ? "s" : ""} por INCI
+                </p>
+              )}
+            </div>
+          ) : null}
 
           {/* History */}
           <div className={cardCls}>

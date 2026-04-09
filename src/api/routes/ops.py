@@ -281,6 +281,7 @@ def ops_get_product(
         "price": product.price,
         "product_url": product.product_url,
         "extraction_method": product.extraction_method,
+        "product_labels": product.product_labels,
         "data_quality": {"fields": fields_quality, "filled": filled, "total": len(fields_quality), "pct": round(filled / len(fields_quality) * 100)},
     }
 
