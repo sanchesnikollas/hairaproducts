@@ -487,6 +487,85 @@ def resolve_review(
     return {"status": "ok", "product_id": product_id, "decision": body.decision}
 
 
+@router.post("/cleanup-ingredients")
+def cleanup_ingredients(
+    user: dict = Depends(require_admin),
+    session: Session = Depends(get_ops_session),
+):
+    """Remove description/sentence text that was incorrectly stored as ingredients."""
+    from src.storage.orm_models import ProductIngredientORM
+    try:
+        from src.storage.orm_models import IngredientAliasORM
+    except ImportError:
+        IngredientAliasORM = None
+
+    patterns = [
+        "canonical_name LIKE 'combinado %'", "canonical_name LIKE '% dos ingredientes%'",
+        "canonical_name LIKE 'com um %'", "canonical_name LIKE 'a arte %'",
+        "canonical_name LIKE 'protagonista %'", "canonical_name LIKE 'as frutas %'",
+        "canonical_name LIKE 'como %' AND length(canonical_name) > 15",
+        "canonical_name LIKE 'com %' AND length(canonical_name) > 20",
+        "canonical_name LIKE 'e %' AND length(canonical_name) > 20 AND canonical_name NOT LIKE 'e-%'",
+        "canonical_name LIKE 'a %' AND length(canonical_name) > 20 AND canonical_name NOT LIKE 'A-%'",
+        "canonical_name LIKE 'o %' AND length(canonical_name) > 20",
+        "canonical_name LIKE 'as %' AND length(canonical_name) > 15",
+        "canonical_name LIKE 'os %' AND length(canonical_name) > 15",
+        "canonical_name LIKE 'um %'", "canonical_name LIKE 'uma %'",
+        "canonical_name LIKE 'para %' AND length(canonical_name) > 15",
+        "canonical_name LIKE 'que %'", "canonical_name LIKE 'no %' AND length(canonical_name) > 15",
+        "canonical_name LIKE '% se destacam%'", "canonical_name LIKE '% ressalta%'",
+        "canonical_name LIKE '% irreverente%'", "canonical_name LIKE '% origem natural%'",
+        "canonical_name LIKE '% design %'",
+        "canonical_name LIKE '%aplicar%'", "canonical_name LIKE '%enxaguar%'",
+        "canonical_name LIKE '%massagear%'", "canonical_name LIKE '%embalagem%'",
+        "canonical_name LIKE '%informações%' AND length(canonical_name) > 15",
+        "canonical_name LIKE '%conservar%'", "canonical_name LIKE '%não ingerir%'",
+        "canonical_name LIKE '%fora do alcance%'", "canonical_name LIKE '%prazo de validade%'",
+        "canonical_name LIKE '%registro anvisa%'",
+        "canonical_name LIKE 'Ingredientes:%'", "canonical_name LIKE 'Ingredientes %'",
+        "canonical_name LIKE '%.%:%' AND length(canonical_name) > 50",
+        "canonical_name LIKE '%.' AND length(canonical_name) > 3",
+        "canonical_name LIKE '%]' AND canonical_name NOT LIKE '%[%]'",
+        "length(TRIM(canonical_name)) < 2",
+    ]
+
+    from src.storage.orm_models import IngredientORM
+    deleted = 0
+    for pattern in patterns:
+        try:
+            rows = session.execute(func.text(f"SELECT id FROM ingredients WHERE {pattern}")).fetchall()
+        except Exception:
+            continue
+        for (rid,) in rows:
+            session.query(ProductIngredientORM).filter(ProductIngredientORM.ingredient_id == rid).delete()
+            if IngredientAliasORM:
+                session.query(IngredientAliasORM).filter(IngredientAliasORM.ingredient_id == rid).delete()
+            session.query(IngredientORM).filter(IngredientORM.id == rid).delete()
+            deleted += 1
+
+    # Also fix trailing dots and case dedup
+    all_ings = session.query(IngredientORM).all()
+    seen = {}
+    merged = 0
+    for ing in all_ings:
+        key = ing.canonical_name.lower().strip().rstrip('.')
+        if key in seen:
+            # Merge
+            session.query(ProductIngredientORM).filter(
+                ProductIngredientORM.ingredient_id == ing.id
+            ).update({"ingredient_id": seen[key]}, synchronize_session=False)
+            if IngredientAliasORM:
+                session.query(IngredientAliasORM).filter(IngredientAliasORM.ingredient_id == ing.id).delete()
+            session.delete(ing)
+            merged += 1
+        else:
+            seen[key] = ing.id
+
+    session.commit()
+    remaining = session.query(func.count(IngredientORM.id)).scalar()
+    return {"deleted": deleted, "merged": merged, "remaining": remaining}
+
+
 @router.get("/seals")
 def get_seals_summary(
     user: dict = Depends(get_current_user),
