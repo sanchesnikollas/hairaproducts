@@ -192,23 +192,54 @@ def get_brand_coverage(
 ):
     repo = ProductRepository(brand_session)
     cov = repo.get_brand_coverage(slug)
-    if not cov:
-        raise HTTPException(status_code=404, detail="Brand coverage not found")
+    if cov:
+        return {
+            "brand_slug": cov.brand_slug,
+            "discovered_total": cov.discovered_total,
+            "hair_total": cov.hair_total,
+            "kits_total": cov.kits_total,
+            "non_hair_total": cov.non_hair_total,
+            "extracted_total": cov.extracted_total,
+            "verified_inci_total": cov.verified_inci_total,
+            "verified_inci_rate": cov.verified_inci_rate,
+            "catalog_only_total": cov.catalog_only_total,
+            "quarantined_total": cov.quarantined_total,
+            "status": cov.status,
+            "last_run": str(cov.last_run) if cov.last_run else None,
+            "blueprint_version": cov.blueprint_version,
+            "coverage_report": cov.coverage_report,
+        }
+
+    # Fallback: compute coverage from products table
+    from sqlalchemy import func as sa_func, case as sa_case
+    row = brand_session.query(
+        sa_func.count(ProductORM.id).label("total"),
+        sa_func.sum(sa_case((ProductORM.verification_status == "verified_inci", 1), else_=0)).label("verified"),
+        sa_func.sum(sa_case((ProductORM.verification_status == "catalog_only", 1), else_=0)).label("catalog"),
+        sa_func.sum(sa_case((ProductORM.verification_status == "quarantined", 1), else_=0)).label("quarantined"),
+    ).filter(ProductORM.brand_slug == slug).first()
+
+    if not row or not row.total:
+        raise HTTPException(status_code=404, detail="Brand not found")
+
+    total = row.total or 0
+    verified = row.verified or 0
+    rate = round(verified / total, 4) if total > 0 else 0.0
     return {
-        "brand_slug": cov.brand_slug,
-        "discovered_total": cov.discovered_total,
-        "hair_total": cov.hair_total,
-        "kits_total": cov.kits_total,
-        "non_hair_total": cov.non_hair_total,
-        "extracted_total": cov.extracted_total,
-        "verified_inci_total": cov.verified_inci_total,
-        "verified_inci_rate": cov.verified_inci_rate,
-        "catalog_only_total": cov.catalog_only_total,
-        "quarantined_total": cov.quarantined_total,
-        "status": cov.status,
-        "last_run": str(cov.last_run) if cov.last_run else None,
-        "blueprint_version": cov.blueprint_version,
-        "coverage_report": cov.coverage_report,
+        "brand_slug": slug,
+        "discovered_total": total,
+        "hair_total": 0,
+        "kits_total": 0,
+        "non_hair_total": 0,
+        "extracted_total": total,
+        "verified_inci_total": verified,
+        "verified_inci_rate": rate,
+        "catalog_only_total": row.catalog or 0,
+        "quarantined_total": row.quarantined or 0,
+        "status": "discovered",
+        "last_run": None,
+        "blueprint_version": None,
+        "coverage_report": None,
     }
 
 
