@@ -484,3 +484,86 @@ def resolve_review(
     _recalculate_confidence(session, product)
     session.commit()
     return {"status": "ok", "product_id": product_id, "decision": body.decision}
+
+
+@router.get("/seals")
+def get_seals_summary(
+    user: dict = Depends(get_current_user),
+    session: Session = Depends(get_ops_session),
+):
+    """Return all seals with product counts."""
+    import json as _json
+    rows = session.query(ProductORM.product_labels).filter(
+        ProductORM.product_labels.isnot(None),
+        ProductORM.product_labels != "null",
+    ).all()
+
+    seal_counts: dict[str, int] = {}
+    for (raw,) in rows:
+        try:
+            labels = raw if isinstance(raw, dict) else _json.loads(raw)
+            for seal in labels.get("detected", []):
+                seal_counts[seal] = seal_counts.get(seal, 0) + 1
+            for seal in labels.get("inferred", []):
+                seal_counts[seal] = seal_counts.get(seal, 0) + 1
+        except Exception:
+            pass
+
+    return {
+        "seals": [
+            {"name": name, "count": count}
+            for name, count in sorted(seal_counts.items(), key=lambda x: -x[1])
+        ],
+        "total_products_with_seals": len([r for r in rows if r[0] and r[0] != "null"]),
+    }
+
+
+@router.get("/seals/{seal_name}/products")
+def get_seal_products(
+    seal_name: str,
+    page: int = 1,
+    per_page: int = 20,
+    user: dict = Depends(get_current_user),
+    session: Session = Depends(get_ops_session),
+):
+    """Return products that have a specific seal."""
+    import json as _json
+    # Query all products with labels, then filter in Python
+    # (JSON column filtering in SQLite is limited)
+    q = session.query(ProductORM).filter(
+        ProductORM.product_labels.isnot(None),
+        ProductORM.product_labels != "null",
+    )
+    all_products = q.all()
+
+    matching = []
+    for p in all_products:
+        try:
+            labels = p.product_labels if isinstance(p.product_labels, dict) else _json.loads(p.product_labels)
+            all_seals = labels.get("detected", []) + labels.get("inferred", [])
+            if seal_name in all_seals:
+                matching.append(p)
+        except Exception:
+            pass
+
+    total = len(matching)
+    start = (page - 1) * per_page
+    page_items = matching[start:start + per_page]
+
+    return {
+        "seal": seal_name,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "items": [
+            {
+                "id": p.id,
+                "product_name": p.product_name,
+                "brand_slug": p.brand_slug,
+                "image_url_main": p.image_url_main,
+                "product_category": p.product_category,
+                "verification_status": p.verification_status,
+            }
+            for p in page_items
+        ],
+    }

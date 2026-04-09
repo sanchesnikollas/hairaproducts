@@ -6,6 +6,7 @@ import OpsDashboard from './pages/ops/OpsDashboard'
 import OpsProducts from './pages/ops/OpsProducts'
 import OpsProductDetail from './pages/ops/OpsProductDetail'
 import OpsIngredients from './pages/ops/OpsIngredients'
+import OpsSeals from './pages/ops/OpsSeals'
 import OpsSettings from './pages/ops/OpsSettings'
 import BrandsDashboard from './pages/BrandsDashboard'
 import BrandPage from './pages/BrandPage'
@@ -35,6 +36,7 @@ function App() {
           <Route index element={<OpsDashboard />} />
           <Route path="products" element={<OpsProducts />} />
           <Route path="products/:id" element={<OpsProductDetail />} />
+          <Route path="seals" element={<OpsSeals />} />
           <Route path="ingredients" element={<OpsIngredients />} />
           <Route path="settings" element={<OpsSettings />} />
           <Route path="brands" element={<BrandsDashboard />} />
