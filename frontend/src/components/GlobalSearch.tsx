@@ -54,7 +54,7 @@ export default function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) 
 
   const handleSelect = (product: Product) => {
     onOpenChange(false);
-    navigate(`/brands/${product.brand_slug}/products/${product.id}`);
+    navigate(`/ops/brands/${product.brand_slug}/products/${product.id}`);
   };
 
   return (

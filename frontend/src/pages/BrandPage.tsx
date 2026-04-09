@@ -94,9 +94,9 @@ export default function BrandPage() {
       {/* Breadcrumb */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <div className="flex items-center gap-1.5 text-[13px] text-neutral-400">
-          <Link to="/" className="hover:text-neutral-600 transition-colors">Home</Link>
+          <Link to="/ops" className="hover:text-neutral-600 transition-colors">Home</Link>
           <span className="text-neutral-300">/</span>
-          <Link to="/brands" className="hover:text-neutral-600 transition-colors">Brands</Link>
+          <Link to="/ops/brands" className="hover:text-neutral-600 transition-colors">Marcas</Link>
           <span className="text-neutral-300">/</span>
           <span className="text-neutral-700 font-medium">{formatBrandName(slug!)}</span>
         </div>
@@ -242,7 +242,7 @@ export default function BrandPage() {
                       onClick={() => setPage(page + 1)}
                       className="px-3.5 py-1.5 rounded-lg border border-neutral-200 text-sm font-medium text-neutral-600 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
-                      Proxima
+                      Próxima
                     </button>
                   </div>
                 )}

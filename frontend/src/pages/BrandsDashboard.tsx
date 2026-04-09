@@ -13,8 +13,8 @@ type SortDir = 'asc' | 'desc';
 
 function getCompleteness(b: BrandCoverage): number {
   const q = b.quality;
-  if (!q) return 0;
-  return Math.round((q.has_description_pct + q.has_image_pct + q.has_category_pct + q.has_labels_pct) / 4);
+  if (!q || !q.has_description_pct) return 0;
+  return Math.round(((q.has_description_pct || 0) + (q.has_image_pct || 0) + (q.has_category_pct || 0) + (q.has_labels_pct || 0)) / 4);
 }
 
 export default function BrandsDashboard() {
@@ -167,7 +167,7 @@ export default function BrandsDashboard() {
             </thead>
             <tbody>
               {filtered.map((brand, i) => (
-                <BrandRow key={brand.brand_slug} brand={brand} index={i} onClick={() => navigate(`/brands/${brand.brand_slug}`)} />
+                <BrandRow key={brand.brand_slug} brand={brand} index={i} onClick={() => navigate(`/ops/brands/${brand.brand_slug}`)} />
               ))}
             </tbody>
           </table>

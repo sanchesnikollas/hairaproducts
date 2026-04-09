@@ -90,7 +90,7 @@ export default function OpsInciEntry() {
           )}
         </div>
         <p className="mt-1 text-sm text-ink-muted">
-          Selecione uma marca e insira a composicao INCI a partir da embalagem do produto.
+          Selecione uma marca e insira a composição INCI a partir da embalagem do produto.
         </p>
       </div>
 
@@ -212,7 +212,7 @@ export default function OpsInciEntry() {
                 </div>
               ))}
 
-              {/* Pagination */}
+              {/* Págination */}
               {products.total > PER_PAGE && (
                 <div className="flex items-center justify-between pt-2 text-sm text-ink-muted">
                   <span>{products.total} produtos total</span>
@@ -224,13 +224,13 @@ export default function OpsInciEntry() {
                     >
                       Anterior
                     </button>
-                    <span className="flex items-center px-2">Pagina {page}</span>
+                    <span className="flex items-center px-2">Página {page}</span>
                     <button
                       onClick={() => setPage((p) => p + 1)}
                       disabled={products.items.length < products.per_page}
                       className="rounded-lg border border-cream-dark px-3 py-1 hover:bg-cream disabled:opacity-50"
                     >
-                      Proxima
+                      Próxima
                     </button>
                   </div>
                 </div>

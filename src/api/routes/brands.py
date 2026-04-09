@@ -58,8 +58,12 @@ def list_brands(session: Session = Depends(_get_session)):
     # Compute quality metrics per brand
     quality = _compute_brand_quality_metrics(session)
 
-    return [
-        {
+    # Build results from coverage records
+    coverage_slugs = set()
+    results = []
+    for c in coverages:
+        coverage_slugs.add(c.brand_slug)
+        results.append({
             "brand_slug": c.brand_slug,
             "discovered_total": c.discovered_total,
             "hair_total": c.hair_total,
@@ -71,9 +75,71 @@ def list_brands(session: Session = Depends(_get_session)):
             "status": c.status,
             "last_run": str(c.last_run) if c.last_run else None,
             "quality": quality.get(c.brand_slug, {}),
-        }
-        for c in coverages
-    ]
+        })
+
+    # Add brands that exist in products but have no coverage record
+    from sqlalchemy import func, case
+    from src.storage.orm_models import ProductORM
+    product_brands = (
+        session.query(
+            ProductORM.brand_slug,
+            func.count(ProductORM.id).label("total"),
+            func.sum(case((ProductORM.verification_status == "verified_inci", 1), else_=0)).label("verified"),
+            func.sum(case((ProductORM.verification_status == "catalog_only", 1), else_=0)).label("catalog"),
+            func.sum(case((ProductORM.verification_status == "quarantined", 1), else_=0)).label("quarantined"),
+        )
+        .group_by(ProductORM.brand_slug)
+        .all()
+    )
+    for row in product_brands:
+        if row.brand_slug not in coverage_slugs:
+            total = row.total or 0
+            verified = row.verified or 0
+            rate = round(verified / total, 4) if total > 0 else 0.0
+            results.append({
+                "brand_slug": row.brand_slug,
+                "discovered_total": total,
+                "hair_total": 0,
+                "extracted_total": total,
+                "verified_inci_total": verified,
+                "verified_inci_rate": rate,
+                "catalog_only_total": row.catalog or 0,
+                "quarantined_total": row.quarantined or 0,
+                "status": "discovered",
+                "last_run": None,
+                "quality": quality.get(row.brand_slug, {}),
+            })
+
+    # Add registered brands from brands.json — ONLY "marcas principais" (priority <= 1)
+    # or brands that have been actively configured (have blueprints)
+    import json
+    from pathlib import Path
+    known_slugs = {r["brand_slug"] for r in results}
+    brands_json = Path("config/brands.json")
+    if brands_json.exists():
+        try:
+            registered = json.loads(brands_json.read_text())
+            for b in registered:
+                slug = b.get("brand_slug", "")
+                priority = b.get("priority", 99)
+                if slug and slug not in known_slugs and priority is not None:
+                    results.append({
+                        "brand_slug": slug,
+                        "discovered_total": 0,
+                        "hair_total": 0,
+                        "extracted_total": 0,
+                        "verified_inci_total": 0,
+                        "verified_inci_rate": 0.0,
+                        "catalog_only_total": 0,
+                        "quarantined_total": 0,
+                        "status": b.get("status", "registered"),
+                        "last_run": None,
+                        "quality": {},
+                    })
+        except Exception:
+            pass  # brands.json malformed, skip
+
+    return results
 
 
 def _compute_brand_quality_metrics(session: SASession) -> dict:

@@ -75,7 +75,7 @@ export default function AttentionAlerts({ brands }: AttentionAlertsProps) {
       className="flex flex-wrap gap-2"
     >
       {totalQuarantine > 0 && firstQuarantineBrand && (
-        <Link to={`/brands/${firstQuarantineBrand}?tab=quarentena`}>
+        <Link to={`/ops/brands/${firstQuarantineBrand}?tab=quarentena`}>
           <span className="inline-flex items-center cursor-pointer text-xs font-medium px-3 py-1.5 rounded-lg bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 transition-colors">
             {totalQuarantine} em quarentena
           </span>
@@ -83,7 +83,7 @@ export default function AttentionAlerts({ brands }: AttentionAlertsProps) {
       )}
 
       {lowInciBrands.length > 0 && (
-        <Link to="/brands">
+        <Link to="/ops/brands">
           <span className="inline-flex items-center cursor-pointer text-xs font-medium px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100 transition-colors">
             {lowInciBrands.length} marcas &lt;50% INCI
           </span>
@@ -91,7 +91,7 @@ export default function AttentionAlerts({ brands }: AttentionAlertsProps) {
       )}
 
       {brandsWithGaps.map((b) => (
-        <Link key={b.brand_slug} to={`/brands/${b.brand_slug}`}>
+        <Link key={b.brand_slug} to={`/ops/brands/${b.brand_slug}`}>
           <span className="inline-flex items-center cursor-pointer text-xs font-medium px-3 py-1.5 rounded-lg bg-neutral-50 text-neutral-600 border border-neutral-200 hover:bg-neutral-100 transition-colors">
             {b.brand_name}: {b.missing_inci} sem INCI
           </span>

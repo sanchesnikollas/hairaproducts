@@ -52,6 +52,7 @@ def dashboard(user: dict = Depends(get_current_user), session: Session = Depends
     low_confidence = (
         session.query(ProductORM)
         .filter(ProductORM.confidence < 50)
+        .filter(ProductORM.verification_status != "quarantined")
         .order_by(ProductORM.confidence.asc())
         .limit(20)
         .all()
@@ -388,7 +389,17 @@ def get_review_queue(
     user: dict = Depends(get_current_user),
     session: Session = Depends(get_ops_session),
 ):
+    from src.core.taxonomy import VALID_CATEGORIES
+
     q = session.query(ProductORM)
+    # Excluir quarantined e produtos sem categoria capilar válida
+    q = q.filter(ProductORM.verification_status != "quarantined")
+    q = q.filter(
+        or_(
+            ProductORM.product_category.in_(VALID_CATEGORIES),
+            ProductORM.verification_status == "verified_inci",
+        )
+    )
     if type == "low_confidence":
         q = q.filter(ProductORM.confidence < 50)
     elif type == "pending_editorial":

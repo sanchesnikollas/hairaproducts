@@ -96,7 +96,7 @@ export default function ProductCard({ product, brandSlug, onClick }: ProductCard
   }
 
   return (
-    <Link to={`/brands/${brandSlug}/products/${product.id}`} className="block group/product-card">
+    <Link to={`/ops/brands/${brandSlug}/products/${product.id}`} className="block group/product-card">
       {cardContent}
     </Link>
   );
