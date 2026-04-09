@@ -152,7 +152,7 @@ export default function ProductBrowser() {
   };
 
   const handleRowClick = (product: Product) => {
-    navigate(`/ops/brands/${product.brand_slug}/products/${product.id}`);
+    navigate(`/ops/products/${product.id}`);
   };
 
   // Pagination info

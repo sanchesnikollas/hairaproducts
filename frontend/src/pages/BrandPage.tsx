@@ -3,7 +3,7 @@ import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import ProductCard from '@/components/ProductCard';
+
 import QuarantineTab from '@/components/QuarantineTab';
 import CoverageTab from '@/components/CoverageTab';
 import LoadingState, { ErrorState, EmptyState } from '@/components/LoadingState';
@@ -200,7 +200,7 @@ export default function BrandPage() {
               )}
             </div>
 
-            {/* Product Grid */}
+            {/* Product Table */}
             {productsLoading ? (
               <LoadingState message="Carregando produtos..." />
             ) : productsError ? (
@@ -209,41 +209,75 @@ export default function BrandPage() {
               <EmptyState title="Nenhum produto encontrado" description="Tente ajustar os filtros." />
             ) : (
               <div className="mt-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {products.map((product, i) => (
-                    <motion.div
-                      key={product.id}
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: 0.02 * i }}
-                    >
-                      <ProductCard
-                        product={product}
-                        brandSlug={slug!}
-                      />
-                    </motion.div>
-                  ))}
+                <div className="overflow-x-auto rounded-xl border border-cream-dark bg-white">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-cream-dark text-left text-[10px] text-ink-muted uppercase tracking-wider">
+                        <th className="w-10 px-1 py-3"></th>
+                        <th className="px-3 py-3">Produto</th>
+                        <th className="px-3 py-3 w-24">Categoria</th>
+                        <th className="px-3 py-3 w-24">Status</th>
+                        <th className="px-3 py-3 w-16">INCI</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {products.map((product) => (
+                        <tr key={product.id} className="border-b border-cream-dark/50 hover:bg-cream/50 transition-colors group">
+                          <td className="px-1 py-2.5">
+                            {product.image_url_main ? (
+                              <img src={product.image_url_main} alt="" className="h-8 w-8 rounded border border-cream-dark object-cover" />
+                            ) : (
+                              <div className="h-8 w-8 rounded border border-cream-dark bg-cream-dark/30" />
+                            )}
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <Link to={`/ops/products/${product.id}`} className="font-medium text-ink hover:underline">
+                              {product.product_name}
+                            </Link>
+                          </td>
+                          <td className="px-3 py-2.5 text-xs text-ink-muted">{product.product_category || '—'}</td>
+                          <td className="px-3 py-2.5">
+                            <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                              product.verification_status === 'verified_inci' ? 'bg-emerald-100 text-emerald-700'
+                              : product.verification_status === 'quarantined' ? 'bg-red-100 text-red-700'
+                              : 'bg-amber-100 text-amber-700'
+                            }`}>
+                              {product.verification_status === 'verified_inci' ? 'verificado' : product.verification_status === 'quarantined' ? 'quarentena' : 'catalog'}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5">
+                            {product.verification_status === 'verified_inci' ? (
+                              <span className="text-xs text-emerald-600 font-medium">✓ {(product as unknown as Record<string, unknown>).inci_count as string ?? ''}</span>
+                            ) : (
+                              <span className="text-xs text-red-400">✗</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
 
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-center gap-3 mt-8">
-                    <button
-                      disabled={page <= 1}
-                      onClick={() => setPage(page - 1)}
-                      className="px-3.5 py-1.5 rounded-lg border border-neutral-200 text-sm font-medium text-neutral-600 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Anterior
-                    </button>
-                    <span className="text-sm text-neutral-400 tabular-nums">
-                      {page} / {totalPages}
-                    </span>
-                    <button
-                      disabled={page >= totalPages}
-                      onClick={() => setPage(page + 1)}
-                      className="px-3.5 py-1.5 rounded-lg border border-neutral-200 text-sm font-medium text-neutral-600 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Próxima
-                    </button>
+                  <div className="flex items-center justify-between mt-4 text-sm text-ink-muted">
+                    <span>{total} produtos</span>
+                    <div className="flex gap-2">
+                      <button
+                        disabled={page <= 1}
+                        onClick={() => setPage(page - 1)}
+                        className="rounded-lg border border-cream-dark px-3 py-1 hover:bg-cream disabled:opacity-50"
+                      >
+                        Anterior
+                      </button>
+                      <span className="flex items-center px-2 tabular-nums">Página {page}</span>
+                      <button
+                        disabled={page >= totalPages}
+                        onClick={() => setPage(page + 1)}
+                        className="rounded-lg border border-cream-dark px-3 py-1 hover:bg-cream disabled:opacity-50"
+                      >
+                        Próxima
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

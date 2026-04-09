@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { AuthProvider } from './lib/auth'
 import Login from './pages/Login'
 import OpsLayout from './components/ops/OpsLayout'
@@ -9,7 +9,12 @@ import OpsIngredients from './pages/ops/OpsIngredients'
 import OpsSettings from './pages/ops/OpsSettings'
 import BrandsDashboard from './pages/BrandsDashboard'
 import BrandPage from './pages/BrandPage'
-import ProductDetail from './pages/ProductDetail'
+// ProductDetail is now handled by OpsProductDetail via redirect
+
+function RedirectToProduct() {
+  const { productId } = useParams();
+  return <Navigate to={`/ops/products/${productId}`} replace />;
+}
 
 function NotFound() {
   return (
@@ -34,7 +39,7 @@ function App() {
           <Route path="settings" element={<OpsSettings />} />
           <Route path="brands" element={<BrandsDashboard />} />
           <Route path="brands/:slug" element={<BrandPage />} />
-          <Route path="brands/:slug/products/:productId" element={<ProductDetail />} />
+          <Route path="brands/:slug/products/:productId" element={<RedirectToProduct />} />
         </Route>
 
         {/* All redirects → unified interface */}

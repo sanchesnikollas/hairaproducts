@@ -39,7 +39,7 @@ function PlaceholderImage() {
   );
 }
 
-export default function ProductCard({ product, brandSlug, onClick }: ProductCardProps) {
+export default function ProductCard({ product, brandSlug: _brandSlug, onClick }: ProductCardProps) {
   const allSeals = [
     ...(product.product_labels?.detected ?? []),
     ...(product.product_labels?.inferred ?? []),
@@ -96,7 +96,7 @@ export default function ProductCard({ product, brandSlug, onClick }: ProductCard
   }
 
   return (
-    <Link to={`/ops/brands/${brandSlug}/products/${product.id}`} className="block group/product-card">
+    <Link to={`/ops/products/${product.id}`} className="block group/product-card">
       {cardContent}
     </Link>
   );
