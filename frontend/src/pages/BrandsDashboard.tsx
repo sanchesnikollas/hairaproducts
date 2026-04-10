@@ -17,17 +17,52 @@ function getCompleteness(b: BrandCoverage): number {
   return Math.round(((q.has_description_pct || 0) + (q.has_image_pct || 0) + (q.has_category_pct || 0) + (q.has_labels_pct || 0)) / 4);
 }
 
+type BrandGroup = 'all' | 'principais' | 'nacionais' | 'internacionais' | 'com_dados';
+
+function slugify(name: string): string {
+  return name.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 export default function BrandsDashboard() {
   const { data: brands, loading, error, refetch } = useAPI(getBrands);
   const [search, setSearch] = useState('');
   const [sortField, setSortField] = useState<SortField>('verified_inci_rate');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [activeGroup, setActiveGroup] = useState<BrandGroup>('com_dados');
+  const [brandGroups, setBrandGroups] = useState<Record<string, string[]>>({});
+
+  // Fetch brand groups on mount
+  useState(() => {
+    fetch('/api/brand-groups').then(r => r.json()).then(d => {
+      if (d.groups) setBrandGroups(d.groups);
+    }).catch(() => {});
+  });
 
   const filtered = useMemo(() => {
     if (!brands) return [];
-    const result = brands.filter((b) =>
-      b.brand_slug.toLowerCase().includes(search.toLowerCase())
-    );
+
+    // Filter by group first
+    let groupSlugs: Set<string> | null = null;
+    if (activeGroup === 'principais' && brandGroups['Marcas Principais']) {
+      groupSlugs = new Set(brandGroups['Marcas Principais'].map(slugify));
+    } else if (activeGroup === 'nacionais' && brandGroups['Nacionais']) {
+      groupSlugs = new Set(brandGroups['Nacionais'].map(slugify));
+    } else if (activeGroup === 'internacionais' && brandGroups['Internacionais']) {
+      groupSlugs = new Set(brandGroups['Internacionais'].map(slugify));
+    } else if (activeGroup === 'com_dados') {
+      groupSlugs = null; // will filter below
+    }
+
+    const result = brands.filter((b) => {
+      if (!b.brand_slug.toLowerCase().includes(search.toLowerCase())) return false;
+      if (activeGroup === 'com_dados') return (b.extracted_total || 0) > 0;
+      if (activeGroup === 'all') return true;
+      if (groupSlugs) return groupSlugs.has(b.brand_slug);
+      return true;
+    });
     result.sort((a, b) => {
       let aVal: number | string;
       let bVal: number | string;
@@ -47,7 +82,7 @@ export default function BrandsDashboard() {
       return sortDir === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
     });
     return result;
-  }, [brands, search, sortField, sortDir]);
+  }, [brands, search, sortField, sortDir, activeGroup, brandGroups]);
 
   const stats = useMemo(() => {
     if (!brands || brands.length === 0) return null;
@@ -117,6 +152,34 @@ export default function BrandsDashboard() {
           />
         </motion.div>
       )}
+
+      {/* Group Tabs */}
+      <div className="flex gap-1 border-b border-cream-dark">
+        {([
+          ['com_dados', 'Com Dados'],
+          ['principais', 'Marcas Principais'],
+          ['nacionais', 'Nacionais'],
+          ['internacionais', 'Internacionais'],
+          ['all', 'Todas'],
+        ] as [BrandGroup, string][]).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setActiveGroup(key)}
+            className={`px-4 py-2 text-sm transition-colors ${
+              activeGroup === key
+                ? 'border-b-2 border-ink font-medium text-ink'
+                : 'text-ink-muted hover:text-ink'
+            }`}
+          >
+            {label}
+            {brands && key === 'com_dados' && (
+              <span className="ml-1.5 text-[10px] text-ink-muted">
+                {brands.filter(b => (b.extracted_total || 0) > 0).length}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
 
       {/* Search */}
       <motion.div

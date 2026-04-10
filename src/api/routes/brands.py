@@ -31,6 +31,17 @@ def _get_session():
             yield session
 
 
+@router.get("/brand-groups")
+def get_brand_groups():
+    """Return brand groupings from the Excel spreadsheet (Principais, Nacionais, Internacionais)."""
+    import json
+    from pathlib import Path
+    groups_path = Path("config/brand_groups.json")
+    if not groups_path.exists():
+        return {"groups": {}}
+    return {"groups": json.loads(groups_path.read_text())}
+
+
 @router.get("/brands")
 def list_brands(session: Session = Depends(_get_session)):
     if is_multi_db():
