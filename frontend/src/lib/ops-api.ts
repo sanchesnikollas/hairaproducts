@@ -79,13 +79,15 @@ export async function opsGetInciSummary(): Promise<{
   return res.json();
 }
 
-export async function opsListProducts(params?: { brand?: string; status_editorial?: string; search?: string; page?: number; verification_status?: string; per_page?: number }): Promise<{
+export async function opsListProducts(params?: { brand?: string; status_editorial?: string; search?: string; page?: number; verification_status?: string; per_page?: number; gap?: string }): Promise<{
   items: {
     id: string; product_name: string; brand_slug: string;
     verification_status: string; status_operacional: string | null;
     status_editorial: string | null; status_publicacao: string | null;
     confidence: number; assigned_to: string | null;
     data_quality?: DataQuality;
+    image_url_main?: string;
+    product_category?: string;
   }[];
   total: number; page: number; per_page: number;
 }> {
@@ -96,6 +98,7 @@ export async function opsListProducts(params?: { brand?: string; status_editoria
   if (params?.page) qs.set("page", String(params.page));
   if (params?.verification_status) qs.set("verification_status", params.verification_status);
   if (params?.per_page) qs.set("per_page", String(params.per_page));
+  if (params?.gap) qs.set("gap", params.gap);
   const res = await authFetch(`${BASE}/ops/products?${qs}`);
   return res.json();
 }

@@ -138,6 +138,7 @@ export default function OpsProducts() {
   const [brand, setBrand] = useState(searchParams.get("brand") || "");
   const [statusFilter, setStatusFilter] = useState(searchParams.get("status_editorial") || "");
   const [verificationFilter, setVerificationFilter] = useState(searchParams.get("verification_status") || "");
+  const [gapFilter, setGapFilter] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -149,13 +150,14 @@ export default function OpsProducts() {
       brand: brand || undefined,
       status_editorial: statusFilter || undefined,
       verification_status: verificationFilter || undefined,
+      gap: gapFilter || undefined,
       search: search || undefined,
       page,
     }),
-    [brand, statusFilter, verificationFilter, search, page],
+    [brand, statusFilter, verificationFilter, gapFilter, search, page],
   );
 
-  const { data, loading, error, refetch } = useAPI(fetcher, [brand, statusFilter, verificationFilter, search, page]);
+  const { data, loading, error, refetch } = useAPI(fetcher, [brand, statusFilter, verificationFilter, gapFilter, search, page]);
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
@@ -251,9 +253,21 @@ export default function OpsProducts() {
           <option value="catalog_only">Catalog Only</option>
           <option value="quarantined">Quarantined</option>
         </select>
-        {(statusFilter || brand || verificationFilter) && (
+        <select
+          value={gapFilter}
+          onChange={(e) => { setGapFilter(e.target.value); setPage(1); }}
+          className={pillCls(!!gapFilter)}
+        >
+          <option value="">Gaps ▾</option>
+          <option value="sem_inci">Sem INCI</option>
+          <option value="sem_descricao">Sem Descrição</option>
+          <option value="sem_categoria">Sem Categoria</option>
+          <option value="sem_preco">Sem Preço</option>
+          <option value="sem_volume">Sem Volume</option>
+        </select>
+        {(statusFilter || brand || verificationFilter || gapFilter) && (
           <button
-            onClick={() => { setStatusFilter(""); setBrand(""); setVerificationFilter(""); setPage(1); }}
+            onClick={() => { setStatusFilter(""); setBrand(""); setVerificationFilter(""); setGapFilter(""); setPage(1); }}
             className="text-xs text-ink-muted hover:text-ink transition-colors"
           >
             Limpar filtros

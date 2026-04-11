@@ -46,6 +46,28 @@ export default function OpsDashboard() {
         <KPICard label="Confiança Média" value={`${kpis.avg_confidence}%`} icon={Package} color="text-ink-muted" sub="Completude + parsing + revisão" />
       </div>
 
+      {/* Data Completeness */}
+      <div className="rounded-xl border border-cream-dark bg-white p-5">
+        <h2 className="mb-4 text-sm font-semibold text-ink">Completude dos Dados</h2>
+        <div className="space-y-3">
+          {[
+            { label: "INCI", pct: kpis.inci_coverage, color: "bg-emerald-500" },
+            { label: "Categoria", pct: kpis.category_pct ?? 0, color: "bg-blue-500" },
+            { label: "Descrição", pct: kpis.description_pct ?? 0, color: "bg-amber-500" },
+            { label: "Imagem", pct: kpis.image_pct ?? 0, color: "bg-purple-500" },
+            { label: "Volume", pct: kpis.volume_pct ?? 0, color: "bg-cyan-500" },
+          ].map(({ label, pct, color }) => (
+            <div key={label} className="flex items-center gap-3">
+              <span className="text-xs text-ink-muted w-20">{label}</span>
+              <div className="flex-1 h-2 rounded-full bg-cream-dark overflow-hidden">
+                <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
+              </div>
+              <span className="text-xs font-medium text-ink tabular-nums w-12 text-right">{pct}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Two columns: Low confidence + Recent activity */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Low confidence products */}
