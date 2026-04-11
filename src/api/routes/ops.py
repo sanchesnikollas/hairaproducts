@@ -49,6 +49,21 @@ def dashboard(user: dict = Depends(get_current_user), session: Session = Depends
     else:
         inci_coverage = 0.0
 
+    # --- Field coverage percentages ---
+    hair_total = total
+    category_filled = session.query(func.count(ProductORM.id)).filter(
+        ProductORM.product_category.isnot(None), ProductORM.product_category != "", ProductORM.product_category != "non_hair"
+    ).scalar() or 0
+    description_filled = session.query(func.count(ProductORM.id)).filter(
+        ProductORM.description.isnot(None), ProductORM.description != ""
+    ).scalar() or 0
+    image_filled = session.query(func.count(ProductORM.id)).filter(
+        ProductORM.image_url_main.isnot(None)
+    ).scalar() or 0
+    volume_filled = session.query(func.count(ProductORM.id)).filter(
+        ProductORM.size_volume.isnot(None), ProductORM.size_volume != ""
+    ).scalar() or 0
+
     low_confidence = (
         session.query(ProductORM)
         .filter(ProductORM.confidence < 50)
@@ -73,6 +88,10 @@ def dashboard(user: dict = Depends(get_current_user), session: Session = Depends
             "quarantined": quarantined,
             "published": published,
             "avg_confidence": round(float(avg_conf), 1),
+            "category_pct": round(category_filled / max(hair_total, 1) * 100, 1),
+            "description_pct": round(description_filled / max(hair_total, 1) * 100, 1),
+            "image_pct": round(image_filled / max(hair_total, 1) * 100, 1),
+            "volume_pct": round(volume_filled / max(hair_total, 1) * 100, 1),
         },
         "low_confidence": [
             {"id": p.id, "product_name": p.product_name, "brand_slug": p.brand_slug,
@@ -316,6 +335,31 @@ def ops_product_history(
     }
 
 
+@router.get("/products/{product_id}/evidence")
+def get_product_evidence(
+    product_id: str,
+    user: dict = Depends(get_current_user),
+    session: Session = Depends(get_ops_session),
+):
+    from src.storage.orm_models import ProductEvidenceORM
+    rows = (
+        session.query(ProductEvidenceORM)
+        .filter(ProductEvidenceORM.product_id == product_id)
+        .order_by(ProductEvidenceORM.extracted_at.desc())
+        .limit(50)
+        .all()
+    )
+    return [
+        {
+            "field_name": e.field_name,
+            "extraction_method": e.extraction_method,
+            "source_url": e.source_url,
+            "extracted_at": str(e.extracted_at) if e.extracted_at else None,
+        }
+        for e in rows
+    ]
+
+
 @router.patch("/products/{product_id}")
 def ops_patch_product(
     product_id: str,
@@ -336,9 +380,49 @@ def ops_patch_product(
         updates["verification_status"] = "verified_inci"
         product.verification_status = "verified_inci"
     create_revisions(session, "product", product_id, old_values, updates, user["sub"], "human")
+
+    # --- Evidence tracking for key fields ---
+    from src.storage.orm_models import ProductEvidenceORM
+    from datetime import datetime, timezone
+
+    evidence_fields = ["inci_ingredients", "description", "composition", "usage_instructions"]
+    for ef in evidence_fields:
+        if ef in updates:
+            evidence = ProductEvidenceORM(
+                product_id=product_id,
+                field_name=ef,
+                source_url=f"ops://manual/{user['sub']}",
+                evidence_locator="ops_panel_edit",
+                raw_source_text=str(updates[ef])[:2000] if updates[ef] else None,
+                extraction_method="manual",
+                extracted_at=datetime.now(timezone.utc),
+            )
+            session.add(evidence)
+
+    # --- Field validation ---
+    from src.core.field_validator import validate_product_fields
+    validation = validate_product_fields(
+        product_name=product.product_name,
+        inci_ingredients=product.inci_ingredients,
+        description=product.description,
+        usage_instructions=product.usage_instructions,
+        price=product.price,
+    )
+
     _recalculate_confidence(session, product)
     session.commit()
-    return {"status": "ok", "product_id": product_id, "confidence": product.confidence}
+    return {
+        "status": "ok",
+        "product_id": product_id,
+        "confidence": product.confidence,
+        "validation": {
+            "score": validation.score,
+            "issues": [
+                {"field": i.field, "severity": i.severity.value, "message": i.message}
+                for i in validation.issues
+            ],
+        },
+    }
 
 
 class ResolveRequest(BaseModel):
