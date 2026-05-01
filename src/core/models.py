@@ -22,6 +22,30 @@ class GenderTarget(str, enum.Enum):
     UNKNOWN = "unknown"
 
 
+class AudienceAge(str, enum.Enum):
+    UNDER_3 = "under_3"
+    KIDS = "kids"
+    TEEN = "teen"
+    ADULT = "adult"
+
+
+class FunctionObjective(str, enum.Enum):
+    LIMPAR = "limpar"
+    CONDICIONAR = "condicionar"
+    HIDRATAR = "hidratar"
+    NUTRIR = "nutrir"
+    RECONSTRUIR = "reconstruir"
+    DEFINIR = "definir"
+    FINALIZAR = "finalizar"
+    PROTEGER = "proteger"
+    TRATAR = "tratar"
+    MODELAR = "modelar"
+    ESFOLIAR = "esfoliar"
+    ALISAR = "alisar"
+    ONDULAR = "ondular"
+    COLORIR = "colorir"
+
+
 class ExtractionMethod(str, enum.Enum):
     JSONLD = "jsonld"
     HTML_SELECTOR = "html_selector"
@@ -93,6 +117,13 @@ class ProductExtraction(BaseModel):
     has_section_context: bool = False
     evidence: list[Evidence] = Field(default_factory=list)
     extracted_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    # --- Hair classification ---
+    ph: Optional[float] = None
+    hair_type: Optional[list[str]] = None
+    audience_age: Optional[str] = None
+    function_objective: Optional[str] = None
+    image_url_front: Optional[str] = None
+    image_url_back: Optional[str] = None
 
 
 class QAResult(BaseModel):

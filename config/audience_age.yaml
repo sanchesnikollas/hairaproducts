@@ -1,0 +1,28 @@
+# Audience age vocabulary
+# Enum único — produto se encaixa em apenas uma faixa
+# Inferido via heurística em product_name + description
+
+under_3:
+  display_name_pt: Bebê (até 3 anos)
+  age_range: "0-2"
+  keywords_pt: ["baby", "bebê", "bebe", "recém-nascido", "recem-nascido", "0+", "0 a 2", "primeira idade", "bebês"]
+  keywords_en: ["baby", "infant", "newborn"]
+
+kids:
+  display_name_pt: Infantil (3-11 anos)
+  age_range: "3-11"
+  keywords_pt: ["kids", "infantil", "criança", "crianças", "infantis", "kid"]
+  keywords_en: ["kids", "children", "child"]
+
+teen:
+  display_name_pt: Adolescente (12-17 anos)
+  age_range: "12-17"
+  keywords_pt: ["teen", "adolescente", "jovem", "teens", "adolescentes"]
+  keywords_en: ["teen", "teenager", "youth"]
+
+adult:
+  display_name_pt: Adulto (18+)
+  age_range: "18+"
+  is_default: true
+  keywords_pt: []
+  keywords_en: []

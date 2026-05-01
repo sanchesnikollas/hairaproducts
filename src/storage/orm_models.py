@@ -51,6 +51,13 @@ class ProductORM(Base):
     variants = Column(JSON, nullable=True)
     product_labels = Column(JSON, nullable=True, default=None)
     confidence = Column(Float, nullable=False, default=0.0)
+    # --- Hair classification fields (added 2026-04-28) ---
+    ph = Column(Float, nullable=True, index=True)
+    hair_type = Column(JSON, nullable=True)
+    audience_age = Column(String(20), nullable=True, index=True)
+    function_objective = Column(String(100), nullable=True, index=True)
+    image_url_front = Column(String(2000), nullable=True)
+    image_url_back = Column(String(2000), nullable=True)
     # --- Ops Panel v1 columns ---
     status_operacional = Column(String(50), nullable=True)   # bruto|extraido|normalizado|parseado|validado
     status_editorial = Column(String(50), nullable=True)     # pendente|em_revisao|aprovado|corrigido|rejeitado
