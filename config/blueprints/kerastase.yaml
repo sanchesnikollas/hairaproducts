@@ -15,7 +15,7 @@ discovery:
 extraction:
   requires_js: false
   http_client: curl_cffi
-  curl_cffi_impersonate: chrome
+  curl_cffi_impersonate: chrome131
   delay_seconds: 3
   inci_selectors:
   - .c-product-detail__ingredients p
@@ -32,6 +32,15 @@ extraction:
   - .c-product-main__image img
   - .product-image img
   - img.product-img
+  price_selectors:
+  - .c-product-main .c-product-price__value.m-new
+  - .c-product-main .c-product-price__value:not(.m-old):not(.h-hidden)
+  - .c-product-detail__main .c-product-price__value.m-new
+  - .c-product-detail__main .c-product-price__value:not(.m-old)
+  description_selectors:
+  - .c-tabs__panel.m-active
+  - .c-product-detail__description
+  - 'meta[name="description"]'
   section_label_map:
     ingredients_inci:
       labels:

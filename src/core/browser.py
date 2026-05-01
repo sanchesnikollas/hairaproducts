@@ -69,7 +69,9 @@ class BrowserClient:
     def _ensure_curl_cffi(self):
         if self._curl_session is None:
             from curl_cffi.requests import Session
-            self._curl_session = Session(impersonate="chrome", verify=self._ssl_verify)
+            # chrome131 — keeps up with current Cloudflare/WAF fingerprinting
+            impersonate = os.environ.get("CURL_CFFI_IMPERSONATE", "chrome131")
+            self._curl_session = Session(impersonate=impersonate, verify=self._ssl_verify)
 
     def _fetch_page_curl_cffi(self, url: str) -> str:
         """Fetch page HTML using curl_cffi (bypasses Akamai/Cloudflare WAFs)."""

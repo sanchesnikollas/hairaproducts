@@ -244,9 +244,15 @@ def extract_by_selectors(
     inci_selectors: list[str] | None = None,
     name_selectors: list[str] | None = None,
     image_selectors: list[str] | None = None,
+    price_selectors: list[str] | None = None,
+    description_selectors: list[str] | None = None,
 ) -> dict:
     soup = _get_soup(html)
-    result: dict = {"name": None, "inci_raw": None, "image": None, "inci_selector": None, "name_selector": None}
+    result: dict = {
+        "name": None, "inci_raw": None, "image": None,
+        "inci_selector": None, "name_selector": None,
+        "price": None, "currency": None, "description": None,
+    }
 
     if name_selectors:
         for sel in name_selectors:
@@ -281,6 +287,40 @@ def extract_by_selectors(
                     src = el.get("data-src")
                 if src:
                     result["image"] = src
+                    break
+
+    # Price extraction via selectors + regex
+    if price_selectors:
+        for sel in price_selectors:
+            els = soup.select(sel)
+            for el in els:
+                text = el.get_text(strip=True)
+                # Match Brazilian price format: R$ 1.234,56 or R$ 100,00
+                m = re.search(r"R\$\s*([\d.]+,\d{2})", text)
+                if m:
+                    raw = m.group(1).replace(".", "").replace(",", ".")
+                    try:
+                        result["price"] = float(raw)
+                        result["currency"] = "BRL"
+                    except ValueError:
+                        continue
+                    break
+            if result["price"] is not None:
+                break
+
+    # Description via selectors (use first selector that returns >= 30 chars)
+    if description_selectors:
+        for sel in description_selectors:
+            el = soup.select_one(sel)
+            if el:
+                # meta tag — read content attribute
+                if el.name == "meta":
+                    text = (el.get("content") or "").strip()
+                else:
+                    text = el.get_text(separator=" ", strip=True)
+                text = re.sub(r"\s+", " ", text)
+                if len(text) >= 30 and not text.lower().startswith(("benefícios", "como usar", "ingredientes")):
+                    result["description"] = text[:2000]
                     break
 
     # Fallback: extract image from Vue media-gallery :variants JSON
@@ -337,6 +377,8 @@ def extract_product_deterministic(
     name_selectors: list[str] | None = None,
     image_selectors: list[str] | None = None,
     section_label_map: dict | None = None,
+    price_selectors: list[str] | None = None,
+    description_selectors: list[str] | None = None,
 ) -> dict:
     evidence_list = []
     result = {
@@ -481,12 +523,40 @@ def extract_product_deterministic(
         "[data-tab='ingredientes']",
     ]
 
+    # Description from section_classifier may be junk header text ("Benefícios", "Como usar", "Ingredientes").
+    # When blueprint provides explicit description_selectors, we re-run them to override junk.
+    _current_desc = result["description"] or ""
+    _is_junk_desc = _current_desc.strip().lower() in ("benefícios", "beneficios", "como usar", "ingredientes", "ciência", "ciencia", "fragrância", "fragrancia")
+    _force_desc = bool(description_selectors) and (not _current_desc or _is_junk_desc)
+
     sel_result = extract_by_selectors(
         html,
         inci_selectors=default_inci_selectors,
         name_selectors=default_name_selectors if not result["product_name"] else None,
         image_selectors=(image_selectors or [".product-image", "img.product-img"]) if not result["image_url_main"] else None,
+        price_selectors=price_selectors if not result["price"] else None,
+        description_selectors=description_selectors if _force_desc else None,
     )
+
+    # If we re-ran description selectors and got valid content, override
+    if _force_desc and sel_result.get("description"):
+        result["description"] = sel_result["description"]
+
+    # Apply price/description from selector pass
+    if not result["price"] and sel_result.get("price") is not None:
+        result["price"] = sel_result["price"]
+        result["currency"] = sel_result.get("currency") or "BRL"
+        evidence_list.append(create_evidence(
+            "price", url, "price_selectors",
+            f"R$ {sel_result['price']}", ExtractionMethod.HTML_SELECTOR,
+        ))
+
+    if not result["description"] and sel_result.get("description"):
+        result["description"] = sanitize_text(sel_result["description"])
+        evidence_list.append(create_evidence(
+            "description", url, "description_selectors",
+            sel_result["description"][:300], ExtractionMethod.HTML_SELECTOR,
+        ))
 
     if not result["product_name"] and sel_result["name"]:
         result["product_name"] = sanitize_text(sel_result["name"])

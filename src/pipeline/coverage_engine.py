@@ -39,6 +39,8 @@ class CoverageEngine:
         inci_selectors = extraction_config.get("inci_selectors", [])
         name_selectors = extraction_config.get("name_selectors", [])
         image_selectors = extraction_config.get("image_selectors", [])
+        price_selectors = extraction_config.get("price_selectors", [])
+        description_selectors = extraction_config.get("description_selectors", [])
         section_label_map = extraction_config.get("section_label_map")
 
         report.discovered_total = len(discovered_urls)
@@ -63,7 +65,7 @@ class CoverageEngine:
         # Extract each product URL
         for url in hair_urls:
             try:
-                product_data = self._extract_product(url, brand_slug, inci_selectors, name_selectors, image_selectors=image_selectors, blueprint_config=blueprint, section_label_map=section_label_map)
+                product_data = self._extract_product(url, brand_slug, inci_selectors, name_selectors, image_selectors=image_selectors, blueprint_config=blueprint, section_label_map=section_label_map, price_selectors=price_selectors, description_selectors=description_selectors)
                 if not product_data:
                     continue
 
@@ -164,6 +166,8 @@ Product: {product_name}
         image_selectors: list[str] | None = None,
         blueprint_config: dict | None = None,
         section_label_map: dict | None = None,
+        price_selectors: list[str] | None = None,
+        description_selectors: list[str] | None = None,
     ) -> ProductExtraction | None:
         # Fetch page HTML
         if not self._browser:
@@ -188,6 +192,8 @@ Product: {product_name}
             name_selectors=name_selectors,
             image_selectors=image_selectors or None,
             section_label_map=section_label_map,
+            price_selectors=price_selectors or None,
+            description_selectors=description_selectors or None,
         )
 
         product_name = det_result.get("product_name") or ""
