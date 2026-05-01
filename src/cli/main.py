@@ -709,17 +709,56 @@ def enrich(brand: str, limit: int, dry_run: bool):
 @click.option("--brand", required=True, help="Brand slug to validate")
 @click.option("--limit", type=int, default=None, help="Limit products to validate")
 @click.option("--dry-run", is_flag=True, help="Show what would be validated")
-def validate(brand: str, limit: int | None, dry_run: bool):
-    """Run dual validation (Pass 2) on already-extracted products."""
+@click.option("--max-llm-calls", type=int, default=300, help="Max LLM calls for this brand")
+def validate(brand: str, limit: int | None, dry_run: bool, max_llm_calls: int):
+    """Run dual validation (Pass 1 vs Pass 2 LLM-grounded re-extraction).
+
+    Pass 1 = stored extraction (deterministic via JSON-LD + CSS selectors).
+    Pass 2 = LLM re-reads the same page and extracts fields independently.
+    Divergences create entries in review_queue for human resolution.
+    """
     import json as _json
     from src.storage.database import get_engine
     from src.storage.orm_models import Base, ProductORM
     from src.storage.repository import ProductRepository
     from src.core.dual_validator import compare_fields, compare_inci_lists
+    from src.core.llm import LLMClient
+    from src.extraction.llm_pass2 import extract_pass2_llm
     from sqlalchemy.orm import Session as SASession
 
     engine = get_engine()
     Base.metadata.create_all(engine)
+
+    # Initialize LLM client
+    try:
+        llm = LLMClient(max_calls_per_brand=max_llm_calls)
+        if not llm._client:
+            click.echo("Error: ANTHROPIC_API_KEY not set. Pass 2 requires LLM.", err=True)
+            sys.exit(1)
+    except Exception as e:
+        click.echo(f"Error initializing LLM: {e}", err=True)
+        sys.exit(1)
+
+    # Initialize browser for re-fetch
+    browser = None
+    try:
+        from src.core.browser import BrowserClient
+        # Load brand blueprint for fetch options
+        from src.discovery.blueprint_engine import load_blueprint
+        try:
+            bp = load_blueprint(brand) or {}
+            extr = bp.get("extraction", {})
+            browser = BrowserClient(
+                delay_seconds=extr.get("delay_seconds", 2.0),
+                use_curl_cffi=extr.get("http_client") == "curl_cffi",
+                headless=True,
+            )
+        except Exception:
+            browser = BrowserClient(delay_seconds=2.0, headless=True)
+        click.echo(f"Browser initialized for re-fetch")
+    except Exception as e:
+        click.echo(f"Error: cannot initialize browser ({e})", err=True)
+        sys.exit(1)
 
     with SASession(engine) as session:
         repo = ProductRepository(session)
@@ -732,48 +771,92 @@ def validate(brand: str, limit: int | None, dry_run: bool):
 
         if dry_run:
             for p in products[:5]:
-                click.echo(f"  Would validate: {p.product_name}")
+                click.echo(f"  Would re-fetch + Pass 2: {p.product_name[:60]}")
             if len(products) > 5:
                 click.echo(f"  ... and {len(products) - 5} more")
             return
 
-        fields_to_compare = ["product_name", "price", "description", "composition", "care_usage", "image_url_main"]
+        fields_to_compare = ["product_name", "price", "description", "composition", "care_usage"]
         total_comparisons = 0
         total_divergences = 0
+        fetch_failures = 0
+        llm_failures = 0
 
-        for p in products:
-            # Self-validate for now (Pass 2 re-extraction will be added later)
+        for idx, p in enumerate(products):
+            click.echo(f"  [{idx+1}/{len(products)}] {p.product_name[:55]}...")
+
+            # Re-fetch HTML
+            try:
+                html = browser.fetch_page(p.product_url)
+            except Exception as e:
+                logger.warning(f"Fetch failed: {e}")
+                fetch_failures += 1
+                continue
+
+            if not html or len(html) < 200:
+                fetch_failures += 1
+                continue
+
+            # Pass 2 LLM
+            pass2 = extract_pass2_llm(html, p.product_url, llm)
+            if not pass2:
+                llm_failures += 1
+                continue
+
+            # Compare each field
             for field in fields_to_compare:
-                val = getattr(p, field, None)
-                if val is not None:
-                    str_val = str(val) if not isinstance(val, str) else val
-                    result = compare_fields(field, str_val, str_val)
-                    vc = repo.save_validation_comparison(
-                        product_id=p.id, field_name=field,
-                        pass_1_value=str_val, pass_2_value=str_val,
-                        resolution=result.resolution,
-                    )
-                    total_comparisons += 1
-                    if result.resolution != "auto_matched":
-                        repo.create_review_queue_item(p.id, vc.id, field)
-                        total_divergences += 1
+                pass_1 = getattr(p, field, None)
+                pass_2 = pass2.get(field)
+                if pass_1 is None and pass_2 is None:
+                    continue  # both null, skip
+                str_1 = str(pass_1) if pass_1 is not None else None
+                str_2 = str(pass_2) if pass_2 is not None else None
+                result = compare_fields(field, str_1, str_2)
+                vc = repo.save_validation_comparison(
+                    product_id=p.id, field_name=field,
+                    pass_1_value=str_1, pass_2_value=str_2,
+                    resolution=result.resolution,
+                )
+                total_comparisons += 1
+                if result.resolution != "auto_matched":
+                    repo.create_review_queue_item(p.id, vc.id, field)
+                    total_divergences += 1
+                    click.echo(f"    DIVERGENCE in {field}")
 
-            if p.inci_ingredients and isinstance(p.inci_ingredients, list):
-                inci_result = compare_inci_lists(p.inci_ingredients, p.inci_ingredients)
+            # Compare INCI lists
+            if p.inci_ingredients and pass2.get("inci_ingredients"):
+                pass_1_inci = p.inci_ingredients if isinstance(p.inci_ingredients, list) else []
+                pass_2_inci = pass2["inci_ingredients"] if isinstance(pass2["inci_ingredients"], list) else []
+                inci_result = compare_inci_lists(pass_1_inci, pass_2_inci)
                 vc = repo.save_validation_comparison(
                     product_id=p.id, field_name="inci_ingredients",
-                    pass_1_value=_json.dumps(p.inci_ingredients[:5]),
-                    pass_2_value=_json.dumps(p.inci_ingredients[:5]),
+                    pass_1_value=_json.dumps(pass_1_inci[:10]),
+                    pass_2_value=_json.dumps(pass_2_inci[:10]),
                     resolution="auto_matched" if inci_result.matches else "pending",
                 )
                 total_comparisons += 1
+                if not inci_result.matches:
+                    repo.create_review_queue_item(p.id, vc.id, "inci_ingredients")
+                    total_divergences += 1
+                    click.echo(f"    DIVERGENCE in inci_ingredients ({len(inci_result.mismatches)} mismatches)")
+
+            # Mark product as dual_validated if all fields matched
+            if total_divergences == 0:
+                # Could update product.verification_status here if desired
+                pass
 
         session.commit()
 
-    click.echo(f"\nValidation complete:")
-    click.echo(f"  Comparisons: {total_comparisons}")
-    click.echo(f"  Auto-matched: {total_comparisons - total_divergences}")
-    click.echo(f"  Divergences (review needed): {total_divergences}")
+    click.echo(f"\n{'='*60}")
+    click.echo(f"Dual Validation Report — {brand}")
+    click.echo(f"{'='*60}")
+    click.echo(f"Products processed:  {len(products) - fetch_failures - llm_failures}/{len(products)}")
+    click.echo(f"Fetch failures:      {fetch_failures}")
+    click.echo(f"LLM failures:        {llm_failures}")
+    click.echo(f"Total comparisons:   {total_comparisons}")
+    click.echo(f"Auto-matched:        {total_comparisons - total_divergences}")
+    click.echo(f"Divergences:         {total_divergences} ({total_divergences/max(total_comparisons,1):.0%})")
+    click.echo(f"\nLLM cost: {llm.cost_summary}")
 
 
 @cli.command(name="source-scrape")
@@ -923,6 +1006,203 @@ def enrich_external(brand: str | None, dry_run: bool, threshold: float):
         click.echo(f"  Auto-applied: {auto_applied}")
         click.echo(f"  Queued:       {queued}")
         click.echo(f"  No match:     {no_match}")
+
+
+@cli.command()
+@click.option("--brand", help="Brand slug (omit + use --all-brands for full backfill)")
+@click.option("--all-brands", "all_brands", is_flag=True, help="Run for all brands")
+@click.option("--limit", type=int, default=0, help="Max products to process (0 = all)")
+@click.option("--dry-run", is_flag=True, help="Preview classification without saving")
+@click.option("--min-confidence", type=float, default=0.0, help="Skip writing fields with confidence below this threshold")
+@click.option("--with-validation", is_flag=True, help="Run Pass 2 LLM and create review queue for divergences")
+@click.option("--max-llm-calls", type=int, default=200, help="Max LLM calls (only with --with-validation)")
+def classify(brand: str | None, all_brands: bool, limit: int, dry_run: bool, min_confidence: float, with_validation: bool, max_llm_calls: int):
+    """Apply heuristic classification (hair_type, audience_age, function_objective) to products."""
+    from src.core.classifier import classify_product
+    from src.storage.database import get_engine
+    from src.storage.orm_models import Base, ProductEvidenceORM
+    from src.storage.repository import ProductRepository
+    from sqlalchemy.orm import Session as SASession
+
+    # Pass 2 LLM (optional)
+    llm_client = None
+    classify_llm_fn = None
+    if with_validation:
+        from src.core.llm import LLMClient
+        from src.core.classifier_llm import classify_with_llm as classify_llm_fn
+        try:
+            llm_client = LLMClient(max_calls_per_brand=max_llm_calls)
+            if not llm_client._client:
+                click.echo("Error: ANTHROPIC_API_KEY not set. --with-validation requires LLM.", err=True)
+                sys.exit(1)
+        except Exception as e:
+            click.echo(f"Error initializing LLM: {e}", err=True)
+            sys.exit(1)
+
+    if not brand and not all_brands:
+        click.echo("Error: provide --brand <slug> or --all-brands.", err=True)
+        sys.exit(2)
+
+    engine_db = get_engine()
+    Base.metadata.create_all(engine_db)
+
+    with SASession(engine_db) as session:
+        repo = ProductRepository(session)
+        if all_brands:
+            products = repo.get_products(limit=limit if limit > 0 else 100000)
+        else:
+            products = repo.get_products(brand_slug=brand, limit=limit if limit > 0 else 100000)
+
+        if not products:
+            click.echo(f"No products found.")
+            return
+
+        click.echo(f"Classifying {len(products)} products...")
+        if dry_run:
+            click.echo("(DRY RUN — no changes will be saved)\n")
+
+        total = len(products)
+        with_function = 0
+        with_hair_type = 0
+        with_age_specific = 0  # not adult
+        function_counts: dict[str, int] = {}
+        age_counts: dict[str, int] = {}
+        hair_type_counts: dict[str, int] = {}
+        # Validation counters (only used with --with-validation)
+        pass2_count = 0
+        comparisons = 0
+        divergences = 0
+        import json
+
+        for product in products:
+            result = classify_product(
+                product_name=product.product_name,
+                description=product.description,
+                product_category=product.product_category,
+                inci_ingredients=product.inci_ingredients if isinstance(product.inci_ingredients, list) else None,
+            )
+
+            if result.function_objective and result.confidence_per_field.get("function_objective", 0) >= min_confidence:
+                with_function += 1
+                function_counts[result.function_objective] = function_counts.get(result.function_objective, 0) + 1
+
+            if result.hair_type:
+                with_hair_type += 1
+                for ht in result.hair_type:
+                    hair_type_counts[ht] = hair_type_counts.get(ht, 0) + 1
+
+            age = result.audience_age or "adult"
+            age_counts[age] = age_counts.get(age, 0) + 1
+            if age != "adult":
+                with_age_specific += 1
+
+            # Pass 2 LLM (optional)
+            if with_validation and llm_client and not dry_run and llm_client.can_call:
+                pass2 = classify_llm_fn(
+                    product_name=product.product_name,
+                    description=product.description,
+                    inci_ingredients=product.inci_ingredients if isinstance(product.inci_ingredients, list) else None,
+                    product_category=product.product_category,
+                    llm=llm_client,
+                )
+                if pass2:
+                    pass2_count += 1
+                    # Compare each field; create ValidationComparisonORM + ReviewQueueORM on diverge
+                    for field_name, p1_val, p2_val in [
+                        ("function_objective", result.function_objective, pass2.function_objective),
+                        ("audience_age", result.audience_age, pass2.audience_age),
+                        ("hair_type", sorted(result.hair_type) if result.hair_type else None,
+                                       sorted(pass2.hair_type) if pass2.hair_type else None),
+                    ]:
+                        matches = (p1_val == p2_val) or (not p1_val and not p2_val)
+                        resolution = "auto_matched" if matches else "pending"
+                        s1 = json.dumps(p1_val) if p1_val is not None else None
+                        s2 = json.dumps(p2_val) if p2_val is not None else None
+                        vc = repo.save_validation_comparison(
+                            product_id=product.id, field_name=field_name,
+                            pass_1_value=s1, pass_2_value=s2, resolution=resolution,
+                        )
+                        comparisons += 1
+                        if not matches:
+                            repo.create_review_queue_item(product.id, vc.id, field_name)
+                            divergences += 1
+
+            if dry_run:
+                if result.function_objective or result.hair_type or (age != "adult"):
+                    click.echo(f"  {product.product_name[:60]}")
+                    click.echo(
+                        f"    function: {result.function_objective} (conf={result.confidence_per_field.get('function_objective', 0):.2f})"
+                        f" | age: {age} (conf={result.confidence_per_field.get('audience_age', 0):.2f})"
+                        f" | hair: {result.hair_type or '—'} (conf={result.confidence_per_field.get('hair_type', 0):.2f})"
+                    )
+            else:
+                # Apply only fields meeting min_confidence
+                if result.confidence_per_field.get("function_objective", 0) >= min_confidence:
+                    product.function_objective = result.function_objective
+                if result.confidence_per_field.get("audience_age", 0) >= min_confidence:
+                    product.audience_age = result.audience_age
+                if result.confidence_per_field.get("hair_type", 0) >= min_confidence and result.hair_type:
+                    product.hair_type = result.hair_type
+
+                # Evidence entries
+                for field_name, value, conf in [
+                    ("function_objective", result.function_objective, result.confidence_per_field.get("function_objective", 0)),
+                    ("audience_age", result.audience_age, result.confidence_per_field.get("audience_age", 0)),
+                    ("hair_type", result.hair_type, result.confidence_per_field.get("hair_type", 0)),
+                ]:
+                    if value and conf >= min_confidence:
+                        # Remove prior classifier evidence for this field
+                        session.query(ProductEvidenceORM).filter(
+                            ProductEvidenceORM.product_id == product.id,
+                            ProductEvidenceORM.field_name == field_name,
+                            ProductEvidenceORM.extraction_method == "classifier_heuristic",
+                        ).delete(synchronize_session=False)
+                        kws = result.matched_keywords.get(field_name, [])
+                        ev = ProductEvidenceORM(
+                            product_id=product.id,
+                            field_name=field_name,
+                            source_url=product.product_url or "",
+                            evidence_locator=f"classifier:heuristic conf={conf:.2f}",
+                            raw_source_text=f"matched: {', '.join(kws) if kws else 'default'}",
+                            extraction_method="classifier_heuristic",
+                        )
+                        session.add(ev)
+
+        if not dry_run:
+            session.commit()
+
+        click.echo(f"\n{'='*60}")
+        click.echo(f"Classification Report")
+        click.echo(f"{'='*60}")
+        click.echo(f"Total products:        {total}")
+        click.echo(f"With function:         {with_function} ({with_function/total:.0%})")
+        click.echo(f"With hair_type:        {with_hair_type} ({with_hair_type/total:.0%})")
+        click.echo(f"With specific age:     {with_age_specific} ({with_age_specific/total:.0%})")
+
+        click.echo(f"\nFunction distribution:")
+        for func, count in sorted(function_counts.items(), key=lambda x: -x[1]):
+            click.echo(f"  {func:<20} {count:>5} ({count/total:.0%})")
+
+        click.echo(f"\nAudience age distribution:")
+        for age, count in sorted(age_counts.items(), key=lambda x: -x[1]):
+            click.echo(f"  {age:<20} {count:>5} ({count/total:.0%})")
+
+        click.echo(f"\nHair type distribution (multi-valor):")
+        for ht, count in sorted(hair_type_counts.items(), key=lambda x: -x[1])[:15]:
+            click.echo(f"  {ht:<20} {count:>5} ({count/total:.0%})")
+
+        if with_validation and llm_client:
+            click.echo(f"\n--- Dual Validation (Pass 1 heuristic vs Pass 2 LLM) ---")
+            click.echo(f"Products with Pass 2:  {pass2_count}")
+            click.echo(f"Total comparisons:     {comparisons}")
+            click.echo(f"Auto-matched:          {comparisons - divergences}")
+            click.echo(f"Divergences (review):  {divergences} ({divergences/max(comparisons,1):.0%})")
+            click.echo(f"LLM cost:              {llm_client.cost_summary}")
+
+        if not dry_run:
+            click.echo(f"\nResults saved to database.")
+        else:
+            click.echo(f"\n(DRY RUN — nothing was saved)")
 
 
 if __name__ == "__main__":
