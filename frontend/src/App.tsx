@@ -9,6 +9,8 @@ import OpsIngredients from './pages/ops/OpsIngredients'
 import OpsQuickFill from './pages/ops/OpsQuickFill'
 import OpsSeals from './pages/ops/OpsSeals'
 import OpsSettings from './pages/ops/OpsSettings'
+import OpsReview from './pages/ops/OpsReview'
+import OpsDualValidation from './pages/ops/OpsDualValidation'
 import BrandsDashboard from './pages/BrandsDashboard'
 import BrandPage from './pages/BrandPage'
 // ProductDetail is now handled by OpsProductDetail via redirect
@@ -41,6 +43,8 @@ function App() {
           <Route path="quick-fill" element={<OpsQuickFill />} />
           <Route path="ingredients" element={<OpsIngredients />} />
           <Route path="settings" element={<OpsSettings />} />
+          <Route path="review" element={<OpsReview />} />
+          <Route path="dual-validation" element={<OpsDualValidation />} />
           <Route path="brands" element={<BrandsDashboard />} />
           <Route path="brands/:slug" element={<BrandPage />} />
           <Route path="brands/:slug/products/:productId" element={<RedirectToProduct />} />
@@ -59,7 +63,6 @@ function App() {
         <Route path="/review-queue" element={<Navigate to="/ops/products" replace />} />
         {/* Redirects for removed pages */}
         <Route path="/ops/explorer" element={<Navigate to="/ops/products" replace />} />
-        <Route path="/ops/review" element={<Navigate to="/ops/products" replace />} />
         <Route path="/ops/inci" element={<Navigate to="/ops/products?verification_status=catalog_only" replace />} />
 
         {/* 404 catch-all */}

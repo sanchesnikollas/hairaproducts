@@ -123,6 +123,13 @@ class OpsProductUpdate(BaseModel):
     status_editorial: StatusEditorial | None = None
     status_publicacao: StatusPublicacao | None = None
     status_operacional: StatusOperacional | None = None
+    # Hair classification
+    ph: float | None = None
+    hair_type: list[str] | None = None
+    audience_age: str | None = None
+    function_objective: str | None = None
+    image_url_front: str | None = None
+    image_url_back: str | None = None
 
 
 class OpsProductCreate(BaseModel):
@@ -137,6 +144,12 @@ class OpsProductCreate(BaseModel):
     image_url_main: str | None = None
     size_volume: str | None = None
     price: float | None = None
+    ph: float | None = None
+    hair_type: list[str] | None = None
+    audience_age: str | None = None
+    function_objective: str | None = None
+    image_url_front: str | None = None
+    image_url_back: str | None = None
 
 
 class BatchStatusUpdate(BaseModel):
@@ -151,6 +164,7 @@ def ops_list_products(
     status_editorial: str | None = None,
     verification_status: str | None = None,
     search: str | None = None,
+    gap: str | None = None,
     page: int = 1,
     per_page: int = 30,
     user: dict = Depends(get_current_user),
@@ -165,6 +179,23 @@ def ops_list_products(
         q = q.filter(ProductORM.verification_status == verification_status)
     if search:
         q = q.filter(ProductORM.product_name.ilike(f"%{search}%"))
+    # Gap filters — products missing specific fields
+    if gap == "sem_inci":
+        q = q.filter((ProductORM.inci_ingredients.is_(None)) | (ProductORM.inci_ingredients == []))
+    elif gap == "sem_descricao":
+        q = q.filter((ProductORM.description.is_(None)) | (ProductORM.description == ""))
+    elif gap == "sem_categoria":
+        q = q.filter(ProductORM.product_category.is_(None))
+    elif gap == "sem_preco":
+        q = q.filter(ProductORM.price.is_(None))
+    elif gap == "sem_volume":
+        q = q.filter(ProductORM.size_volume.is_(None))
+    elif gap == "sem_funcao":
+        q = q.filter(ProductORM.function_objective.is_(None))
+    elif gap == "sem_tipo_cabelo":
+        q = q.filter(ProductORM.hair_type.is_(None))
+    elif gap == "sem_ph":
+        q = q.filter(ProductORM.ph.is_(None))
     total = q.count()
     items = q.order_by(ProductORM.confidence.asc()).offset((page - 1) * per_page).limit(per_page).all()
 
@@ -301,6 +332,12 @@ def ops_get_product(
         "product_url": product.product_url,
         "extraction_method": product.extraction_method,
         "product_labels": product.product_labels,
+        "ph": product.ph,
+        "hair_type": product.hair_type,
+        "audience_age": product.audience_age,
+        "function_objective": product.function_objective,
+        "image_url_front": product.image_url_front,
+        "image_url_back": product.image_url_back,
         "data_quality": {"fields": fields_quality, "filled": filled, "total": len(fields_quality), "pct": round(filled / len(fields_quality) * 100)},
     }
 

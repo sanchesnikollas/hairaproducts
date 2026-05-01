@@ -87,9 +87,75 @@ export interface Product {
   created_at: string;
   updated_at: string;
   is_kit?: boolean;
+  // Hair classification (added 2026-04-28)
+  ph: number | null;
+  hair_type: string[] | null;
+  audience_age: string | null;
+  function_objective: string | null;
+  image_url_front: string | null;
+  image_url_back: string | null;
   evidence?: ProductEvidence[];
   quality?: QualityReport;
 }
+
+export const HAIR_TYPES = [
+  "liso", "ondulado", "cacheado", "crespo",
+  "oleoso", "seco", "misto", "normal",
+  "com_quimica", "tingido",
+  "danificado", "sensibilizado", "fino", "grosso",
+] as const;
+export type HairType = (typeof HAIR_TYPES)[number];
+
+export const AUDIENCE_AGES = ["under_3", "kids", "teen", "adult"] as const;
+export type AudienceAge = (typeof AUDIENCE_AGES)[number];
+
+export const FUNCTIONS = [
+  "limpar", "condicionar", "hidratar", "nutrir", "reconstruir",
+  "definir", "finalizar", "proteger", "tratar", "modelar",
+  "esfoliar", "alisar", "ondular", "colorir",
+] as const;
+export type FunctionObjective = (typeof FUNCTIONS)[number];
+
+export const HAIR_TYPE_LABELS: Record<string, string> = {
+  liso: "Liso",
+  ondulado: "Ondulado",
+  cacheado: "Cacheado",
+  crespo: "Crespo",
+  oleoso: "Oleoso",
+  seco: "Seco",
+  misto: "Misto",
+  normal: "Normal",
+  com_quimica: "Com química",
+  tingido: "Tingido",
+  danificado: "Danificado",
+  sensibilizado: "Sensibilizado",
+  fino: "Fino",
+  grosso: "Grosso",
+};
+
+export const AUDIENCE_AGE_LABELS: Record<string, string> = {
+  under_3: "Bebê (<3 anos)",
+  kids: "Infantil (3-11)",
+  teen: "Adolescente (12-17)",
+  adult: "Adulto (18+)",
+};
+
+export const FUNCTION_LABELS: Record<string, string> = {
+  limpar: "Limpar",
+  condicionar: "Condicionar",
+  hidratar: "Hidratar",
+  nutrir: "Nutrir",
+  reconstruir: "Reconstruir",
+  definir: "Definir",
+  finalizar: "Finalizar",
+  proteger: "Proteger",
+  tratar: "Tratar",
+  modelar: "Modelar",
+  esfoliar: "Esfoliar",
+  alisar: "Alisar",
+  ondular: "Ondular",
+  colorir: "Colorir",
+};
 
 export interface QuarantineItem {
   id: string;

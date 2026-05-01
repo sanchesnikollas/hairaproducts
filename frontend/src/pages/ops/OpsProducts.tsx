@@ -264,6 +264,9 @@ export default function OpsProducts() {
           <option value="sem_categoria">Sem Categoria</option>
           <option value="sem_preco">Sem Preço</option>
           <option value="sem_volume">Sem Volume</option>
+          <option value="sem_funcao">Sem Função</option>
+          <option value="sem_tipo_cabelo">Sem Tipo de Cabelo</option>
+          <option value="sem_ph">Sem pH</option>
         </select>
         {(statusFilter || brand || verificationFilter || gapFilter) && (
           <button

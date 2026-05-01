@@ -7,6 +7,14 @@ import { RevisionTimeline } from "../../components/ops/RevisionTimeline";
 import SaveBar from "../../components/ops/SaveBar";
 import CategorySelect from "../../components/ops/CategorySelect";
 import IngredientTagInput from "../../components/ops/IngredientTagInput";
+import {
+  HAIR_TYPES,
+  HAIR_TYPE_LABELS,
+  AUDIENCE_AGES,
+  AUDIENCE_AGE_LABELS,
+  FUNCTIONS,
+  FUNCTION_LABELS,
+} from "../../types/api";
 import type { ProductIngredient } from "../../types/api";
 
 type ProductData = Record<string, unknown>;
@@ -15,6 +23,9 @@ const EDITABLE_FIELDS = [
   "product_name", "description", "usage_instructions", "composition",
   "product_category", "status_editorial", "status_publicacao",
   "image_url_main", "price", "size_volume", "inci_raw",
+  // Hair classification
+  "ph", "hair_type_csv", "audience_age", "function_objective",
+  "image_url_front", "image_url_back",
 ] as const;
 
 function getEditSnapshot(product: ProductData): Record<string, string> {
@@ -23,6 +34,9 @@ function getEditSnapshot(product: ProductData): Record<string, string> {
     if (key === "inci_raw") {
       const arr = product.inci_ingredients as string[] | undefined;
       snap[key] = arr && arr.length > 0 ? arr.join(", ") : "";
+    } else if (key === "hair_type_csv") {
+      const arr = product.hair_type as string[] | undefined;
+      snap[key] = arr && arr.length > 0 ? arr.join(",") : "";
     } else {
       const val = product[key];
       snap[key] = val != null ? String(val) : "";
@@ -87,11 +101,13 @@ export default function OpsProductDetail() {
       const updates: Record<string, unknown> = {};
       for (const [key, val] of Object.entries(form)) {
         if (val !== (originalRef.current[key] ?? "")) {
-          if (key === "price") {
+          if (key === "price" || key === "ph") {
             updates[key] = val ? parseFloat(val) : null;
           } else if (key === "inci_raw") {
             updates["inci_ingredients"] = val ? val.split(",").map((s) => s.trim()).filter(Boolean) : [];
             updates["composition"] = val || null;
+          } else if (key === "hair_type_csv") {
+            updates["hair_type"] = val ? val.split(",").map((s) => s.trim()).filter(Boolean) : null;
           } else {
             updates[key] = val || null;
           }
@@ -243,6 +259,90 @@ export default function OpsProductDetail() {
               </div>
             )}
           </div>
+
+          {/* Card: Classificação */}
+          <div className={cardCls}>
+            <h2 className="text-sm font-semibold text-ink mb-4">Classificação para algoritmo</h2>
+            <div className="space-y-4">
+              <div>
+                <label className={labelCls}>Função / Objetivo declarado</label>
+                <select
+                  value={form.function_objective ?? ""}
+                  onChange={(e) => updateField("function_objective", e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="">— não classificado —</option>
+                  {FUNCTIONS.map((f) => (
+                    <option key={f} value={f}>{FUNCTION_LABELS[f]}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className={labelCls}>Público / Idade</label>
+                <div className="flex gap-2 flex-wrap">
+                  {AUDIENCE_AGES.map((age) => (
+                    <button
+                      key={age}
+                      type="button"
+                      onClick={() => updateField("audience_age", age)}
+                      className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                        form.audience_age === age
+                          ? "bg-ink text-cream border-ink"
+                          : "bg-cream text-ink-muted border-cream-dark hover:border-ink"
+                      }`}
+                    >
+                      {AUDIENCE_AGE_LABELS[age]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className={labelCls}>Tipo de cabelo (multi-valor)</label>
+                <div className="flex gap-2 flex-wrap">
+                  {HAIR_TYPES.map((ht) => {
+                    const selected = (form.hair_type_csv ?? "").split(",").map(s => s.trim()).filter(Boolean);
+                    const isOn = selected.includes(ht);
+                    return (
+                      <button
+                        key={ht}
+                        type="button"
+                        onClick={() => {
+                          const next = isOn
+                            ? selected.filter((s) => s !== ht)
+                            : [...selected, ht];
+                          updateField("hair_type_csv", next.join(","));
+                        }}
+                        className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                          isOn
+                            ? "bg-ink text-cream border-ink"
+                            : "bg-cream text-ink-muted border-cream-dark hover:border-ink"
+                        }`}
+                      >
+                        {HAIR_TYPE_LABELS[ht]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className={labelCls}>pH (se disponível no rótulo)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="14"
+                  value={form.ph ?? ""}
+                  onChange={(e) => updateField("ph", e.target.value)}
+                  className={inputCls}
+                  placeholder="ex: 5.5"
+                />
+                <p className="mt-1 text-[10px] text-ink-muted">Valor numérico entre 0 e 14. Geralmente impresso no rótulo (verso).</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Sidebar */}
@@ -314,8 +414,48 @@ export default function OpsProductDetail() {
               value={form.image_url_main ?? ""}
               onChange={(e) => updateField("image_url_main", e.target.value)}
               className={`${inputCls} text-xs mb-2`}
-              placeholder="URL da imagem"
+              placeholder="URL da imagem principal"
             />
+
+            {/* Front / Back photo URLs */}
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <label className={labelCls}>Frente</label>
+                {form.image_url_front && (
+                  <img
+                    src={form.image_url_front}
+                    alt=""
+                    className="w-full h-20 rounded border border-cream-dark object-contain bg-cream mb-1"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                )}
+                <input
+                  type="text"
+                  value={form.image_url_front ?? ""}
+                  onChange={(e) => updateField("image_url_front", e.target.value)}
+                  className={`${inputCls} text-[10px]`}
+                  placeholder="URL frente"
+                />
+              </div>
+              <div>
+                <label className={labelCls}>Verso (rótulo INCI)</label>
+                {form.image_url_back && (
+                  <img
+                    src={form.image_url_back}
+                    alt=""
+                    className="w-full h-20 rounded border border-cream-dark object-contain bg-cream mb-1"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                )}
+                <input
+                  type="text"
+                  value={form.image_url_back ?? ""}
+                  onChange={(e) => updateField("image_url_back", e.target.value)}
+                  className={`${inputCls} text-[10px]`}
+                  placeholder="URL verso"
+                />
+              </div>
+            </div>
             {/* Photo upload for INCI extraction */}
             <div className="border-t border-cream-dark/50 pt-2 mt-1">
               <label className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-cream-dark bg-cream/50 py-3 cursor-pointer hover:border-ink/30 transition-colors">
