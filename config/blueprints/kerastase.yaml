@@ -55,6 +55,10 @@ extraction:
       labels:
       - composicao
       - composição
+      - principais ingredientes
+      - principais ativos
+      - ingredientes principais
+      - ativos principais
     description:
       labels:
       - descricao
