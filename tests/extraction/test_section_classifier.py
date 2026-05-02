@@ -72,6 +72,36 @@ class TestExtractSectionsFromHtml:
         result = extract_sections_from_html(html, SECTION_LABEL_MAP)
         assert result.care_usage == "Aplique nos cabelos molhados, massageie e enxague."
 
+    def test_tab_buttons_dont_consume_each_other(self):
+        """Salesforce Commerce Cloud (Kerastase) renders tab labels as <button>
+        siblings. The button 'Como usar' must not consume 'Ingredientes' (the
+        next sibling button) as its content. The fallback h2 inside the panel
+        is the correct source.
+        """
+        html = """
+        <html><body>
+            <div class="tabs__nav">
+                <button>Descrição</button>
+                <button>Benefícios</button>
+                <button>Como usar</button>
+                <button>Ingredientes</button>
+            </div>
+            <div class="tabs__panel">
+                <h2>Como usar o Produto</h2>
+                <p>PASSO 1: Aplique nos cabelos molhados. PASSO 2: Massageie. PASSO 3: Enxágue bem.</p>
+            </div>
+            <div class="tabs__panel">
+                <h2>Ingredientes</h2>
+                <p>Aqua, Sodium Laureth Sulfate, Cocamidopropyl Betaine, Glycerin, Parfum.</p>
+            </div>
+        </body></html>
+        """
+        result = extract_sections_from_html(html, SECTION_LABEL_MAP)
+        assert result.care_usage is not None
+        assert "PASSO 1" in result.care_usage
+        # Must NOT have grabbed "Ingredientes" as the care_usage content
+        assert result.care_usage != "Ingredientes"
+
     def test_composition_section(self):
         html = """
         <html><body>

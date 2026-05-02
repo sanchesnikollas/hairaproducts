@@ -60,6 +60,13 @@ extraction:
       - descricao
       - sobre o produto
       - detalhes
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - como aplicar
+      - instrucoes de uso
+      - aplicacao
   use_llm_fallback: true
 notes: |
   Kerastase.com.br uses Cloudflare WAF.

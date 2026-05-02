@@ -230,6 +230,19 @@ def extract_sections_from_html(
             if not content:
                 break
 
+            # Tab-button heuristic: when a <button> heading is followed by
+            # another tab button, the sibling text is just another label
+            # (e.g., button "Como usar" followed by button "Ingredientes").
+            # Reject short matches whose content is itself a known section label.
+            if el.name == "button" and len(content) < 30:
+                content_normalized = _normalize_label(content)
+                is_other_label = any(
+                    content_normalized.startswith(other_label)
+                    for other_label, _, _, _ in label_lookup
+                )
+                if is_other_label:
+                    break
+
             actual_field = taxonomy_field
 
             # For ingredients_inci, validate the content
