@@ -182,7 +182,12 @@ class BrowserClient:
         return self._page.inner_text("body")
 
     def get_links(self, url: str, allowed_domains: list[str] | None = None) -> list[str]:
-        """Fetch a page and extract all links, optionally filtered by domain."""
+        """Fetch a page and extract all links, optionally filtered by domain.
+
+        Discovered URLs are normalized: fragment + tracking + listing params stripped.
+        """
+        from src.discovery.url_classifier import normalize_discovery_url
+
         if self._use_curl_cffi or self._use_httpx:
             # Use HTML parser instead of browser for non-JS clients
             from urllib.parse import urljoin
@@ -206,9 +211,15 @@ class BrowserClient:
                 logger.warning(f"Navigation issue for {url}: {e}")
                 return []
             links = self._page.eval_on_selector_all('a[href]', 'els => els.map(e => e.href)')
+
+        normalized = []
+        for link in links:
+            n = normalize_discovery_url(link)
+            if n:
+                normalized.append(n)
         if allowed_domains:
-            links = [l for l in links if self.is_allowed_domain(l, allowed_domains)]
-        return list(set(links))
+            normalized = [l for l in normalized if self.is_allowed_domain(l, allowed_domains)]
+        return list(set(normalized))
 
     @staticmethod
     def is_allowed_domain(url: str, allowed_domains: list[str]) -> bool:

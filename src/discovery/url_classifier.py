@@ -3,8 +3,23 @@ from __future__ import annotations
 
 import enum
 import re
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from src.core.taxonomy import HAIR_KEYWORDS, EXCLUDE_KEYWORDS, KIT_PATTERNS
+
+# Tracking/analytics parameters — always strip from discovered URLs.
+TRACKING_PARAMS = frozenset({
+    "gad_source", "gad_campaignid", "gbraid", "gclid", "fbclid",
+    "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
+    "_ga", "_gl", "yclid", "msclkid", "mc_cid", "mc_eid",
+})
+
+# Listing/filter parameters (Demandware/Salesforce Commerce Cloud + generic).
+# These do not identify a unique product; they collapse the URL to its base path.
+LISTING_PARAMS = frozenset({
+    "prefn1", "prefv1", "prefn2", "prefv2", "prefn3", "prefv3",
+    "start", "sz", "insertMode", "page", "p", "sort",
+})
 
 
 class URLType(str, enum.Enum):
@@ -109,3 +124,34 @@ def classify_url(url: str, product_url_pattern: str | None = None) -> URLType:
         return URLType.CATEGORY
 
     return URLType.OTHER
+
+
+def normalize_discovery_url(url: str) -> str | None:
+    """Normalize a discovered URL: strip fragment, tracking params, listing params.
+
+    Returns None for malformed URLs (no scheme/host).
+    Preserves product variant params like ?dwvar_X_size= (Demandware) since they
+    identify distinct SKUs.
+    """
+    try:
+        parsed = urlparse(url)
+    except (ValueError, TypeError):
+        return None
+    if not parsed.scheme or not parsed.netloc:
+        return None
+
+    params = parse_qsl(parsed.query, keep_blank_values=False)
+    filtered = [
+        (k, v) for k, v in params
+        if k not in TRACKING_PARAMS and k not in LISTING_PARAMS
+    ]
+    new_query = urlencode(filtered)
+
+    return urlunparse((
+        parsed.scheme,
+        parsed.netloc,
+        parsed.path,
+        parsed.params,
+        new_query,
+        "",  # always strip fragment
+    ))
