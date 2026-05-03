@@ -58,10 +58,17 @@ class NormalizedWriter:
         self._session.query(ProductIngredientORM).filter_by(product_id=product.id).delete()
 
         count = 0
+        seen_ingredient_ids: set = set()
         for i, raw_name in enumerate(ingredients):
             if not isinstance(raw_name, str) or not raw_name.strip():
                 continue
             ingredient = self.resolve_or_create_ingredient(raw_name)
+            # Skip duplicates by canonical ingredient id — prevents UNIQUE
+            # violation when bilingual lists (PT + INCI EN) resolve different
+            # raw_names to the same canonical ingredient.
+            if ingredient.id in seen_ingredient_ids:
+                continue
+            seen_ingredient_ids.add(ingredient.id)
             pi = ProductIngredientORM(
                 product_id=product.id,
                 ingredient_id=ingredient.id,
