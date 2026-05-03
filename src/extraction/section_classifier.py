@@ -64,7 +64,8 @@ INCI_ANCHOR_INGREDIENTS = {
 }
 
 # Heading-like elements to search for section labels
-HEADING_TAGS = ["h2", "h3", "h4", "button", "strong", "b", "span"]
+# label: Shopify FAQ-tabs (e.g., Apice Cosmeticos uses <label class="jump-faq-tab-label">)
+HEADING_TAGS = ["h2", "h3", "h4", "button", "strong", "b", "span", "label"]
 
 
 def _normalize_label(text: str) -> str:
@@ -230,18 +231,13 @@ def extract_sections_from_html(
             if not content:
                 break
 
-            # Tab-button heuristic: when a <button> heading is followed by
-            # another tab button, the sibling text is just another label
-            # (e.g., button "Como usar" followed by button "Ingredientes").
-            # Reject short matches whose content is itself a known section label.
-            if el.name == "button" and len(content) < 30:
-                content_normalized = _normalize_label(content)
-                is_other_label = any(
-                    content_normalized.startswith(other_label)
-                    for other_label, _, _, _ in label_lookup
-                )
-                if is_other_label:
-                    break
+            # Tab-nav heuristic: when a <button> or <label> heading is followed
+            # by another tab in the same nav (e.g., button "Como usar" → button
+            # "Ingredientes", or label "Composição" → label "Modo de uso"), the
+            # sibling text is just another tab label or short noise.
+            # Real section content is always > 30 chars, so reject short matches.
+            if el.name in ("button", "label") and len(content) < 30:
+                break
 
             actual_field = taxonomy_field
 

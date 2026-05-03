@@ -231,6 +231,24 @@ def _extract_inci_by_tab_labels(soup) -> tuple[str | None, str | None]:
                         candidates.append((content, f"data_attr:{attr}:{label}", priority))
                     break
 
+    # Strategy 5: blind panel scan — for FAQ/tab/accordion panels, find any
+    # panel whose content looks like INCI. Useful for sites where tab nav
+    # labels (<label>, <button>) are decoupled from the content panels
+    # (e.g., Apice Cosmeticos uses .jump-faq-tab-panel--N divs).
+    panel_selectors = [
+        "[class*=tab-panel]",
+        "[class*=faq-panel]",
+        "[class*=accordion-panel]",
+        "[class*=accordion-content]",
+    ]
+    for sel in panel_selectors:
+        for panel in soup.select(sel):
+            content = panel.get_text(strip=True)
+            if _looks_like_inci(content):
+                # Lower priority than label-driven matches but better than nothing
+                priority = len(INCI_TAB_LABELS) + 1
+                candidates.append((content, f"panel_scan:{sel}", priority))
+
     if not candidates:
         return None, None
 
