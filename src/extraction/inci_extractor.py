@@ -45,6 +45,10 @@ def _split_ingredients(text: str) -> list[str]:
     treated as whitespace — they're often visual wraps inside a single ingredient
     name (e.g., 'Cetearyl\\nAlcohol' is one ingredient: 'Cetearyl Alcohol').
     Only when no other separator exists is newline used as the splitter.
+
+    Deduplicates case-insensitively while preserving first-occurrence order:
+    pages that publish bilingual lists (Portuguese + INCI standard in the same
+    block) would otherwise repeat ingredients like 'Cetearyl Alcohol'.
     """
     if "●" in text or "•" in text or "·" in text:
         # Newlines = whitespace inside a wrapped ingredient name
@@ -56,11 +60,27 @@ def _split_ingredients(text: str) -> list[str]:
     elif "," in text:
         normalized = re.sub(r"\s*\n\s*", " ", text)
         parts = normalized.split(",")
+    elif "/" in text and text.count("/") > 5:
+        # Slash-separated INCI (Widi-care pattern)
+        normalized = re.sub(r"\s*\n\s*", " ", text)
+        parts = normalized.split("/")
     elif "\n" in text:
         parts = text.split("\n")
     else:
         parts = [text]
-    return [p.strip() for p in parts if p.strip()]
+
+    seen = set()
+    deduped = []
+    for p in parts:
+        s = p.strip()
+        if not s:
+            continue
+        key = s.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(s)
+    return deduped
 
 
 def extract_and_validate_inci(
