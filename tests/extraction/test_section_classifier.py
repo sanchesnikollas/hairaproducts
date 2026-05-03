@@ -72,6 +72,26 @@ class TestExtractSectionsFromHtml:
         result = extract_sections_from_html(html, SECTION_LABEL_MAP)
         assert result.care_usage == "Aplique nos cabelos molhados, massageie e enxague."
 
+    def test_label_tab_nav_rejects_short_neighbor_label(self):
+        """Apice Cosmeticos pattern: Shopify FAQ uses <label> for tab nav.
+        When <label>Composição</label> is followed by <label>Modo de Uso</label>,
+        the next-sibling 'Modo de Uso' must NOT be accepted as ingredients_inci
+        content. Real content lives in a separate panel div."""
+        html = """
+        <html><body>
+            <div class="tab-nav">
+                <label>Composição</label>
+                <label>Modo de uso</label>
+                <label>Sobre o produto</label>
+            </div>
+        </body></html>
+        """
+        result = extract_sections_from_html(html, SECTION_LABEL_MAP)
+        # No real content was provided — must NOT pick up sibling labels
+        assert result.ingredients_inci_raw is None
+        assert result.care_usage is None
+        assert result.description is None
+
     def test_tab_buttons_dont_consume_each_other(self):
         """Salesforce Commerce Cloud (Kerastase) renders tab labels as <button>
         siblings. The button 'Como usar' must not consume 'Ingredientes' (the
