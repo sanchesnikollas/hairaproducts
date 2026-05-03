@@ -19,7 +19,7 @@ discovery:
     type: none
     max_pages: 1
 extraction:
-  requires_js: true
+  requires_js: false
   headless: true
   delay_seconds: 3
   inci_selectors:
@@ -46,19 +46,27 @@ extraction:
       - "descri\xE7\xE3o"
       - detalhes
       - sobre o produto
+      - detalhes do produto
     care_usage:
       labels:
       - como usar
       - modo de uso
+      - "aplica\xE7\xE3o"
+      - "aplica\xE7\xE3o / uso"
+      - "aplica\xE7\xE3o/uso"
     composition:
       labels:
       - "composi\xE7\xE3o"
       - "f\xF3rmula"
+      - "composi\xE7\xE3o / tecnologia"
+      - "composi\xE7\xE3o/tecnologia"
+      - tecnologia
     ingredients_inci:
       labels:
       - ingredientes
       - ingredients
       - "composi\xE7\xE3o"
+      - "composi\xE7\xE3o / tecnologia"
       validators:
       - has_separators
       - min_length_30
@@ -66,6 +74,7 @@ extraction:
       labels:
       - "benef\xEDcios"
       - resultado
+      - resultados esperados
   wait_for_selector: .fbits-produto-nome
   use_llm_fallback: true
 notes:
