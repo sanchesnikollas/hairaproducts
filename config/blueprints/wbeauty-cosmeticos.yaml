@@ -1,19 +1,17 @@
 brand_slug: wbeauty-cosmeticos
 brand_name: WBeauty Cosméticos
 platform: wake
-domain: beautycosmeticos.com.br
+domain: wbeautycosmeticos.com.br
 allowed_domains:
-- beautycosmeticos.com.br
-- www.beautycosmeticos.com.br
+- wbeautycosmeticos.com.br
+- www.wbeautycosmeticos.com.br
 entrypoints:
-- https://wbeautycosmeticos.com.br/
+- https://www.wbeautycosmeticos.com.br/
 discovery:
   strategy: sitemap_first
   sitemap_urls:
-  - https://wbeautycosmeticos.com.br/sitemap.xml
-  - https://wbeautycosmeticos.com.br/sitemap-produtos.xml
-  - https://wbeautycosmeticos.com.br/produtos.xml
-  product_url_pattern: ^https?://(?:www\.)?wbeautycosmeticos\.com\.br/[\w-]+\b
+  - https://www.wbeautycosmeticos.com.br/sitemap.xml
+  product_url_pattern: ^https?://(?:www\.)?wbeautycosmeticos\.com\.br/[\w/-]+\b
   max_pages: 500
   pagination:
     type: none

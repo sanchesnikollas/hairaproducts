@@ -1,19 +1,20 @@
 brand_slug: barba-urbana
 brand_name: Barba Urbana
 platform: wake
-domain: barbaurbana.com.br
+domain: burb.com.br
 allowed_domains:
+- burb.com.br
+- www.burb.com.br
 - barbaurbana.com.br
 - www.barbaurbana.com.br
 entrypoints:
-- https://www.barbaurbana.com.br/
+- https://www.burb.com.br/
 discovery:
   strategy: sitemap_first
   sitemap_urls:
-  - https://www.barbaurbana.com.br/sitemap.xml
-  - https://www.barbaurbana.com.br/sitemap-produtos.xml
-  - https://www.barbaurbana.com.br/produtos.xml
-  product_url_pattern: ^https?://(?:www\.)?barbaurbana\.com\.br/[\w-]+\b
+  - https://www.burb.com.br/sitemap.xml
+  - https://www.burb.com.br/sitemap-produtos.xml
+  product_url_pattern: ^https?://(?:www\.)?burb\.com\.br/[\w/-]+\b
   max_pages: 500
   pagination:
     type: none
