@@ -135,6 +135,15 @@ def url_root(url: str) -> str:
     return m.group(1) if m else url
 
 
+def domain_pattern(url: str) -> str:
+    """Build a regex matching domain with or without www. prefix and HTTP/HTTPS."""
+    m = re.match(r"https?://(?:www\.)?([^/]+)", url)
+    if not m:
+        return re.escape(url)
+    base = m.group(1)
+    return rf"https?://(?:www\.)?{re.escape(base)}"
+
+
 def make_blueprint(brand: dict) -> dict:
     slug = brand["brand_slug"]
     name = brand["brand_name"]
@@ -146,16 +155,18 @@ def make_blueprint(brand: dict) -> dict:
 
     tpl = PLATFORM_TEMPLATES[platform]
     root = url_root(url)
-    domain = root.replace("https://", "").replace("http://", "").rstrip("/")
+    domain = root.replace("https://", "").replace("http://", "").rstrip("/").lstrip("www.")
+    if domain.startswith("www."):
+        domain = domain[4:]
 
-    pattern = tpl["product_url_pattern"].replace("{root}", re.escape(root))
+    pattern = tpl["product_url_pattern"].replace("{root}", domain_pattern(url))
 
     bp = {
         "brand_slug": slug,
         "brand_name": name,
         "platform": tpl["platform"],
         "domain": domain,
-        "allowed_domains": [domain],
+        "allowed_domains": [domain, f"www.{domain}"],
         "entrypoints": [url],
         "discovery": {
             "strategy": tpl["discovery_strategy"],

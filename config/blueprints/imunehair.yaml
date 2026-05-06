@@ -4,6 +4,7 @@ platform: shopify
 domain: imunehair.com.br
 allowed_domains:
 - imunehair.com.br
+- www.imunehair.com.br
 entrypoints:
 - https://imunehair.com.br/
 discovery:
@@ -11,7 +12,7 @@ discovery:
   sitemap_urls:
   - https://imunehair.com.br/sitemap.xml
   - https://imunehair.com.br/sitemap_products_1.xml
-  product_url_pattern: ^https://imunehair\.com\.br/products/[\w-]+$
+  product_url_pattern: ^https?://(?:www\.)?imunehair\.com\.br/products/[\w-]+$
   max_pages: 500
   pagination:
     type: none

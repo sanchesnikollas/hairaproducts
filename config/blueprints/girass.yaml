@@ -4,6 +4,7 @@ platform: shopify
 domain: girass.com.br
 allowed_domains:
 - girass.com.br
+- www.girass.com.br
 entrypoints:
 - https://girass.com.br/
 discovery:
@@ -11,7 +12,7 @@ discovery:
   sitemap_urls:
   - https://girass.com.br/sitemap.xml
   - https://girass.com.br/sitemap_products_1.xml
-  product_url_pattern: ^https://girass\.com\.br/products/[\w-]+$
+  product_url_pattern: ^https?://(?:www\.)?girass\.com\.br/products/[\w-]+$
   max_pages: 500
   pagination:
     type: none

@@ -4,6 +4,7 @@ platform: woocommerce
 domain: dermare.com.br
 allowed_domains:
 - dermare.com.br
+- www.dermare.com.br
 entrypoints:
 - https://dermare.com.br/
 discovery:
@@ -12,7 +13,7 @@ discovery:
   - https://dermare.com.br/product-sitemap.xml
   - https://dermare.com.br/sitemap_index.xml
   - https://dermare.com.br/sitemap.xml
-  product_url_pattern: ^https://dermare\.com\.br/(?:produto|product)/[\w-]+/?$
+  product_url_pattern: ^https?://(?:www\.)?dermare\.com\.br/(?:produto|product)/[\w-]+/?$
   max_pages: 500
   pagination:
     type: none

@@ -1,8 +1,9 @@
 brand_slug: barba-robusta
 brand_name: Barba Robusta
 platform: shopify
-domain: www.barbarobusta.com.br
+domain: barbarobusta.com.br
 allowed_domains:
+- barbarobusta.com.br
 - www.barbarobusta.com.br
 entrypoints:
 - https://www.barbarobusta.com.br/
@@ -11,7 +12,7 @@ discovery:
   sitemap_urls:
   - https://www.barbarobusta.com.br/sitemap.xml
   - https://www.barbarobusta.com.br/sitemap_products_1.xml
-  product_url_pattern: ^https://www\.barbarobusta\.com\.br/products/[\w-]+$
+  product_url_pattern: ^https?://(?:www\.)?barbarobusta\.com\.br/products/[\w-]+$
   max_pages: 500
   pagination:
     type: none

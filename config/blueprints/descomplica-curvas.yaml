@@ -4,6 +4,7 @@ platform: nuvemshop
 domain: descomplicacurvas.com.br
 allowed_domains:
 - descomplicacurvas.com.br
+- www.descomplicacurvas.com.br
 entrypoints:
 - https://descomplicacurvas.com.br/
 discovery:
@@ -11,7 +12,7 @@ discovery:
   sitemap_urls:
   - https://descomplicacurvas.com.br/sitemap.xml
   - https://descomplicacurvas.com.br/sitemap-products.xml
-  product_url_pattern: ^https://descomplicacurvas\.com\.br/produto[s]?/[\w-]+
+  product_url_pattern: ^https?://(?:www\.)?descomplicacurvas\.com\.br/produto[s]?/[\w-]+
   max_pages: 500
   pagination:
     type: none

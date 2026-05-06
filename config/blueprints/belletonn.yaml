@@ -1,8 +1,9 @@
 brand_slug: belletonn
 brand_name: Belletonn
 platform: shopify
-domain: www.belletonn.com.br
+domain: belletonn.com.br
 allowed_domains:
+- belletonn.com.br
 - www.belletonn.com.br
 entrypoints:
 - https://www.belletonn.com.br/
@@ -11,7 +12,7 @@ discovery:
   sitemap_urls:
   - https://www.belletonn.com.br/sitemap.xml
   - https://www.belletonn.com.br/sitemap_products_1.xml
-  product_url_pattern: ^https://www\.belletonn\.com\.br/products/[\w-]+$
+  product_url_pattern: ^https?://(?:www\.)?belletonn\.com\.br/products/[\w-]+$
   max_pages: 500
   pagination:
     type: none

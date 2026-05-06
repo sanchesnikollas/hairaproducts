@@ -4,6 +4,7 @@ platform: woocommerce
 domain: grankera.com.br
 allowed_domains:
 - grankera.com.br
+- www.grankera.com.br
 entrypoints:
 - https://grankera.com.br/
 discovery:
@@ -12,7 +13,7 @@ discovery:
   - https://grankera.com.br/product-sitemap.xml
   - https://grankera.com.br/sitemap_index.xml
   - https://grankera.com.br/sitemap.xml
-  product_url_pattern: ^https://grankera\.com\.br/(?:produto|product)/[\w-]+/?$
+  product_url_pattern: ^https?://(?:www\.)?grankera\.com\.br/(?:produto|product)/[\w-]+/?$
   max_pages: 500
   pagination:
     type: none

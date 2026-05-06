@@ -4,6 +4,7 @@ platform: woocommerce
 domain: habitocosmeticos.com.br
 allowed_domains:
 - habitocosmeticos.com.br
+- www.habitocosmeticos.com.br
 entrypoints:
 - https://habitocosmeticos.com.br/
 discovery:
@@ -12,7 +13,7 @@ discovery:
   - https://habitocosmeticos.com.br/product-sitemap.xml
   - https://habitocosmeticos.com.br/sitemap_index.xml
   - https://habitocosmeticos.com.br/sitemap.xml
-  product_url_pattern: ^https://habitocosmeticos\.com\.br/(?:produto|product)/[\w-]+/?$
+  product_url_pattern: ^https?://(?:www\.)?habitocosmeticos\.com\.br/(?:produto|product)/[\w-]+/?$
   max_pages: 500
   pagination:
     type: none

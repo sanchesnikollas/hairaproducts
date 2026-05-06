@@ -4,6 +4,7 @@ platform: woocommerce
 domain: foxformen.com.br
 allowed_domains:
 - foxformen.com.br
+- www.foxformen.com.br
 entrypoints:
 - https://foxformen.com.br/
 discovery:
@@ -12,7 +13,7 @@ discovery:
   - https://foxformen.com.br/product-sitemap.xml
   - https://foxformen.com.br/sitemap_index.xml
   - https://foxformen.com.br/sitemap.xml
-  product_url_pattern: ^https://foxformen\.com\.br/(?:produto|product)/[\w-]+/?$
+  product_url_pattern: ^https?://(?:www\.)?foxformen\.com\.br/(?:produto|product)/[\w-]+/?$
   max_pages: 500
   pagination:
     type: none

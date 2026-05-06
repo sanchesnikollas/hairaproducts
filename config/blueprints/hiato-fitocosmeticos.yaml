@@ -4,6 +4,7 @@ platform: woocommerce
 domain: hiatofitocosmeticos.com.br
 allowed_domains:
 - hiatofitocosmeticos.com.br
+- www.hiatofitocosmeticos.com.br
 entrypoints:
 - https://hiatofitocosmeticos.com.br/
 discovery:
@@ -12,7 +13,7 @@ discovery:
   - https://hiatofitocosmeticos.com.br/product-sitemap.xml
   - https://hiatofitocosmeticos.com.br/sitemap_index.xml
   - https://hiatofitocosmeticos.com.br/sitemap.xml
-  product_url_pattern: ^https://hiatofitocosmeticos\.com\.br/(?:produto|product)/[\w-]+/?$
+  product_url_pattern: ^https?://(?:www\.)?hiatofitocosmeticos\.com\.br/(?:produto|product)/[\w-]+/?$
   max_pages: 500
   pagination:
     type: none

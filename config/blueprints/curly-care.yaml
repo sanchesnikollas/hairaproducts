@@ -4,6 +4,7 @@ platform: woocommerce
 domain: curlycare.com.br
 allowed_domains:
 - curlycare.com.br
+- www.curlycare.com.br
 entrypoints:
 - https://curlycare.com.br/
 discovery:
@@ -12,7 +13,7 @@ discovery:
   - https://curlycare.com.br/product-sitemap.xml
   - https://curlycare.com.br/sitemap_index.xml
   - https://curlycare.com.br/sitemap.xml
-  product_url_pattern: ^https://curlycare\.com\.br/(?:produto|product)/[\w-]+/?$
+  product_url_pattern: ^https?://(?:www\.)?curlycare\.com\.br/(?:produto|product)/[\w-]+/?$
   max_pages: 500
   pagination:
     type: none

@@ -4,6 +4,7 @@ platform: nuvemshop
 domain: facinatus.com.br
 allowed_domains:
 - facinatus.com.br
+- www.facinatus.com.br
 entrypoints:
 - https://facinatus.com.br/
 discovery:
@@ -11,7 +12,7 @@ discovery:
   sitemap_urls:
   - https://facinatus.com.br/sitemap.xml
   - https://facinatus.com.br/sitemap-products.xml
-  product_url_pattern: ^https://facinatus\.com\.br/produto[s]?/[\w-]+
+  product_url_pattern: ^https?://(?:www\.)?facinatus\.com\.br/produto[s]?/[\w-]+
   max_pages: 500
   pagination:
     type: none

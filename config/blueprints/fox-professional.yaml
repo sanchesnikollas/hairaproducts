@@ -4,6 +4,7 @@ platform: shopify
 domain: foxprofessional.com.br
 allowed_domains:
 - foxprofessional.com.br
+- www.foxprofessional.com.br
 entrypoints:
 - https://foxprofessional.com.br/
 discovery:
@@ -11,7 +12,7 @@ discovery:
   sitemap_urls:
   - https://foxprofessional.com.br/sitemap.xml
   - https://foxprofessional.com.br/sitemap_products_1.xml
-  product_url_pattern: ^https://foxprofessional\.com\.br/products/[\w-]+$
+  product_url_pattern: ^https?://(?:www\.)?foxprofessional\.com\.br/products/[\w-]+$
   max_pages: 500
   pagination:
     type: none

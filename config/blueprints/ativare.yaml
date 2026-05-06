@@ -1,0 +1,64 @@
+brand_slug: ativare
+brand_name: Ativare
+platform: tray
+domain: prolabcosmetics.com.br
+allowed_domains:
+- prolabcosmetics.com.br
+- www.prolabcosmetics.com.br
+entrypoints:
+- https://www.prolabcosmetics.com.br/ativare
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.prolabcosmetics.com.br/sitemap.xml
+  - https://www.prolabcosmetics.com.br/sitemapProdutos.xml
+  product_url_pattern: ^https?://(?:www\.)?prolabcosmetics\.com\.br/produto/[\w-]+
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: true
+  delay_seconds: 2
+  name_selectors:
+  - h1.product_name
+  - h1.titulo
+  - h1
+  image_selectors:
+  - .product-image img
+  - .carousel-image img
+  price_selectors:
+  - .product_price
+  - .price
+  inci_selectors:
+  - .description
+  - .product-description
+  section_label_map:
+    description:
+      labels:
+      - descrição
+      - detalhes
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+    composition:
+      labels:
+      - composição
+      - fórmula
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+    benefits:
+      labels:
+      - benefícios
+  use_llm_fallback: false
+notes:
+  auto_generated: true
+  platform_detail: tray
+  inci_available: unknown
+  inci_note: Auto-generated blueprint; review after first scrape.
+  triage_tier: tier_2_check
+version: 1

@@ -4,6 +4,7 @@ platform: woocommerce
 domain: detagold.com.br
 allowed_domains:
 - detagold.com.br
+- www.detagold.com.br
 entrypoints:
 - https://detagold.com.br/
 discovery:
@@ -12,7 +13,7 @@ discovery:
   - https://detagold.com.br/product-sitemap.xml
   - https://detagold.com.br/sitemap_index.xml
   - https://detagold.com.br/sitemap.xml
-  product_url_pattern: ^https://detagold\.com\.br/(?:produto|product)/[\w-]+/?$
+  product_url_pattern: ^https?://(?:www\.)?detagold\.com\.br/(?:produto|product)/[\w-]+/?$
   max_pages: 500
   pagination:
     type: none

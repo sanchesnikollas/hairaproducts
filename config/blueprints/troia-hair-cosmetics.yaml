@@ -1,0 +1,73 @@
+brand_slug: troia-hair-cosmetics
+brand_name: Tróia Hair Cosmetics
+platform: woocommerce
+domain: troiahair.com.br
+allowed_domains:
+- troiahair.com.br
+- www.troiahair.com.br
+entrypoints:
+- https://troiahair.com.br/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://troiahair.com.br/product-sitemap.xml
+  - https://troiahair.com.br/sitemap_index.xml
+  - https://troiahair.com.br/sitemap.xml
+  product_url_pattern: ^https?://(?:www\.)?troiahair\.com\.br/(?:produto|product)/[\w-]+/?$
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: true
+  delay_seconds: 2
+  name_selectors:
+  - h1.product_title
+  - h1.entry-title
+  - h1
+  image_selectors:
+  - .woocommerce-product-gallery__image img
+  - img.wp-post-image
+  price_selectors:
+  - p.price
+  - span.price
+  - .woocommerce-Price-amount
+  inci_selectors:
+  - .woocommerce-product-details__short-description
+  - .woocommerce-tabs .panel
+  section_label_map:
+    description:
+      labels:
+      - descrição
+      - detalhes
+      - sobre
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - modo de usar
+      - aplicação
+      - como aplicar
+    composition:
+      labels:
+      - composição
+      - fórmula
+      - ingredientes ativos
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - inci
+    benefits:
+      labels:
+      - benefícios
+      - resultado
+  use_llm_fallback: false
+notes:
+  auto_generated: true
+  platform_detail: woocommerce
+  inci_available: unknown
+  inci_note: Auto-generated blueprint; review after first scrape.
+  triage_tier: tier_1_easy
+version: 1

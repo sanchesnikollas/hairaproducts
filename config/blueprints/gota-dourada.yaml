@@ -4,6 +4,7 @@ platform: shopify
 domain: gotadourada.com.br
 allowed_domains:
 - gotadourada.com.br
+- www.gotadourada.com.br
 entrypoints:
 - https://gotadourada.com.br/
 discovery:
@@ -11,7 +12,7 @@ discovery:
   sitemap_urls:
   - https://gotadourada.com.br/sitemap.xml
   - https://gotadourada.com.br/sitemap_products_1.xml
-  product_url_pattern: ^https://gotadourada\.com\.br/products/[\w-]+$
+  product_url_pattern: ^https?://(?:www\.)?gotadourada\.com\.br/products/[\w-]+$
   max_pages: 500
   pagination:
     type: none

@@ -4,6 +4,7 @@ platform: woocommerce
 domain: lojabarrominas.com.br
 allowed_domains:
 - lojabarrominas.com.br
+- www.lojabarrominas.com.br
 entrypoints:
 - https://lojabarrominas.com.br/
 discovery:
@@ -12,7 +13,7 @@ discovery:
   - https://lojabarrominas.com.br/product-sitemap.xml
   - https://lojabarrominas.com.br/sitemap_index.xml
   - https://lojabarrominas.com.br/sitemap.xml
-  product_url_pattern: ^https://lojabarrominas\.com\.br/(?:produto|product)/[\w-]+/?$
+  product_url_pattern: ^https?://(?:www\.)?lojabarrominas\.com\.br/(?:produto|product)/[\w-]+/?$
   max_pages: 500
   pagination:
     type: none

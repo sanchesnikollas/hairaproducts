@@ -4,6 +4,7 @@ platform: shopify
 domain: fattorecosmeticos.com.br
 allowed_domains:
 - fattorecosmeticos.com.br
+- www.fattorecosmeticos.com.br
 entrypoints:
 - https://fattorecosmeticos.com.br/
 discovery:
@@ -11,7 +12,7 @@ discovery:
   sitemap_urls:
   - https://fattorecosmeticos.com.br/sitemap.xml
   - https://fattorecosmeticos.com.br/sitemap_products_1.xml
-  product_url_pattern: ^https://fattorecosmeticos\.com\.br/products/[\w-]+$
+  product_url_pattern: ^https?://(?:www\.)?fattorecosmeticos\.com\.br/products/[\w-]+$
   max_pages: 500
   pagination:
     type: none

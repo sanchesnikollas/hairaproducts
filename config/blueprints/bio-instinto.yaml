@@ -1,8 +1,9 @@
 brand_slug: bio-instinto
 brand_name: Bio Instinto
 platform: woocommerce
-domain: www.bioinstinto.com.br
+domain: bioinstinto.com.br
 allowed_domains:
+- bioinstinto.com.br
 - www.bioinstinto.com.br
 entrypoints:
 - https://www.bioinstinto.com.br/
@@ -12,7 +13,7 @@ discovery:
   - https://www.bioinstinto.com.br/product-sitemap.xml
   - https://www.bioinstinto.com.br/sitemap_index.xml
   - https://www.bioinstinto.com.br/sitemap.xml
-  product_url_pattern: ^https://www\.bioinstinto\.com\.br/(?:produto|product)/[\w-]+/?$
+  product_url_pattern: ^https?://(?:www\.)?bioinstinto\.com\.br/(?:produto|product)/[\w-]+/?$
   max_pages: 500
   pagination:
     type: none

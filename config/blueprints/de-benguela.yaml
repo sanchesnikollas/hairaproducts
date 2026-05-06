@@ -4,6 +4,7 @@ platform: shopify
 domain: debenguela.com.br
 allowed_domains:
 - debenguela.com.br
+- www.debenguela.com.br
 entrypoints:
 - https://debenguela.com.br/
 discovery:
@@ -11,7 +12,7 @@ discovery:
   sitemap_urls:
   - https://debenguela.com.br/sitemap.xml
   - https://debenguela.com.br/sitemap_products_1.xml
-  product_url_pattern: ^https://debenguela\.com\.br/products/[\w-]+$
+  product_url_pattern: ^https?://(?:www\.)?debenguela\.com\.br/products/[\w-]+$
   max_pages: 500
   pagination:
     type: none

@@ -4,6 +4,7 @@ platform: shopify
 domain: essendy.com.br
 allowed_domains:
 - essendy.com.br
+- www.essendy.com.br
 entrypoints:
 - https://essendy.com.br/
 discovery:
@@ -11,7 +12,7 @@ discovery:
   sitemap_urls:
   - https://essendy.com.br/sitemap.xml
   - https://essendy.com.br/sitemap_products_1.xml
-  product_url_pattern: ^https://essendy\.com\.br/products/[\w-]+$
+  product_url_pattern: ^https?://(?:www\.)?essendy\.com\.br/products/[\w-]+$
   max_pages: 500
   pagination:
     type: none

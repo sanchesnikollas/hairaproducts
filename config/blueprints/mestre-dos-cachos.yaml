@@ -1,0 +1,71 @@
+brand_slug: mestre-dos-cachos
+brand_name: Mestre dos Cachos
+platform: nuvemshop
+domain: mestredoscachos.com.br
+allowed_domains:
+- mestredoscachos.com.br
+- www.mestredoscachos.com.br
+entrypoints:
+- https://mestredoscachos.com.br/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://mestredoscachos.com.br/sitemap.xml
+  - https://mestredoscachos.com.br/sitemap-products.xml
+  product_url_pattern: ^https?://(?:www\.)?mestredoscachos\.com\.br/produto[s]?/[\w-]+
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: true
+  delay_seconds: 2
+  name_selectors:
+  - h1.product-name
+  - h1.js-product-name
+  - h1
+  image_selectors:
+  - .js-product-slides img
+  - .product-image img
+  price_selectors:
+  - .js-price-display
+  - .price
+  - .js-product-price
+  inci_selectors:
+  - .js-product-description
+  - .user-content
+  - .product-description
+  section_label_map:
+    description:
+      labels:
+      - descrição
+      - detalhes
+      - sobre
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - aplicação
+    composition:
+      labels:
+      - composição
+      - fórmula
+      - ativos
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - inci
+    benefits:
+      labels:
+      - benefícios
+      - resultado
+  use_llm_fallback: false
+notes:
+  auto_generated: true
+  platform_detail: nuvemshop
+  inci_available: unknown
+  inci_note: Auto-generated blueprint; review after first scrape.
+  triage_tier: tier_1_easy
+version: 1

@@ -4,6 +4,7 @@ platform: shopify
 domain: fabulosalizz.com.br
 allowed_domains:
 - fabulosalizz.com.br
+- www.fabulosalizz.com.br
 entrypoints:
 - https://fabulosalizz.com.br/
 discovery:
@@ -11,7 +12,7 @@ discovery:
   sitemap_urls:
   - https://fabulosalizz.com.br/sitemap.xml
   - https://fabulosalizz.com.br/sitemap_products_1.xml
-  product_url_pattern: ^https://fabulosalizz\.com\.br/products/[\w-]+$
+  product_url_pattern: ^https?://(?:www\.)?fabulosalizz\.com\.br/products/[\w-]+$
   max_pages: 500
   pagination:
     type: none
