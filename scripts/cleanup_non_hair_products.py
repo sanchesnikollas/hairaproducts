@@ -25,6 +25,20 @@ NON_HAIR_PATTERNS = [
     "creme para maos", "creme dental", "pasta dental", "enxaguante bucal",
     "talco", "fralda", "pomada infantil", "máscara facial", "mascara facial",
     "tônico facial", "tonico facial",
+    # Eletrodomésticos (philco)
+    "frigobar", "cooktop", "smart tv", "ventilador", "batedeira",
+    "torradeira", "pneu", " grill ", "lavadora", "geladeira", "fogão", "fogao",
+    "micro-ondas", "microondas", "liquidificador", "fritadeira", "airfryer",
+    "ferro de passar", "aspirador",
+    # Acessórios sem INCI (belliz-company)
+    "elastico ", "grampo ", "tesoura", "alicate", "cortador unhas",
+    "polidor de unha", "fita dental", "raquete",
+    "lixa de unha", "lixa para unha",
+    "secador de cabelo", "secador profissional", "chapinha", "babyliss",
+    "prancha de cabelo", "modelador de cachos elétrico",
+    "removedor de esmalte",
+    "alongamento de cilios", "cilios para alongamento",
+    "guarda-roupa", "armário", "estante",
 ]
 
 CHILD_TABLES = (
