@@ -127,6 +127,42 @@ PLATFORM_TEMPLATES = {
         },
         "requires_js": False,
     },
+    "wake": {
+        "platform": "wake",
+        "discovery_strategy": "sitemap_first",
+        "sitemap_paths": ["/sitemap.xml", "/sitemap-produtos.xml", "/produtos.xml"],
+        "product_url_pattern": r"^{root}/[\w-]+\b",
+        "name_selectors": ["h1.fbits-produto-nome", "h1.product-name", "h1.titulo", "h1"],
+        "image_selectors": [".fbits-produto-imagensMinicarrossel img", ".product-image img"],
+        "price_selectors": [".fbits-preco", ".product-price", ".price"],
+        "inci_selectors": [".conteudoAbasProduto", ".product-description", ".description"],
+        "section_label_map": {
+            "description": ["descrição", "detalhes", "sobre o produto", "detalhes do produto"],
+            "care_usage": ["como usar", "modo de uso", "aplicação", "aplicação / uso"],
+            "composition": ["composição", "fórmula", "composição / tecnologia", "tecnologia"],
+            "ingredients_inci": ["ingredientes", "ingredients", "inci"],
+            "benefits": ["benefícios", "resultado", "resultados esperados"],
+        },
+        "requires_js": False,
+    },
+    "prestashop": {
+        "platform": "prestashop",
+        "discovery_strategy": "sitemap_first",
+        "sitemap_paths": ["/sitemap.xml", "/1_pt_sitemap.xml"],
+        "product_url_pattern": r"^{root}/[\w/-]+\.html$",
+        "name_selectors": ["h1.h1.product-detail-name", "h1.product-name", "h1"],
+        "image_selectors": [".product-cover img", ".product-image img", "img.js-qv-product-cover"],
+        "price_selectors": [".current-price .price", ".product-price", ".price"],
+        "inci_selectors": [".product-description", ".product-info-tabs", ".description"],
+        "section_label_map": {
+            "description": ["descrição", "detalhes", "sobre"],
+            "care_usage": ["como usar", "modo de uso", "aplicação"],
+            "composition": ["composição", "fórmula", "ativos"],
+            "ingredients_inci": ["ingredientes", "ingredients", "inci"],
+            "benefits": ["benefícios", "resultado"],
+        },
+        "requires_js": False,
+    },
 }
 
 

@@ -21,3 +21,4 @@ exports/
 scripts/migration_*.json
 scripts/prod_products_dump.json
 data/*_all_urls.txt
+/logs/
