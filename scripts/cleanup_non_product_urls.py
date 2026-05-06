@@ -43,6 +43,9 @@ def load_pattern(brand_slug: str) -> str | None:
     return bp.get("discovery", {}).get("product_url_pattern")
 
 
+MIN_MATCH_RATIO = 0.5  # if pattern matches less than this, abort cleanup (likely wrong pattern)
+
+
 def cleanup_brand(brand_slug: str, dry_run: bool = False) -> tuple[int, int]:
     pattern_str = load_pattern(brand_slug)
     if not pattern_str:
@@ -65,6 +68,15 @@ def cleanup_brand(brand_slug: str, dry_run: bool = False) -> tuple[int, int]:
 
     if not bad_ids:
         print(f"  {brand_slug}: {total} products, all match pattern ✓")
+        conn.close()
+        return total, 0
+
+    if total > 0 and (total - len(bad_ids)) / total < MIN_MATCH_RATIO:
+        print(
+            f"  {brand_slug}: {total} products, but pattern matches only "
+            f"{total - len(bad_ids)}/{total} ({100*(total-len(bad_ids))/total:.0f}%) — "
+            f"pattern likely wrong, ABORTING cleanup"
+        )
         conn.close()
         return total, 0
 
