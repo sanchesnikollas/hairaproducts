@@ -41,11 +41,22 @@ WHERE product_name LIKE 'Não existem produtos%'
    OR product_name LIKE 'Identificação%cadastro%'
    OR product_name LIKE 'IdentificaçãoFaça o seu login%'
    OR product_name LIKE 'Politica %'
+   OR product_name LIKE 'Politíca %'
+   OR product_name LIKE 'Política %'
    OR product_name LIKE 'Como Comprar%'
    OR product_name LIKE 'Frete %'
    OR product_name LIKE 'Formas de %'
    OR product_name LIKE 'Duvidas %'
+   OR product_name LIKE 'Dúvidas %'
    OR product_name = 'Como comprar'
+   OR product_name LIKE 'Desculpe%não encontramos%'
+   OR product_name LIKE 'Página não encontrada%'
+   OR product_name = '404'
+   OR product_name = 'Produtos'
+   OR product_name = 'Faciais'
+   OR product_name = 'Marcas'
+   OR product_name = 'Kits'
+   OR LENGTH(TRIM(product_name)) < 6
 """
 
 

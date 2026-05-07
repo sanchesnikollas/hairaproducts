@@ -66,6 +66,21 @@ def list_brands(session: Session = Depends(_get_session)):
     repo = ProductRepository(session)
     coverages = repo.get_all_brand_coverages()
 
+    # Load brands.json scope status (active / out_of_scope / blocked / etc.)
+    import json
+    from pathlib import Path
+    brand_scope: dict[str, str] = {}
+    brand_notes: dict[str, str] = {}
+    brands_json = Path("config/brands.json")
+    if brands_json.exists():
+        try:
+            for b in json.loads(brands_json.read_text()):
+                brand_scope[b["brand_slug"]] = b.get("status", "active")
+                if b.get("notes"):
+                    brand_notes[b["brand_slug"]] = b["notes"]
+        except Exception:
+            pass
+
     # Compute quality metrics per brand
     quality = _compute_brand_quality_metrics(session)
 
@@ -84,6 +99,8 @@ def list_brands(session: Session = Depends(_get_session)):
             "catalog_only_total": c.catalog_only_total,
             "quarantined_total": c.quarantined_total,
             "status": c.status,
+            "scope": brand_scope.get(c.brand_slug, "active"),
+            "scope_notes": brand_notes.get(c.brand_slug),
             "last_run": str(c.last_run) if c.last_run else None,
             "quality": quality.get(c.brand_slug, {}),
         })
@@ -117,6 +134,8 @@ def list_brands(session: Session = Depends(_get_session)):
                 "catalog_only_total": row.catalog or 0,
                 "quarantined_total": row.quarantined or 0,
                 "status": "discovered",
+                "scope": brand_scope.get(row.brand_slug, "active"),
+                "scope_notes": brand_notes.get(row.brand_slug),
                 "last_run": None,
                 "quality": quality.get(row.brand_slug, {}),
             })
@@ -144,6 +163,8 @@ def list_brands(session: Session = Depends(_get_session)):
                         "catalog_only_total": 0,
                         "quarantined_total": 0,
                         "status": b.get("status", "registered"),
+                        "scope": b.get("status", "active"),
+                        "scope_notes": b.get("notes"),
                         "last_run": None,
                         "quality": {},
                     })

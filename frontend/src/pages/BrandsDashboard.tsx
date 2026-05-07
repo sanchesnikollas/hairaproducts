@@ -17,7 +17,7 @@ function getCompleteness(b: BrandCoverage): number {
   return Math.round(((q.has_description_pct || 0) + (q.has_image_pct || 0) + (q.has_category_pct || 0) + (q.has_labels_pct || 0)) / 4);
 }
 
-type BrandGroup = 'all' | 'principais' | 'nacionais' | 'internacionais' | 'com_dados';
+type BrandGroup = 'all' | 'principais' | 'nacionais' | 'internacionais' | 'com_dados' | 'fora_escopo';
 
 function slugify(name: string): string {
   return name.toLowerCase()
@@ -58,6 +58,10 @@ export default function BrandsDashboard() {
 
     const result = brands.filter((b) => {
       if (!b.brand_slug.toLowerCase().includes(search.toLowerCase())) return false;
+      const isOutOfScope = b.scope === 'out_of_scope';
+      if (activeGroup === 'fora_escopo') return isOutOfScope;
+      // All other tabs hide out-of-scope brands
+      if (isOutOfScope) return false;
       if (activeGroup === 'com_dados') return (b.extracted_total || 0) > 0;
       if (activeGroup === 'all') return true;
       if (groupSlugs) return groupSlugs.has(b.brand_slug);
@@ -161,6 +165,7 @@ export default function BrandsDashboard() {
           ['nacionais', 'Nacionais'],
           ['internacionais', 'Internacionais'],
           ['all', 'Todas'],
+          ['fora_escopo', 'Fora de Escopo'],
         ] as [BrandGroup, string][]).map(([key, label]) => (
           <button
             key={key}
@@ -174,7 +179,12 @@ export default function BrandsDashboard() {
             {label}
             {brands && key === 'com_dados' && (
               <span className="ml-1.5 text-[10px] text-ink-muted">
-                {brands.filter(b => (b.extracted_total || 0) > 0).length}
+                {brands.filter(b => (b.extracted_total || 0) > 0 && b.scope !== 'out_of_scope').length}
+              </span>
+            )}
+            {brands && key === 'fora_escopo' && (
+              <span className="ml-1.5 text-[10px] text-ink-muted">
+                {brands.filter(b => b.scope === 'out_of_scope').length}
               </span>
             )}
           </button>

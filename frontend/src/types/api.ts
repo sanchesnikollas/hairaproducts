@@ -20,6 +20,8 @@ export interface BrandCoverage {
   catalog_only_total: number;
   quarantined_total: number;
   status: string;
+  scope?: string;
+  scope_notes?: string | null;
   last_run: string | null;
   blueprint_version: number;
   coverage_report: Record<string, unknown> | null;
