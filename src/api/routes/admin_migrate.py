@@ -307,6 +307,55 @@ def migrate_update_coverage(body: CoverageUpdateRequest):
         return {"error": str(e)[:500]}
 
 
+class SeedCompatRequest(BaseModel):
+    secret: str
+
+
+@router.post("/seed-compatibility-matrix")
+def seed_compatibility_matrix(body: SeedCompatRequest):
+    """Seed ingredient_category_compatibility table from YAML config.
+
+    Idempotent: clears existing rows then re-inserts. Run after Alembic
+    migration creates the table.
+    """
+    if not MIGRATION_SECRET or body.secret != MIGRATION_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid migration secret")
+
+    import yaml
+    from pathlib import Path
+
+    yaml_path = Path("config/ingredient_compatibility.yaml")
+    if not yaml_path.exists():
+        return {"error": "ingredient_compatibility.yaml not found"}
+
+    data = yaml.safe_load(yaml_path.read_text())
+    categories = data.get("categories", {})
+
+    engine = get_engine()
+    inserted = 0
+    try:
+        with engine.begin() as conn:
+            # Ensure table exists (defensive — Alembic should have created it)
+            try:
+                conn.execute(text("DELETE FROM ingredient_category_compatibility"))
+            except Exception:
+                # Table doesn't exist — bail with clear message
+                return {"error": "Table ingredient_category_compatibility not found. Run Alembic migration first."}
+
+            for cat, info in categories.items():
+                by_hair = info.get("by_hair_type", {}) or {}
+                for hair_type, entry in by_hair.items():
+                    conn.execute(text("""
+                        INSERT INTO ingredient_category_compatibility (category, hair_type, score, reason)
+                        VALUES (:cat, :ht, :sc, :rs)
+                    """), {"cat": cat, "ht": hair_type, "sc": entry["score"], "rs": entry.get("reason", "")})
+                    inserted += 1
+    except Exception as e:
+        return {"error": str(e)[:500], "inserted": inserted}
+
+    return {"inserted": inserted, "categories": len(categories)}
+
+
 @router.get("/migrate-status")
 def migrate_status(secret: str = ""):
     if not MIGRATION_SECRET or secret != MIGRATION_SECRET:
