@@ -6,8 +6,8 @@
     "country": "Brasil",
     "priority": null,
     "catalog_entrypoints": [],
-    "status": "active",
-    "notes": "inci_on_site=não"
+    "status": "out_of_scope",
+    "notes": "Vitrine multi-marca em stilohair.com.br — apenas ~9% produtos são da marca 1Ka"
   },
   {
     "brand_name": "A-line",
@@ -825,8 +825,8 @@
     "country": "Brasil",
     "priority": null,
     "catalog_entrypoints": [],
-    "status": "active",
-    "notes": null
+    "status": "out_of_scope",
+    "notes": "Vitrine multi-marca em requintehair.com.br — produtos extraídos são páginas de UI sem produtos reais"
   },
   {
     "brand_name": "Charming",
@@ -2843,8 +2843,8 @@
     "country": "Brasil",
     "priority": null,
     "catalog_entrypoints": [],
-    "status": "active",
-    "notes": null
+    "status": "out_of_scope",
+    "notes": "Domínio redireciona para drjack.com.br — duplicado de dr-jack"
   },
   {
     "brand_name": "Mahair Cosmetics",
