@@ -307,6 +307,44 @@ def migrate_update_coverage(body: CoverageUpdateRequest):
         return {"error": str(e)[:500]}
 
 
+class SyncIngredientCategoriesRequest(BaseModel):
+    secret: str
+    updates: list[dict]  # [{canonical_name: str, category: str}, ...]
+
+
+@router.post("/sync-ingredient-categories")
+def sync_ingredient_categories(body: SyncIngredientCategoriesRequest):
+    """Update ingredient.category by canonical_name match (case-insensitive)."""
+    if not MIGRATION_SECRET or body.secret != MIGRATION_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid migration secret")
+
+    if not body.updates:
+        return {"updated": 0}
+
+    engine = get_engine()
+    updated = 0
+    not_found = 0
+    try:
+        with engine.begin() as conn:
+            for u in body.updates:
+                name = u.get("canonical_name")
+                cat = u.get("category")
+                if not name or not cat:
+                    continue
+                r = conn.execute(text("""
+                    UPDATE ingredients SET category = :cat
+                    WHERE LOWER(canonical_name) = LOWER(:n)
+                """), {"cat": cat, "n": name})
+                if r.rowcount > 0:
+                    updated += r.rowcount
+                else:
+                    not_found += 1
+    except Exception as e:
+        return {"error": str(e)[:500], "updated": updated}
+
+    return {"updated": updated, "not_matched": not_found}
+
+
 class SeedCompatRequest(BaseModel):
     secret: str
 
