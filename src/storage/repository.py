@@ -135,13 +135,21 @@ class ProductRepository:
 
         return product_id
 
-    def _apply_filters(self, query, brand_slug=None, verified_only=False, search=None, category=None, exclude_kits=False):
+    def _apply_filters(self, query, brand_slug=None, verified_only=False, search=None, category=None, exclude_kits=False, exclude_non_hair=True):
         if brand_slug:
             query = query.filter(ProductORM.brand_slug == brand_slug)
         if verified_only:
             query = query.filter(ProductORM.verification_status == "verified_inci")
         if category:
             query = query.filter(ProductORM.product_category == category)
+        elif exclude_non_hair:
+            # Hide non_hair products from default listings (preserves data, hides from views)
+            query = query.filter(
+                or_(
+                    ProductORM.product_category != "non_hair",
+                    ProductORM.product_category.is_(None),
+                )
+            )
         if exclude_kits:
             query = query.filter(ProductORM.is_kit == False)
         if search:
