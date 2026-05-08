@@ -93,6 +93,96 @@ def migrate_json(body: MigrateRequest):
     }
 
 
+class DedupRequest(BaseModel):
+    secret: str
+    brand_slug: str | None = None  # if None, dedup all brands
+
+
+@router.post("/dedup-variants")
+def dedup_variants(body: DedupRequest):
+    """Deduplicate products by (brand_slug, product_name, size_volume).
+
+    For each duplicate group, keeps the row with the richest data (verified_inci
+    > has INCI > has price > has description > URL contains /produto), deletes
+    the rest with cascading child rows.
+    """
+    if not MIGRATION_SECRET or body.secret != MIGRATION_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid migration secret")
+
+    engine = get_engine()
+    deleted_total = 0
+    groups_processed = 0
+    by_brand: dict[str, int] = {}
+
+    score_sql = """
+        (CASE WHEN verification_status = 'verified_inci' THEN 1000 ELSE 0 END) +
+        (CASE WHEN inci_ingredients IS NOT NULL AND inci_ingredients::text NOT IN ('[]', 'null') THEN 500 ELSE 0 END) +
+        (CASE WHEN price IS NOT NULL THEN 100 ELSE 0 END) +
+        (CASE WHEN description IS NOT NULL THEN 50 ELSE 0 END) +
+        (CASE WHEN image_url_main IS NOT NULL THEN 25 ELSE 0 END) +
+        (CASE WHEN product_url ILIKE '%/produto%' THEN 200 ELSE 0 END)
+    """
+
+    where = "WHERE 1=1"
+    params: dict = {}
+    if body.brand_slug:
+        where += " AND brand_slug = :slug"
+        params["slug"] = body.brand_slug
+
+    try:
+        with engine.begin() as conn:
+            # Find duplicate groups
+            groups_q = text(
+                f"""SELECT brand_slug, product_name, COALESCE(size_volume, '') as sz
+                    FROM products
+                    {where}
+                    GROUP BY brand_slug, product_name, COALESCE(size_volume, '')
+                    HAVING COUNT(*) > 1"""
+            )
+            groups = list(conn.execute(groups_q, params).fetchall())
+            groups_processed = len(groups)
+
+            for g in groups:
+                # Find best row to keep, return ids of others
+                ids_to_delete = list(conn.execute(text(
+                    f"""WITH ranked AS (
+                        SELECT id, ROW_NUMBER() OVER (
+                            ORDER BY {score_sql} DESC, created_at ASC
+                        ) as rn
+                        FROM products
+                        WHERE brand_slug = :brand
+                          AND product_name = :name
+                          AND COALESCE(size_volume, '') = :sz
+                    )
+                    SELECT id FROM ranked WHERE rn > 1"""
+                ), {"brand": g.brand_slug, "name": g.product_name, "sz": g.sz}).fetchall())
+
+                if not ids_to_delete:
+                    continue
+
+                ids = [r.id for r in ids_to_delete]
+                # Delete child rows first
+                for tbl in ["product_evidence", "product_ingredients", "product_claims",
+                            "product_images", "product_compositions", "quarantine_details"]:
+                    try:
+                        conn.execute(text(f"DELETE FROM {tbl} WHERE product_id = ANY(:ids)"),
+                                     {"ids": ids})
+                    except Exception:
+                        pass
+                r = conn.execute(text("DELETE FROM products WHERE id = ANY(:ids)"),
+                                 {"ids": ids})
+                deleted_total += r.rowcount or 0
+                by_brand[g.brand_slug] = by_brand.get(g.brand_slug, 0) + len(ids)
+    except Exception as e:
+        return {"error": str(e)[:500], "deleted": deleted_total}
+
+    return {
+        "groups_processed": groups_processed,
+        "deleted_total": deleted_total,
+        "deleted_by_brand": dict(sorted(by_brand.items(), key=lambda x: -x[1])[:20]),
+    }
+
+
 class DeleteBrandRequest(BaseModel):
     secret: str
     brand_slug: str
