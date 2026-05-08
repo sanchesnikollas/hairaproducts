@@ -1,0 +1,258 @@
+# Ingredient category × hair_type compatibility matrix (Moon AI knowledge base)
+#
+# Score: -1 (avoid) | 0 (neutral) | +1 (recommended)
+# Use editorial expertise; not an exhaustive replacement for dermatologist guidance.
+#
+# When a product has many ingredients, Moon aggregates per-ingredient scores
+# weighted by position (top of list = higher concentration → higher weight).
+
+categories:
+  # ───────── SURFACTANTS ─────────
+  surfactant_anionic:
+    label_pt: "Tensoativo aniônico (sulfato)"
+    description: "Sulfato/sulfonato — limpeza profunda; tendência a ressecar"
+    by_hair_type:
+      cacheado: { score: -1, reason: "resseca os cachos, prejudica definição" }
+      crespo: { score: -1, reason: "muito secativo para cabelo crespo" }
+      seco: { score: -1, reason: "remove óleos naturais, agrava ressecamento" }
+      tingido: { score: -1, reason: "acelera desbotamento da cor" }
+      com_quimica: { score: -1, reason: "agride fibra já sensibilizada" }
+      sensibilizado: { score: -1, reason: "demasiado agressivo para fios fragilizados" }
+      danificado: { score: -1, reason: "intensifica dano em fibras quebradiças" }
+      oleoso: { score: 1, reason: "ideal para limpeza profunda em couro oleoso" }
+      normal: { score: 0, reason: "uso ocasional ok, evitar diário" }
+      liso: { score: 0, reason: "tolerado mas pode opacar lisos" }
+
+  surfactant_amphoteric:
+    label_pt: "Tensoativo anfótero (betaína)"
+    description: "Betaínas — limpeza suave, compatível com low-poo"
+    by_hair_type:
+      cacheado: { score: 1, reason: "limpa sem ressecar definição" }
+      crespo: { score: 1, reason: "suave para couro crespo seco" }
+      seco: { score: 1, reason: "preserva hidratação" }
+      tingido: { score: 1, reason: "preserva cor" }
+      sensibilizado: { score: 1, reason: "pH neutro, suave" }
+
+  surfactant_cationic:
+    label_pt: "Tensoativo catiônico"
+    description: "Cetrimonium, behentrimonium — condicionante (não usado para limpeza)"
+    by_hair_type:
+      cacheado: { score: 1, reason: "deposita carga positiva: condiciona cachos" }
+      crespo: { score: 1, reason: "alinha fibra crespa" }
+      danificado: { score: 1, reason: "neutraliza carga negativa do dano" }
+      com_quimica: { score: 1, reason: "estabiliza fibras quimicamente tratadas" }
+      oleoso: { score: -1, reason: "pode pesar e acelerar oleosidade" }
+
+  surfactant_nonionic:
+    label_pt: "Tensoativo não-iônico (eco)"
+    description: "Glucosídeos, ceteareth — emulsificação/limpeza ultra-suave"
+    by_hair_type:
+      cacheado: { score: 1, reason: "compatível com low-poo e no-poo" }
+      seco: { score: 1, reason: "preserva oleosidade natural" }
+      sensibilizado: { score: 1, reason: "muito suave" }
+
+  # ───────── SILICONES ─────────
+  silicone_insoluble:
+    label_pt: "Silicone insolúvel (dimethicone)"
+    description: "Pode acumular; remoção exige tensoativo aniônico"
+    by_hair_type:
+      cacheado: { score: -1, reason: "acumula, dificulta hidratação dos cachos" }
+      crespo: { score: -1, reason: "peso e oclusão; restringe absorção de água" }
+      seco: { score: 0, reason: "selamento momentâneo mas pode bloquear hidratação" }
+      tingido: { score: 1, reason: "sela cutícula e protege cor" }
+      liso: { score: 1, reason: "sela e dá brilho intenso" }
+      danificado: { score: 1, reason: "selamento temporário do dano" }
+      fino: { score: -1, reason: "achata o volume" }
+      oleoso: { score: -1, reason: "intensifica aspecto oleoso" }
+
+  silicone_volatile:
+    label_pt: "Silicone volátil (cyclomethicone)"
+    description: "Evapora rápido; sem acúmulo"
+    by_hair_type:
+      cacheado: { score: 0, reason: "neutro: efeito breve" }
+      liso: { score: 1, reason: "spread sem peso" }
+
+  silicone_amine:
+    label_pt: "Silicone amino (amodimethicone)"
+    description: "Adere seletivamente em áreas danificadas; menor acúmulo"
+    by_hair_type:
+      cacheado: { score: 1, reason: "selamento sem peso, ótimo para cachos" }
+      crespo: { score: 1, reason: "alinha cutícula sem oclusão" }
+      danificado: { score: 1, reason: "repara áreas porosas seletivamente" }
+      com_quimica: { score: 1, reason: "ideal para fios quimicamente tratados" }
+
+  silicone_water_soluble:
+    label_pt: "Silicone solúvel em água"
+    description: "PEG-modificados; lavam com qualquer shampoo"
+    by_hair_type:
+      cacheado: { score: 1, reason: "compatível com low-poo" }
+      crespo: { score: 1, reason: "selamento removível" }
+      oleoso: { score: 0, reason: "neutro" }
+
+  # ───────── OILS / BUTTERS / EMOLLIENTS ─────────
+  oil_natural:
+    label_pt: "Óleo vegetal natural"
+    description: "Argan, coco, jojoba, etc — nutrição"
+    by_hair_type:
+      cacheado: { score: 1, reason: "hidrata e define cachos" }
+      crespo: { score: 1, reason: "nutre fios crespos secos" }
+      seco: { score: 1, reason: "repõe lipídios da fibra" }
+      danificado: { score: 1, reason: "nutre cutícula" }
+      oleoso: { score: -1, reason: "pode pesar e acumular" }
+      fino: { score: 0, reason: "usar comedidamente" }
+
+  oil_mineral:
+    label_pt: "Óleo mineral / Petrolatum"
+    description: "Selador oclusivo; controverso"
+    by_hair_type:
+      cacheado: { score: -1, reason: "oclusão impede hidratação" }
+      crespo: { score: -1, reason: "trava entrada de água nos fios" }
+      seco: { score: 0, reason: "selamento ok mas não hidrata" }
+      liso: { score: 1, reason: "brilho e disciplina" }
+
+  butter_natural:
+    label_pt: "Manteiga vegetal"
+    description: "Karité, cacau, cupuaçu — alta nutrição"
+    by_hair_type:
+      crespo: { score: 1, reason: "selamento profundo, ideal para crespo" }
+      seco: { score: 1, reason: "nutrição intensa" }
+      cacheado: { score: 1, reason: "boa para finalização de cachos" }
+      fino: { score: -1, reason: "pesa demais em fios finos" }
+
+  fatty_alcohol:
+    label_pt: "Álcool gorduroso (cetyl/cetearyl/stearyl)"
+    description: "NÃO resseca — emoliente que dá toque macio"
+    by_hair_type:
+      cacheado: { score: 1, reason: "emolliente, ajuda na definição" }
+      seco: { score: 1, reason: "amacia sem ressecar" }
+      crespo: { score: 1, reason: "ajuda no slip do desembaraço" }
+
+  alcohol_drying:
+    label_pt: "Álcool secativo (etílico/isopropílico)"
+    description: "Volátil; extrai água do fio"
+    by_hair_type:
+      seco: { score: -1, reason: "intensifica ressecamento" }
+      cacheado: { score: -1, reason: "frizz e perda de definição" }
+      crespo: { score: -1, reason: "muito secativo" }
+      sensibilizado: { score: -1, reason: "pode irritar couro cabeludo" }
+      danificado: { score: -1, reason: "agrava porosidade" }
+      oleoso: { score: 0, reason: "neutro/tolerado" }
+
+  # ───────── HUMECTANTS / PROTEINS ─────────
+  humectant:
+    label_pt: "Umectante (glicerina, panthenol)"
+    description: "Atrai e retém água no fio"
+    by_hair_type:
+      seco: { score: 1, reason: "rehidrata e retém água" }
+      cacheado: { score: 1, reason: "essencial para definição" }
+      crespo: { score: 1, reason: "essencial para hidratação" }
+      danificado: { score: 1, reason: "compensa porosidade alta" }
+      tingido: { score: 1, reason: "preserva cor mantendo umidade" }
+
+  protein:
+    label_pt: "Proteína hidrolisada (queratina, colágeno)"
+    description: "Repara fibra capilar; usar em ciclos"
+    by_hair_type:
+      danificado: { score: 1, reason: "restaura proteínas perdidas" }
+      com_quimica: { score: 1, reason: "repõe perda química" }
+      tingido: { score: 1, reason: "fortalece fios coloridos" }
+      sensibilizado: { score: 1, reason: "reconstrução suave" }
+      fino: { score: 0, reason: "uso moderado para não pesar" }
+
+  # ───────── ACTIVES / OTHERS ─────────
+  active:
+    label_pt: "Ativo cosmético"
+    description: "Vitaminas, peptídeos, ácidos — função específica"
+    by_hair_type: {}  # depends on specific active
+
+  fragrance_allergen:
+    label_pt: "Alérgeno de fragrância"
+    description: "Componente declarado por regulação cosmética"
+    by_hair_type:
+      sensibilizado: { score: -1, reason: "potencial irritante para couro sensível" }
+
+  fragrance:
+    label_pt: "Fragrância (parfum)"
+    by_hair_type:
+      sensibilizado: { score: 0, reason: "preferir versões sem parfum" }
+
+  preservative:
+    label_pt: "Conservante"
+    by_hair_type: {}
+
+  chelator:
+    label_pt: "Quelante (EDTA)"
+    by_hair_type: {}
+
+  antioxidant:
+    label_pt: "Antioxidante"
+    by_hair_type:
+      tingido: { score: 1, reason: "protege cor da oxidação" }
+      danificado: { score: 1, reason: "protege fibra de radicais livres" }
+
+  ph_adjuster:
+    label_pt: "Ajustador de pH"
+    by_hair_type: {}
+
+  colorant:
+    label_pt: "Pigmento/Corante"
+    by_hair_type: {}
+
+  polymer_film:
+    label_pt: "Polímero formador de filme"
+    description: "PVP, acrilatos — fixação"
+    by_hair_type:
+      cacheado: { score: 0, reason: "fixa cachos mas pode endurecer" }
+      fino: { score: 1, reason: "dá corpo e volume" }
+
+  polymer_cationic:
+    label_pt: "Polímero catiônico (polyquaternium)"
+    by_hair_type:
+      cacheado: { score: 1, reason: "condicionamento sem peso" }
+      danificado: { score: 1, reason: "deposita em áreas porosas" }
+      com_quimica: { score: 1, reason: "selamento de cutícula" }
+
+  exfoliant:
+    label_pt: "Esfoliante"
+    by_hair_type:
+      oleoso: { score: 1, reason: "remove acúmulo no couro cabeludo" }
+      sensibilizado: { score: -1, reason: "pode irritar" }
+
+  thickener:
+    label_pt: "Espessante"
+    by_hair_type: {}
+
+  emollient_synthetic:
+    label_pt: "Emoliente sintético"
+    description: "Isododecano, alkyl benzoatos — toque macio leve"
+    by_hair_type:
+      fino: { score: 1, reason: "leveza sem peso" }
+      cacheado: { score: 0, reason: "neutro" }
+
+  electrolyte:
+    label_pt: "Eletrólito"
+    by_hair_type: {}
+
+  extract_botanical:
+    label_pt: "Extrato botânico"
+    description: "Específico do extrato"
+    by_hair_type: {}
+
+  absorbent:
+    label_pt: "Absorvente"
+    by_hair_type:
+      oleoso: { score: 1, reason: "absorve oleosidade do couro" }
+
+  solvent:
+    label_pt: "Solvente (água)"
+    by_hair_type: {}
+
+  emulsifier:
+    label_pt: "Emulsificante"
+    by_hair_type: {}
+
+  fatty_acid:
+    label_pt: "Ácido graxo"
+    by_hair_type:
+      seco: { score: 1, reason: "repõe lipídios da fibra" }
+      danificado: { score: 1, reason: "restaura barreira" }
