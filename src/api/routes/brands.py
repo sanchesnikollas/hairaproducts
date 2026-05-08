@@ -44,6 +44,21 @@ def get_brand_groups():
 
 @router.get("/brands")
 def list_brands(session: Session = Depends(_get_session)):
+    # Load brands.json scope status (used by both multi-DB and single-DB paths)
+    import json
+    from pathlib import Path
+    brand_scope: dict[str, str] = {}
+    brand_notes: dict[str, str] = {}
+    brands_json_path = Path("config/brands.json")
+    if brands_json_path.exists():
+        try:
+            for bj in json.loads(brands_json_path.read_text()):
+                brand_scope[bj["brand_slug"]] = bj.get("status", "active")
+                if bj.get("notes"):
+                    brand_notes[bj["brand_slug"]] = bj["notes"]
+        except Exception:
+            pass
+
     if is_multi_db():
         # Multi-DB mode: read brand list from central database
         db_router = get_router()
@@ -56,6 +71,8 @@ def list_brands(session: Session = Depends(_get_session)):
                 "inci_rate": b.inci_rate,
                 "platform": b.platform,
                 "is_active": b.is_active,
+                "scope": brand_scope.get(b.brand_slug, "active"),
+                "scope_notes": brand_notes.get(b.brand_slug),
                 "created_at": str(b.created_at) if b.created_at else None,
                 "updated_at": str(b.updated_at) if b.updated_at else None,
             }
@@ -66,20 +83,7 @@ def list_brands(session: Session = Depends(_get_session)):
     repo = ProductRepository(session)
     coverages = repo.get_all_brand_coverages()
 
-    # Load brands.json scope status (active / out_of_scope / blocked / etc.)
-    import json
-    from pathlib import Path
-    brand_scope: dict[str, str] = {}
-    brand_notes: dict[str, str] = {}
-    brands_json = Path("config/brands.json")
-    if brands_json.exists():
-        try:
-            for b in json.loads(brands_json.read_text()):
-                brand_scope[b["brand_slug"]] = b.get("status", "active")
-                if b.get("notes"):
-                    brand_notes[b["brand_slug"]] = b["notes"]
-        except Exception:
-            pass
+    # brand_scope/brand_notes already loaded above
 
     # Compute quality metrics per brand
     quality = _compute_brand_quality_metrics(session)
