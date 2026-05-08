@@ -163,6 +163,26 @@ PLATFORM_TEMPLATES = {
         },
         "requires_js": False,
     },
+    "loja_integrada": {
+        "platform": "loja_integrada",
+        "discovery_strategy": "sitemap_first",
+        "sitemap_paths": ["/sitemap.xml"],
+        # Loja Integrada uses single-segment URLs; exclude category/info pages
+        "product_url_pattern": r"^{root}/(?!pagina/|carrinho|sitemap|lancamentos$|produtos$|linhas$|categoria|marca/|sobre|contato|finalizadores$|transformacao$)[\w-]+$",
+        "name_selectors": ["h1.produto-nome", "h1.product-name", "h1"],
+        "image_selectors": [".produto-imagem img", ".imagem-produto img", ".product-image img"],
+        "price_selectors": [".produto-preco-por", ".preco-por", ".product-price", ".price"],
+        "inci_selectors": [".produto-descricao", ".descricao-produto", ".product-description"],
+        "section_label_map": {
+            "description": ["descrição", "detalhes", "sobre o produto"],
+            "care_usage": ["como usar", "modo de uso", "aplicação"],
+            "composition": ["composição", "fórmula", "ativos"],
+            "ingredients_inci": ["ingredientes", "ingredients", "inci"],
+            "benefits": ["benefícios", "resultado"],
+        },
+        "requires_js": False,
+        "headless": False,  # forces httpx mode (avoids Playwright asyncio conflict)
+    },
 }
 
 
@@ -213,7 +233,7 @@ def make_blueprint(brand: dict) -> dict:
         },
         "extraction": {
             "requires_js": tpl["requires_js"],
-            "headless": True,
+            "headless": tpl.get("headless", True),
             "delay_seconds": 2,
             "name_selectors": tpl["name_selectors"],
             "image_selectors": tpl["image_selectors"],

@@ -4202,11 +4202,11 @@
   {
     "brand_slug": "natuhair",
     "brand_name": "NatuHair",
-    "official_url_root": "https://natuhair.com.br/",
+    "official_url_root": "https://www.lojanatuhair.com.br/",
     "priority": null,
     "inci_flag": "unknown",
     "tier": "tier_2_check",
-    "platform_guess": "wake",
+    "platform_guess": "loja_integrada",
     "http_status": 200,
     "html_length": 177543,
     "has_sitemap": true,
