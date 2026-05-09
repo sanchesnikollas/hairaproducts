@@ -13,6 +13,7 @@ import OpsReview from './pages/ops/OpsReview'
 import OpsDualValidation from './pages/ops/OpsDualValidation'
 import BrandsDashboard from './pages/BrandsDashboard'
 import BrandPage from './pages/BrandPage'
+import MoonAnalyzer from './pages/MoonAnalyzer'
 // ProductDetail is now handled by OpsProductDetail via redirect
 
 function RedirectToProduct() {
@@ -48,6 +49,7 @@ function App() {
           <Route path="brands" element={<BrandsDashboard />} />
           <Route path="brands/:slug" element={<BrandPage />} />
           <Route path="brands/:slug/products/:productId" element={<RedirectToProduct />} />
+          <Route path="moon" element={<MoonAnalyzer />} />
         </Route>
 
         {/* All redirects → unified interface */}

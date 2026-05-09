@@ -146,3 +146,38 @@ export async function resolveReviewItem(itemId: string, status: string, notes?: 
     body: JSON.stringify({ status, reviewer_notes: notes }),
   });
 }
+
+// ── Moon AI ──
+
+export interface MoonMatch {
+  hair_type: string;
+  score: number;
+  reason: string;
+}
+
+export interface MoonBreakdown {
+  name: string;
+  category: string | null;
+  weight: number;
+  matches: MoonMatch[];
+}
+
+export interface MoonAnalysis {
+  overall_score: number;
+  interpretation: string;
+  hair_types: string[];
+  ingredients_total: number;
+  ingredients_categorized: number;
+  coverage_pct: number;
+  alerts: { name: string; category: string; hair_type: string; reason: string }[];
+  benefits: { name: string; category: string; hair_type: string; reason: string }[];
+  breakdown: MoonBreakdown[];
+}
+
+export async function analyzeWithMoon(inci: string[], hair_types: string[]): Promise<MoonAnalysis> {
+  return fetchJSON<MoonAnalysis>('/moon/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ inci, hair_types }),
+  });
+}
