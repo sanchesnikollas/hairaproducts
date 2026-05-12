@@ -1,0 +1,828 @@
+{
+  "snapshot_date": "2026-05-12T00:24:59",
+  "db_path": "/Users/nikollasanches/Documents/_Clients/Haira/hairaproducts/haira.db",
+  "totals": {
+    "products": 19901,
+    "distinct_brands_with_products": 109
+  },
+  "verification_status": {
+    "catalog_only": 10459,
+    "verified_inci": 6985,
+    "quarantined": 2457
+  },
+  "coverage_pct": {
+    "price": 78.43,
+    "care_usage": 30.36,
+    "inci_ingredients": 42.03,
+    "description": 86.51,
+    "product_labels": 99.28
+  },
+  "per_brand_coverage": [
+    {
+      "brand_slug": "o-boticario",
+      "total": 1836,
+      "inci_pct": 60.3,
+      "price_pct": 99.1,
+      "care_usage_pct": 90.8
+    },
+    {
+      "brand_slug": "eudora",
+      "total": 1415,
+      "inci_pct": 48.8,
+      "price_pct": 96.2,
+      "care_usage_pct": 92.0
+    },
+    {
+      "brand_slug": "salon-line",
+      "total": 792,
+      "inci_pct": 97.3,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "griffus",
+      "total": 791,
+      "inci_pct": 12.8,
+      "price_pct": 98.6,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "amend",
+      "total": 704,
+      "inci_pct": 89.3,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "belliz-company",
+      "total": 499,
+      "inci_pct": 1.0,
+      "price_pct": 0.0,
+      "care_usage_pct": 5.2
+    },
+    {
+      "brand_slug": "haskell",
+      "total": 486,
+      "inci_pct": 27.6,
+      "price_pct": 99.6,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "abelha-rainha",
+      "total": 436,
+      "inci_pct": 0.0,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "fox-for-men",
+      "total": 390,
+      "inci_pct": 0.0,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "left-cosmeticos",
+      "total": 390,
+      "inci_pct": 72.6,
+      "price_pct": 100.0,
+      "care_usage_pct": 76.2
+    },
+    {
+      "brand_slug": "mondial",
+      "total": 387,
+      "inci_pct": 61.2,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "beleza-natural",
+      "total": 375,
+      "inci_pct": 56.3,
+      "price_pct": 100.0,
+      "care_usage_pct": 32.3
+    },
+    {
+      "brand_slug": "philco",
+      "total": 373,
+      "inci_pct": 0.0,
+      "price_pct": 91.2,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "natura",
+      "total": 362,
+      "inci_pct": 66.3,
+      "price_pct": 100.0,
+      "care_usage_pct": 1.4
+    },
+    {
+      "brand_slug": "karina",
+      "total": 354,
+      "inci_pct": 15.8,
+      "price_pct": 100.0,
+      "care_usage_pct": 4.5
+    },
+    {
+      "brand_slug": "apice-cosmeticos",
+      "total": 334,
+      "inci_pct": 67.4,
+      "price_pct": 100.0,
+      "care_usage_pct": 61.4
+    },
+    {
+      "brand_slug": "loccitane",
+      "total": 307,
+      "inci_pct": 2.9,
+      "price_pct": 98.0,
+      "care_usage_pct": 14.3
+    },
+    {
+      "brand_slug": "widi-care",
+      "total": 291,
+      "inci_pct": 19.6,
+      "price_pct": 99.7,
+      "care_usage_pct": 70.8
+    },
+    {
+      "brand_slug": "de-benguela",
+      "total": 286,
+      "inci_pct": 0.0,
+      "price_pct": 100.0,
+      "care_usage_pct": 4.2
+    },
+    {
+      "brand_slug": "keragen",
+      "total": 286,
+      "inci_pct": 87.1,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.3
+    },
+    {
+      "brand_slug": "keune",
+      "total": 283,
+      "inci_pct": 89.8,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "b-o-b-bars",
+      "total": 280,
+      "inci_pct": 40.4,
+      "price_pct": 73.2,
+      "care_usage_pct": 31.8
+    },
+    {
+      "brand_slug": "mahogany",
+      "total": 265,
+      "inci_pct": 23.8,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "spa-cosmetics",
+      "total": 258,
+      "inci_pct": 5.4,
+      "price_pct": 100.0,
+      "care_usage_pct": 19.4
+    },
+    {
+      "brand_slug": "facinatus-cosmeticos",
+      "total": 245,
+      "inci_pct": 16.3,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "red-iron",
+      "total": 243,
+      "inci_pct": 19.8,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "pokoloka",
+      "total": 228,
+      "inci_pct": 1.8,
+      "price_pct": 100.0,
+      "care_usage_pct": 99.6
+    },
+    {
+      "brand_slug": "brae",
+      "total": 227,
+      "inci_pct": 0.4,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "treeliss-profissional",
+      "total": 225,
+      "inci_pct": 45.3,
+      "price_pct": 100.0,
+      "care_usage_pct": 9.8
+    },
+    {
+      "brand_slug": "inoar",
+      "total": 218,
+      "inci_pct": 92.7,
+      "price_pct": 84.9,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "all-nature",
+      "total": 215,
+      "inci_pct": 77.2,
+      "price_pct": 99.5,
+      "care_usage_pct": 51.2
+    },
+    {
+      "brand_slug": "soupleliss-professional",
+      "total": 210,
+      "inci_pct": 37.1,
+      "price_pct": 100.0,
+      "care_usage_pct": 3.8
+    },
+    {
+      "brand_slug": "myphios-professional",
+      "total": 205,
+      "inci_pct": 58.0,
+      "price_pct": 100.0,
+      "care_usage_pct": 56.6
+    },
+    {
+      "brand_slug": "gota-dourada",
+      "total": 199,
+      "inci_pct": 3.0,
+      "price_pct": 100.0,
+      "care_usage_pct": 20.6
+    },
+    {
+      "brand_slug": "bio-extratus",
+      "total": 197,
+      "inci_pct": 3.0,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "lucy-s",
+      "total": 194,
+      "inci_pct": 0.5,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "fattore",
+      "total": 193,
+      "inci_pct": 23.8,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "forever-liss-professional",
+      "total": 190,
+      "inci_pct": 72.6,
+      "price_pct": 99.5,
+      "care_usage_pct": 87.9
+    },
+    {
+      "brand_slug": "arvensis-cosmeticos-naturais",
+      "total": 188,
+      "inci_pct": 3.2,
+      "price_pct": 92.0,
+      "care_usage_pct": 31.4
+    },
+    {
+      "brand_slug": "alva",
+      "total": 165,
+      "inci_pct": 81.8,
+      "price_pct": 78.2,
+      "care_usage_pct": 78.2
+    },
+    {
+      "brand_slug": "hidratei",
+      "total": 162,
+      "inci_pct": 75.9,
+      "price_pct": 87.7,
+      "care_usage_pct": 48.1
+    },
+    {
+      "brand_slug": "c-kamura",
+      "total": 156,
+      "inci_pct": 2.6,
+      "price_pct": 100.0,
+      "care_usage_pct": 78.8
+    },
+    {
+      "brand_slug": "knut",
+      "total": 155,
+      "inci_pct": 20.6,
+      "price_pct": 100.0,
+      "care_usage_pct": 6.5
+    },
+    {
+      "brand_slug": "alphahall-cosmetiques",
+      "total": 151,
+      "inci_pct": 94.0,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "capicilin",
+      "total": 151,
+      "inci_pct": 0.0,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "seda",
+      "total": 147,
+      "inci_pct": 74.1,
+      "price_pct": 0.0,
+      "care_usage_pct": 70.7
+    },
+    {
+      "brand_slug": "essendy",
+      "total": 132,
+      "inci_pct": 76.5,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "joico",
+      "total": 129,
+      "inci_pct": 47.3,
+      "price_pct": 92.2,
+      "care_usage_pct": 44.2
+    },
+    {
+      "brand_slug": "lacan",
+      "total": 124,
+      "inci_pct": 86.3,
+      "price_pct": 100.0,
+      "care_usage_pct": 8.1
+    },
+    {
+      "brand_slug": "kerastase",
+      "total": 116,
+      "inci_pct": 72.4,
+      "price_pct": 86.2,
+      "care_usage_pct": 91.4
+    },
+    {
+      "brand_slug": "redken",
+      "total": 112,
+      "inci_pct": 35.7,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "tekmi-cosmeticos",
+      "total": 112,
+      "inci_pct": 73.2,
+      "price_pct": 100.0,
+      "care_usage_pct": 30.4
+    },
+    {
+      "brand_slug": "aneethun",
+      "total": 109,
+      "inci_pct": 0.0,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "avatim",
+      "total": 102,
+      "inci_pct": 83.3,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "belletonn",
+      "total": 102,
+      "inci_pct": 59.8,
+      "price_pct": 100.0,
+      "care_usage_pct": 94.1
+    },
+    {
+      "brand_slug": "mega-bell",
+      "total": 102,
+      "inci_pct": 3.9,
+      "price_pct": 0.0,
+      "care_usage_pct": 2.0
+    },
+    {
+      "brand_slug": "acquaflora",
+      "total": 100,
+      "inci_pct": 7.0,
+      "price_pct": 98.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "dove",
+      "total": 97,
+      "inci_pct": 10.3,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "ox-cosmeticos",
+      "total": 94,
+      "inci_pct": 45.7,
+      "price_pct": 100.0,
+      "care_usage_pct": 14.9
+    },
+    {
+      "brand_slug": "cosmobeauty",
+      "total": 86,
+      "inci_pct": 45.3,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "larree",
+      "total": 86,
+      "inci_pct": 100.0,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "silone-hair",
+      "total": 84,
+      "inci_pct": 3.6,
+      "price_pct": 0.0,
+      "care_usage_pct": 72.6
+    },
+    {
+      "brand_slug": "agilise-cosmeticos",
+      "total": 79,
+      "inci_pct": 69.6,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "probelle",
+      "total": 76,
+      "inci_pct": 5.3,
+      "price_pct": 100.0,
+      "care_usage_pct": 11.8
+    },
+    {
+      "brand_slug": "mio-capelli",
+      "total": 75,
+      "inci_pct": 38.7,
+      "price_pct": 100.0,
+      "care_usage_pct": 29.3
+    },
+    {
+      "brand_slug": "mestre-dos-cachos",
+      "total": 73,
+      "inci_pct": 12.3,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "batiste",
+      "total": 72,
+      "inci_pct": 15.3,
+      "price_pct": 0.0,
+      "care_usage_pct": 1.4
+    },
+    {
+      "brand_slug": "abela-cosmetics",
+      "total": 71,
+      "inci_pct": 67.6,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "k-bell",
+      "total": 71,
+      "inci_pct": 0.0,
+      "price_pct": 100.0,
+      "care_usage_pct": 15.5
+    },
+    {
+      "brand_slug": "lana-brasiles",
+      "total": 67,
+      "inci_pct": 3.0,
+      "price_pct": 59.7,
+      "care_usage_pct": 46.3
+    },
+    {
+      "brand_slug": "mustela",
+      "total": 64,
+      "inci_pct": 53.1,
+      "price_pct": 0.0,
+      "care_usage_pct": 46.9
+    },
+    {
+      "brand_slug": "amazonico-care",
+      "total": 62,
+      "inci_pct": 24.2,
+      "price_pct": 50.0,
+      "care_usage_pct": 35.5
+    },
+    {
+      "brand_slug": "soul-cosmeticos",
+      "total": 59,
+      "inci_pct": 0.0,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "elseve",
+      "total": 58,
+      "inci_pct": 15.5,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "granado",
+      "total": 58,
+      "inci_pct": 98.3,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "pantene",
+      "total": 56,
+      "inci_pct": 78.6,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "b-hulmann",
+      "total": 49,
+      "inci_pct": 28.6,
+      "price_pct": 0.0,
+      "care_usage_pct": 6.1
+    },
+    {
+      "brand_slug": "barba-de-respeito",
+      "total": 46,
+      "inci_pct": 0.0,
+      "price_pct": 100.0,
+      "care_usage_pct": 100.0
+    },
+    {
+      "brand_slug": "brscience-profissional",
+      "total": 46,
+      "inci_pct": 4.3,
+      "price_pct": 100.0,
+      "care_usage_pct": 69.6
+    },
+    {
+      "brand_slug": "salunat",
+      "total": 46,
+      "inci_pct": 65.2,
+      "price_pct": 100.0,
+      "care_usage_pct": 89.1
+    },
+    {
+      "brand_slug": "laby",
+      "total": 45,
+      "inci_pct": 6.7,
+      "price_pct": 100.0,
+      "care_usage_pct": 6.7
+    },
+    {
+      "brand_slug": "bemgloria",
+      "total": 42,
+      "inci_pct": 0.0,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "okyo",
+      "total": 42,
+      "inci_pct": 61.9,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "balai",
+      "total": 41,
+      "inci_pct": 48.8,
+      "price_pct": 0.0,
+      "care_usage_pct": 48.8
+    },
+    {
+      "brand_slug": "barba-robusta",
+      "total": 41,
+      "inci_pct": 22.0,
+      "price_pct": 100.0,
+      "care_usage_pct": 43.9
+    },
+    {
+      "brand_slug": "sense-brasil",
+      "total": 41,
+      "inci_pct": 0.0,
+      "price_pct": 100.0,
+      "care_usage_pct": 97.6
+    },
+    {
+      "brand_slug": "malina-beauty",
+      "total": 36,
+      "inci_pct": 97.2,
+      "price_pct": 100.0,
+      "care_usage_pct": 52.8
+    },
+    {
+      "brand_slug": "descomplica-curvas",
+      "total": 34,
+      "inci_pct": 32.4,
+      "price_pct": 100.0,
+      "care_usage_pct": 5.9
+    },
+    {
+      "brand_slug": "hiato-fitocosmeticos",
+      "total": 33,
+      "inci_pct": 21.2,
+      "price_pct": 100.0,
+      "care_usage_pct": 27.3
+    },
+    {
+      "brand_slug": "nordic-smells",
+      "total": 33,
+      "inci_pct": 6.1,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "bendita-canfora",
+      "total": 32,
+      "inci_pct": 0.0,
+      "price_pct": 100.0,
+      "care_usage_pct": 100.0
+    },
+    {
+      "brand_slug": "tresemme",
+      "total": 32,
+      "inci_pct": 100.0,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "kah-noa",
+      "total": 27,
+      "inci_pct": 33.3,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "wella",
+      "total": 22,
+      "inci_pct": 40.9,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "imunehair",
+      "total": 21,
+      "inci_pct": 100.0,
+      "price_pct": 100.0,
+      "care_usage_pct": 4.8
+    },
+    {
+      "brand_slug": "breany-liss",
+      "total": 18,
+      "inci_pct": 0.0,
+      "price_pct": 88.9,
+      "care_usage_pct": 38.9
+    },
+    {
+      "brand_slug": "rainha-dos-cachos",
+      "total": 18,
+      "inci_pct": 44.4,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "aussie",
+      "total": 16,
+      "inci_pct": 75.0,
+      "price_pct": 0.0,
+      "care_usage_pct": 6.2
+    },
+    {
+      "brand_slug": "fabulosa-lizz",
+      "total": 13,
+      "inci_pct": 15.4,
+      "price_pct": 100.0,
+      "care_usage_pct": 38.5
+    },
+    {
+      "brand_slug": "bio-instinto",
+      "total": 11,
+      "inci_pct": 100.0,
+      "price_pct": 0.0,
+      "care_usage_pct": 100.0
+    },
+    {
+      "brand_slug": "new-hair",
+      "total": 11,
+      "inci_pct": 54.5,
+      "price_pct": 81.8,
+      "care_usage_pct": 9.1
+    },
+    {
+      "brand_slug": "my-brush",
+      "total": 9,
+      "inci_pct": 44.4,
+      "price_pct": 100.0,
+      "care_usage_pct": 33.3
+    },
+    {
+      "brand_slug": "sos-frizz",
+      "total": 6,
+      "inci_pct": 83.3,
+      "price_pct": 100.0,
+      "care_usage_pct": 50.0
+    },
+    {
+      "brand_slug": "head-and-shoulders",
+      "total": 5,
+      "inci_pct": 0.0,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "lola-cosmetics",
+      "total": 5,
+      "inci_pct": 0.0,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "barrominas",
+      "total": 4,
+      "inci_pct": 25.0,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "grankera",
+      "total": 2,
+      "inci_pct": 0.0,
+      "price_pct": 100.0,
+      "care_usage_pct": 100.0
+    },
+    {
+      "brand_slug": "b-urb",
+      "total": 1,
+      "inci_pct": 0.0,
+      "price_pct": 100.0,
+      "care_usage_pct": 0.0
+    },
+    {
+      "brand_slug": "loccitane-us",
+      "total": 1,
+      "inci_pct": 0.0,
+      "price_pct": 0.0,
+      "care_usage_pct": 0.0
+    }
+  ],
+  "top_quarantined_brands": [
+    {
+      "brand_slug": "o-boticario",
+      "quarantined": 1160
+    },
+    {
+      "brand_slug": "eudora",
+      "quarantined": 729
+    },
+    {
+      "brand_slug": "natura",
+      "quarantined": 141
+    },
+    {
+      "brand_slug": "loccitane",
+      "quarantined": 107
+    },
+    {
+      "brand_slug": "arvensis-cosmeticos-naturais",
+      "quarantined": 35
+    },
+    {
+      "brand_slug": "avatim",
+      "quarantined": 35
+    },
+    {
+      "brand_slug": "griffus",
+      "quarantined": 29
+    },
+    {
+      "brand_slug": "salon-line",
+      "quarantined": 24
+    },
+    {
+      "brand_slug": "granado",
+      "quarantined": 22
+    },
+    {
+      "brand_slug": "alva",
+      "quarantined": 20
+    }
+  ],
+  "discovered_total_sum": 27365
+}
