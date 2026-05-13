@@ -31,10 +31,14 @@ discovery:
   product_url_pattern: /p$
   max_pages: 50000
 extraction:
-  requires_js: true
-  headless: true
-  delay_seconds: 5
-  wait_for_selector: '[class*="productSpecification"]'
+  # Specs render client-side; SSR HTML carries only nav/marketing copy. We
+  # use the VTEX public catalog API instead of Playwright (Playwright is
+  # blocked by edge bot-detection and never reached productSpecification
+  # in practice; previous run yielded 0/105 with the CSS selectors).
+  requires_js: false
+  http_client: curl_cffi
+  use_vtex_catalog_api: true
+  delay_seconds: 3
   inci_selectors:
   - '[class*="specificationValue"]'
   - '[class*="productSpecification"] td:last-child'

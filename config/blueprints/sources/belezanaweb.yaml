@@ -14,11 +14,22 @@ discovery:
   product_url_pattern: ^https://www\.belezanaweb\.com\.br/[\w%-]+/?$
   max_pages: 80000
 extraction:
+  # Beleza na Web is a custom storefront (not standard VTEX). Playwright is
+  # blocked by Akamai ("Access Denied"), so requires_js must stay false. The
+  # SSR HTML does not carry a "Composição" tab — only Detalhes / Como Usar /
+  # Ação. We try the VTEX catalog API (no-op when no productId is found) and
+  # then fall back to the product description body (.product-description-content)
+  # which carries an inline INCI block for a small minority of products (mostly
+  # kits). Realistic yield here is low; the file remains as an opportunistic
+  # source — primary INCI comes from other distributors / official sites.
   requires_js: false
   http_client: curl_cffi
   curl_cffi_impersonate: chrome
+  use_vtex_catalog_api: true
   delay_seconds: 3
   inci_selectors:
+  - '#description-region .product-description-content'
+  - '.product-description-content'
   - '[data-specification-name="Composição"] .vtex-product-specifications-1-x-specificationValue'
   - '[data-specification-name="Ingredientes"] .vtex-product-specifications-1-x-specificationValue'
   - '[data-specification-name="Composição"]'
