@@ -63,7 +63,25 @@ extraction:
 notes:
   auto_generated: true
   platform_detail: vtex
-  inci_available: unknown
-  inci_note: Auto-generated blueprint; review after first scrape.
-  triage_tier: tier_1_easy
-version: 1
+  inci_available: rare
+  inci_note: |
+    Audited 2026-05-13 (pipeline-doctor). Belliz portfolio is ~50% hair accessories
+    (escovas, espatulas, pentes, elasticos) and ~12% formula products. Verified via
+    VTEX catalog API (/api/catalog_system/pub/products/search/{slug}/p): allSpecifications
+    for ALL products is limited to ['Beneficios', 'Volume', 'Descubra por que ter na sua loja',
+    'Antes', 'Depois']. NO structured INCI specification exists. The only products with
+    extractable INCI are ~4-5 facial serums where ingredient list is embedded inline in
+    description as '<strong>Composicao:</strong>' block - existing selectors already
+    capture these (5 verified in DB). Coverage ceiling ~1-3% by full portfolio,
+    ~8% by formula-only subset. RECOMMEND: mark for M3 source-scrape (alternate origin
+    like ANVISA/EAN-based INCI lookup) if higher coverage required - blueprint cannot
+    recover what site does not publish.
+  triage_tier: tier_3_source_scrape
+  audit_2026_05_13:
+    total_products: 499
+    accessories_estimate: 252
+    formula_estimate: 60
+    inci_verified: 5
+    blueprint_action: none_required
+    coverage_ceiling_pct: 3
+version: 2

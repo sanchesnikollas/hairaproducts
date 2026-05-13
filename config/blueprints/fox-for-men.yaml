@@ -33,9 +33,11 @@ extraction:
   - p.price
   - span.price
   - .woocommerce-Price-amount
-  inci_selectors:
-  - .woocommerce-product-details__short-description
-  - .woocommerce-tabs .panel
+  # Porto WooCommerce theme nests product content in <script type="text/template">.
+  # The extractor unpacks it; INCI lives inside #tab-description as a <p> starting with
+  # "Composição (INCI):" or "Composition (INCI):" — left empty so the tab-label
+  # heuristic isolates just the INCI <p> instead of matching the whole tab body.
+  inci_selectors: []
   section_label_map:
     description:
       labels:

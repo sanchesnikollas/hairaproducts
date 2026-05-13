@@ -56,7 +56,8 @@ INCI_TAB_LABELS = [
     # Most specific labels first (longer matches take priority)
     "lista completa de ingredientes", "full ingredient list",
     "composição completa", "composição do produto",
-    "composição", "composicao",
+    "composition (inci)", "composição (inci)",
+    "composição", "composicao", "composition",
     "ingredientes", "ingredients", "inci",
 ]
 
@@ -388,6 +389,53 @@ def _is_domain_name(text: str) -> bool:
     return bool(re.match(r'^(www\.)?[a-z0-9-]+\.[a-z]{2,}(\.[a-z]{2,})?$', text))
 
 
+def _unpack_porto_templates(html: str) -> str:
+    """Inject Porto WooCommerce theme's <script type="text/template"> content into the DOM.
+
+    The Porto theme (used by foxformen.com.br and other WooCommerce stores) renders
+    the product summary, description tabs, and additional info inside a JSON-encoded
+    HTML blob in a <script type="text/template"> tag. BeautifulSoup CSS selectors
+    don't see this content unless we parse the template and inject it into <body>.
+
+    Returns the original html unchanged if no Porto template is detected, so this
+    is safe to call on any page.
+    """
+    if "tab-description" not in html and "product-summary-wrap" not in html:
+        return html
+    try:
+        soup = _get_soup(html)
+    except Exception:
+        return html
+    injected = False
+    for s in list(soup.find_all("script", {"type": "text/template"})):
+        raw = (s.string or "").strip()
+        if not raw:
+            continue
+        if "tab-description" not in raw and "product-summary-wrap" not in raw:
+            continue
+        # Porto renders the template as a JSON-encoded HTML string
+        if raw.startswith('"'):
+            try:
+                decoded = json.loads(raw)
+            except (json.JSONDecodeError, ValueError):
+                try:
+                    decoded = raw[1:-1].encode().decode("unicode_escape", errors="replace")
+                except Exception:
+                    continue
+        else:
+            decoded = raw
+        try:
+            frag = _get_soup(decoded)
+        except Exception:
+            continue
+        body = soup.find("body") or soup
+        frag_root = frag.body if frag.body else frag
+        for child in list(frag_root.children):
+            body.append(child)
+        injected = True
+    return str(soup) if injected else html
+
+
 def extract_product_deterministic(
     html: str,
     url: str,
@@ -417,6 +465,9 @@ def extract_product_deterministic(
     if _is_waf_challenge_page(html):
         logger.warning(f"WAF challenge page detected for {url}, skipping extraction")
         return result
+
+    # Unpack Porto WooCommerce theme script templates (no-op on other sites)
+    html = _unpack_porto_templates(html)
 
     # Try JSON-LD first
     jsonld = extract_jsonld(html)

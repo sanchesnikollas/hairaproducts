@@ -63,8 +63,20 @@ extraction:
   use_llm_fallback: false
 notes:
   auto_generated: true
-  platform_detail: vtex
-  inci_available: unknown
-  inci_note: Auto-generated blueprint; review after first scrape.
-  triage_tier: tier_2_check
-version: 1
+  platform_detail: vtex_faststore
+  inci_available: false
+  inci_note: |
+    Confirmed 2026-05-13 (pipeline-doctor): site does NOT publish INCI/ingredients/composition.
+    Verified across 3 hair products + 1 non-hair sample:
+      - JSON-LD "description" field is empty string
+      - VTEX catalog API (/api/catalog_system/pub/products/search) "description" + "metaTagDescription" empty
+      - No "specificationGroups" / allSpecifications populated
+      - SSR HTML contains zero ingredient/composição/aqua tokens
+    Blueprint CSS selectors match VTEX legacy theme but this is FastStore deployment with empty
+    description containers. Not a blueprint bug — fundamental gap at source.
+    Action: mark for M3 source-scrape (PDF labels / manufacturer catalog) — re-scraping with
+    current blueprint will not improve INCI coverage.
+  triage_tier: tier_3_source_scrape
+  inci_coverage_current: 0.0
+  inci_coverage_achievable_via_scrape: 0.0
+version: 2
