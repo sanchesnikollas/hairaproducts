@@ -28,6 +28,15 @@ function parseInci(text: string): string[] {
     .filter((s) => s.length > 1 && s.length < 100);
 }
 
+// Real-world sample taken from an Oe Nani shampoo (Shopify auto-blueprint)
+// to give users an immediate "show me" experience.
+const SAMPLE_INCI = [
+  'Aqua', 'Sodium Laureth Sulfate', 'Cocamidopropyl Betaine',
+  'Glycerin', 'Argan Oil', 'Panthenol', 'Cetearyl Alcohol',
+  'Dimethicone', 'Phenoxyethanol', 'Parfum', 'Limonene',
+].join(', ');
+const SAMPLE_HAIR_TYPES = ['cacheado', 'seco'];
+
 function scoreColor(score: number): string {
   if (score >= 0.6) return 'text-green-700 bg-green-50';
   if (score >= 0.2) return 'text-emerald-700 bg-emerald-50';
@@ -71,11 +80,28 @@ export default function MoonAnalyzer() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto p-6">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="font-display text-4xl font-semibold text-ink">🌙 Moon Analyzer</h1>
-        <p className="mt-2 text-sm text-ink-muted">
-          Cole a lista INCI de qualquer produto. A Moon avalia compatibilidade com seu perfil capilar
-          e identifica alertas e benefícios principais.
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="font-display text-4xl font-semibold text-ink">🌙 Moon Analyzer</h1>
+            <p className="mt-2 text-sm text-ink-muted">
+              Cole a lista INCI de qualquer produto. A Moon avalia compatibilidade com seu perfil capilar
+              e identifica alertas e benefícios principais.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setInciText(SAMPLE_INCI);
+              setSelectedTypes(new Set(SAMPLE_HAIR_TYPES));
+              setAnalysis(null);
+              setError(null);
+            }}
+            className="shrink-0 mt-2 px-3 py-1.5 text-xs rounded-full border border-cream-dark text-ink-muted hover:border-ink hover:text-ink transition-colors"
+            title="Pré-popula a entrada com um shampoo real e perfil cacheado+seco"
+          >
+            ⚡ Carregar exemplo
+          </button>
+        </div>
       </motion.div>
 
       {/* Hair profile selector */}
@@ -135,7 +161,15 @@ export default function MoonAnalyzer() {
           <div className={`rounded-lg p-6 ${scoreColor(analysis.overall_score)}`}>
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs uppercase tracking-wide opacity-70">Score geral</div>
+                <div className="flex items-center gap-2 text-xs uppercase tracking-wide opacity-70">
+                  Score geral
+                  <span
+                    className="inline-flex items-center justify-center w-4 h-4 text-[10px] rounded-full border border-current opacity-80 cursor-help"
+                    title="Score de -1 (incompatível) a +1 (ideal). Verde >+0.3, neutro entre -0.3 e +0.3, âmbar/vermelho <-0.3. Calculado pela média ponderada dos ingredientes (primeiros 5 pesam mais)."
+                  >
+                    ?
+                  </span>
+                </div>
                 <div className="text-4xl font-display font-bold mt-1">
                   {analysis.overall_score >= 0 ? '+' : ''}{analysis.overall_score.toFixed(2)}
                 </div>
@@ -146,6 +180,10 @@ export default function MoonAnalyzer() {
                 <div className="text-xl font-semibold mt-1">{analysis.coverage_pct}%</div>
                 <div>{analysis.ingredients_categorized} de {analysis.ingredients_total} mapeados</div>
               </div>
+            </div>
+            <div className="mt-4 pt-3 border-t border-current/10 text-[11px] opacity-70 leading-relaxed">
+              <strong>Como ler:</strong> &minus;1 incompatível · 0 neutro · +1 ideal. Cobertura mostra
+              quantos ingredientes a Moon reconhece — quanto maior, mais confiável o score.
             </div>
           </div>
 
