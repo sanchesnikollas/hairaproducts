@@ -29,6 +29,20 @@ ROOT = Path(__file__).parent.parent
 TERMINAL = {"out_of_scope", "blocked", "no_source"}
 
 
+SKIP_FILE = ROOT / "data/loop_skip.txt"
+
+
+def load_skip():
+    """Brands já tentadas que voltaram 0 produtos — não retentar no loop."""
+    if not SKIP_FILE.exists():
+        return set()
+    return {
+        line.strip()
+        for line in SKIP_FILE.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.startswith("#")
+    }
+
+
 def load_state():
     existing = {f[:-5] for f in os.listdir(ROOT / "config/blueprints") if f.endswith(".yaml")}
     c = sqlite3.connect(str(ROOT / "haira.db"))
@@ -41,13 +55,15 @@ def load_state():
     return existing, counts, status, tier, brands
 
 
-def build_queue(existing, counts, status, tier):
+def build_queue(existing, counts, status, tier, skip=None):
     """Ordered list of (slug, tier, needs_blueprint) for brands still to do."""
+    skip = skip or set()
+
     def n(slug):
         return counts.get(slug, 0)
 
     def active(slug):
-        return status.get(slug) not in TERMINAL
+        return status.get(slug) not in TERMINAL and slug not in skip
 
     buckets = {
         "tier1_bp_zero": [],   # tier_1, has blueprint, 0 products
@@ -93,7 +109,8 @@ def main():
     args = ap.parse_args()
 
     existing, counts, status, tier, brands = load_state()
-    queue, buckets = build_queue(existing, counts, status, tier)
+    skip = load_skip()
+    queue, buckets = build_queue(existing, counts, status, tier, skip)
 
     with_ge10 = sum(1 for s, cnt in counts.items() if cnt >= 10)
     with_any = len(counts)
