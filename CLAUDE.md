@@ -139,3 +139,19 @@ Dados estao corretos?     -> data-quality-auditor
 UI quebrada?              -> frontend-reviewer
 Tudo pronto, subir?       -> deploy-operator
 ```
+
+## Documentacao no Jira (OBRIGATORIO)
+
+Todo trabalho tecnico (pipeline, scraping, Moon, INCI, deploy, infra) e documentado no Jira
+sob o epico-log **HAIRA-143** ("Engenharia & Dados — Pipeline, Moon AI & Deploy").
+
+- **Site:** `sanchescreative.atlassian.net` (cloudId `715ed417-3bdb-4268-aca5-b49c04cbf59e`, projeto `HAIRA`)
+- **Epico-log:** [HAIRA-143](https://sanchescreative.atlassian.net/browse/HAIRA-143)
+- **Tarefas filhas atuais:**
+  - HAIRA-144 — Cobertura horizontal (waves M2 de scraping)
+  - HAIRA-145 — Moon AI (deploy MVP)
+  - HAIRA-146 — Qualidade INCI (fixes de extracao)
+
+**Convencao:** cada frente nova = tarefa filha de HAIRA-143. Progresso relevante (waves,
+fixes, deploys, metricas antes/depois, incidentes) = comentario datado na tarefa. Usar o
+MCP Atlassian (`createJiraIssue`, `addCommentToJiraIssue`, `editJiraIssue`).
