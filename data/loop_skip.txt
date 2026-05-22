@@ -15,3 +15,7 @@ pharma
 soft-color
 sollido
 the-body-shop
+fashion-gold
+glatten-professional
+hidraliso
+hobety-profissional
