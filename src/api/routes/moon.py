@@ -12,6 +12,7 @@ Output:
 """
 from __future__ import annotations
 
+import json
 import logging
 import unicodedata
 from collections import defaultdict
@@ -21,8 +22,11 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from src.api.dependencies import is_multi_db, get_router
+from src.api.dependencies import is_multi_db, get_router, get_ops_session
+from src.api.auth import get_current_user
+from src.core.moon_ai import analyze_compatibility_ai
 from src.storage.database import get_engine
+from src.storage.ops_models import HairProfileORM
 from sqlalchemy.orm import Session as SASession
 
 logger = logging.getLogger("haira.moon")
@@ -52,6 +56,7 @@ class AnalyzeRequest(BaseModel):
     inci: list[str] | None = None
     product_id: str | None = None
     hair_types: list[str]
+    use_ai: bool = False  # quando True, anexa análise consultiva da IA (camada sobre o rule-based)
 
 
 @router.post("/analyze")
@@ -64,6 +69,7 @@ def analyze(body: AnalyzeRequest, session: Session = Depends(_get_session)):
 
     # Resolve INCI list from product_id if needed
     ingredient_names = body.inci or []
+    product_meta: dict = {}
     if body.product_id and not body.inci:
         rows = session.execute(text("""
             SELECT i.canonical_name
@@ -73,8 +79,36 @@ def analyze(body: AnalyzeRequest, session: Session = Depends(_get_session)):
             ORDER BY pi.position
         """), {"pid": body.product_id}).fetchall()
         ingredient_names = [r.canonical_name for r in rows]
+        # Fallback: alguns produtos guardam INCI como JSON em products.inci_ingredients
+        if not ingredient_names:
+            prow = session.execute(text(
+                "SELECT inci_ingredients FROM products WHERE id = :pid"
+            ), {"pid": body.product_id}).first()
+            if prow and prow.inci_ingredients:
+                try:
+                    parsed = json.loads(prow.inci_ingredients)
+                    if isinstance(parsed, list):
+                        ingredient_names = [str(x) for x in parsed]
+                except (json.JSONDecodeError, TypeError):
+                    pass
         if not ingredient_names:
             raise HTTPException(status_code=404, detail="No ingredients found for product")
+
+    # Metadados do produto (pra contexto da IA) — best-effort, não bloqueia
+    if body.product_id:
+        try:
+            meta = session.execute(text("""
+                SELECT product_name, product_type_normalized, description
+                FROM products WHERE id = :pid
+            """), {"pid": body.product_id}).first()
+            if meta:
+                product_meta = {
+                    "name": meta.product_name,
+                    "product_type": meta.product_type_normalized,
+                    "description": meta.description,
+                }
+        except Exception:  # noqa: BLE001
+            product_meta = {}
 
     # Match each ingredient name to canonical (via name or alias)
     matched_categories: list[tuple[str, str | None, int]] = []
@@ -157,7 +191,7 @@ def analyze(body: AnalyzeRequest, session: Session = Depends(_get_session)):
     inci_known = sum(1 for n, _, _ in matched_categories
                      if any(c is not None for nn, c, _ in matched_categories if nn == n))
 
-    return {
+    result = {
         "overall_score": round(overall, 2),
         "interpretation": _interpret(overall),
         "hair_types": body.hair_types,
@@ -167,7 +201,23 @@ def analyze(body: AnalyzeRequest, session: Session = Depends(_get_session)):
         "alerts": alerts[:10],
         "benefits": benefits[:10],
         "breakdown": breakdown,
+        "ai_analysis": None,
     }
+
+    # Camada IA opcional — consultiva, sobre o score rule-based. Degrada graciosamente.
+    if body.use_ai:
+        result["ai_analysis"] = analyze_compatibility_ai(
+            product_ctx={
+                "name": product_meta.get("name"),
+                "product_type": product_meta.get("product_type"),
+                "description": product_meta.get("description"),
+                "inci": ingredient_names,
+            },
+            hair_types=body.hair_types,
+            rule_result=result,
+        )
+
+    return result
 
 
 def _interpret(score: float) -> str:
@@ -196,3 +246,51 @@ def list_categories(session: Session = Depends(_get_session)):
             "hair_type": r.hair_type, "score": r.score, "reason": r.reason
         })
     return {"categories": dict(by_cat)}
+
+
+# ---------------------------------------------------------------------------
+# Perfil capilar do usuário — alimenta a análise contextual do Moon.
+# ---------------------------------------------------------------------------
+
+class HairProfileBody(BaseModel):
+    hair_types: list[str]
+    notes: str | None = None
+
+
+@router.get("/profile")
+def get_profile(
+    user: dict = Depends(get_current_user),
+    session: Session = Depends(get_ops_session),
+):
+    """Carrega o perfil capilar salvo do usuário logado."""
+    prof = session.query(HairProfileORM).filter(
+        HairProfileORM.user_id == user["sub"]
+    ).first()
+    if not prof:
+        return {"hair_types": [], "notes": None, "exists": False}
+    try:
+        hts = json.loads(prof.hair_types) if prof.hair_types else []
+    except (json.JSONDecodeError, TypeError):
+        hts = []
+    return {"hair_types": hts, "notes": prof.notes, "exists": True}
+
+
+@router.put("/profile")
+def save_profile(
+    body: HairProfileBody,
+    user: dict = Depends(get_current_user),
+    session: Session = Depends(get_ops_session),
+):
+    """Salva (cria ou atualiza) o perfil capilar do usuário logado."""
+    prof = session.query(HairProfileORM).filter(
+        HairProfileORM.user_id == user["sub"]
+    ).first()
+    payload = json.dumps(body.hair_types, ensure_ascii=False)
+    if prof:
+        prof.hair_types = payload
+        prof.notes = body.notes
+    else:
+        prof = HairProfileORM(user_id=user["sub"], hair_types=payload, notes=body.notes)
+        session.add(prof)
+    session.commit()
+    return {"hair_types": body.hair_types, "notes": body.notes, "exists": True}

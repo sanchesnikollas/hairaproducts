@@ -162,6 +162,14 @@ export interface MoonBreakdown {
   matches: MoonMatch[];
 }
 
+export interface MoonAiAnalysis {
+  summary: string;
+  synergies: string[];
+  personalized_alerts: string[];
+  recommendation: string;
+  _model?: string;
+}
+
 export interface MoonAnalysis {
   overall_score: number;
   interpretation: string;
@@ -172,12 +180,45 @@ export interface MoonAnalysis {
   alerts: { name: string; category: string; hair_type: string; reason: string }[];
   benefits: { name: string; category: string; hair_type: string; reason: string }[];
   breakdown: MoonBreakdown[];
+  ai_analysis: MoonAiAnalysis | null;
 }
 
-export async function analyzeWithMoon(inci: string[], hair_types: string[]): Promise<MoonAnalysis> {
+export interface MoonAnalyzeRequest {
+  inci?: string[];
+  product_id?: string;
+  hair_types: string[];
+  use_ai?: boolean;
+}
+
+function authHeaders(): Record<string, string> {
+  const token = localStorage.getItem('haira_token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export async function analyzeWithMoon(req: MoonAnalyzeRequest): Promise<MoonAnalysis> {
   return fetchJSON<MoonAnalysis>('/moon/analyze', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ inci, hair_types }),
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(req),
+  });
+}
+
+// ── Moon hair profile (perfil capilar salvo do usuário) ──
+
+export interface MoonProfile {
+  hair_types: string[];
+  notes: string | null;
+  exists: boolean;
+}
+
+export async function getMoonProfile(): Promise<MoonProfile> {
+  return fetchJSON<MoonProfile>('/moon/profile', { headers: { ...authHeaders() } });
+}
+
+export async function saveMoonProfile(hair_types: string[], notes?: string): Promise<MoonProfile> {
+  return fetchJSON<MoonProfile>('/moon/profile', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ hair_types, notes: notes ?? null }),
   });
 }

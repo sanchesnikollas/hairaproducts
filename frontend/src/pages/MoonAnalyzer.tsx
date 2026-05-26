@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { analyzeWithMoon } from '@/lib/api';
+import { analyzeWithMoon, getMoonProfile, saveMoonProfile, getProducts } from '@/lib/api';
 import type { MoonAnalysis } from '@/lib/api';
+import type { Product } from '@/types/api';
 
 const HAIR_TYPES = [
   { slug: 'liso', label: 'Liso' },
@@ -46,14 +47,40 @@ function scoreColor(score: number): string {
 }
 
 export default function MoonAnalyzer() {
+  const [mode, setMode] = useState<'product' | 'inci'>('product');
   const [inciText, setInciText] = useState('');
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set(['cacheado']));
+  const [useAi, setUseAi] = useState(true);
   const [analysis, setAnalysis] = useState<MoonAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Product selector
+  const [productQuery, setProductQuery] = useState('');
+  const [productResults, setProductResults] = useState<Product[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [searching, setSearching] = useState(false);
+
+  // Profile
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [profileSavedAt, setProfileSavedAt] = useState<number | null>(null);
+
+  // Carrega o perfil capilar salvo do usuário ao montar — pré-seleciona os tipos.
+  useEffect(() => {
+    getMoonProfile()
+      .then((p) => {
+        if (p.exists && p.hair_types.length > 0) {
+          setSelectedTypes(new Set(p.hair_types));
+        }
+      })
+      .catch(() => {/* sem perfil / não logado — mantém default */})
+      .finally(() => setProfileLoaded(true));
+  }, []);
+
   const ingredients = parseInci(inciText);
-  const canAnalyze = ingredients.length > 0 && selectedTypes.size > 0;
+  const canAnalyze =
+    selectedTypes.size > 0 &&
+    (mode === 'product' ? !!selectedProduct : ingredients.length > 0);
 
   function toggleType(slug: string) {
     setSelectedTypes((prev) => {
@@ -64,16 +91,43 @@ export default function MoonAnalyzer() {
     });
   }
 
+  async function searchProducts(q: string) {
+    setProductQuery(q);
+    if (q.trim().length < 2) { setProductResults([]); return; }
+    setSearching(true);
+    try {
+      const res = await getProducts({ search: q.trim(), per_page: 10 });
+      setProductResults(res.items ?? []);
+    } catch {
+      setProductResults([]);
+    } finally {
+      setSearching(false);
+    }
+  }
+
   async function runAnalysis() {
     setLoading(true);
     setError(null);
     try {
-      const result = await analyzeWithMoon(ingredients, Array.from(selectedTypes));
+      const req = mode === 'product' && selectedProduct
+        ? { product_id: selectedProduct.id, hair_types: Array.from(selectedTypes), use_ai: useAi }
+        : { inci: ingredients, hair_types: Array.from(selectedTypes), use_ai: useAi };
+      const result = await analyzeWithMoon(req);
       setAnalysis(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro ao analisar');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleSaveProfile() {
+    try {
+      await saveMoonProfile(Array.from(selectedTypes));
+      setProfileSavedAt(Date.now());
+      setTimeout(() => setProfileSavedAt(null), 2500);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro ao salvar perfil');
     }
   }
 
@@ -84,13 +138,14 @@ export default function MoonAnalyzer() {
           <div>
             <h1 className="font-display text-4xl font-semibold text-ink">🌙 Moon Analyzer</h1>
             <p className="mt-2 text-sm text-ink-muted">
-              Cole a lista INCI de qualquer produto. A Moon avalia compatibilidade com seu perfil capilar
-              e identifica alertas e benefícios principais.
+              Escolha um produto do catálogo (ou cole o INCI), use seu perfil capilar salvo, e a Moon
+              avalia a compatibilidade — com análise personalizada por IA.
             </p>
           </div>
           <button
             type="button"
             onClick={() => {
+              setMode('inci');
               setInciText(SAMPLE_INCI);
               setSelectedTypes(new Set(SAMPLE_HAIR_TYPES));
               setAnalysis(null);
@@ -106,7 +161,19 @@ export default function MoonAnalyzer() {
 
       {/* Hair profile selector */}
       <div className="rounded-lg border border-cream-dark bg-white p-5">
-        <h2 className="text-sm font-medium text-ink mb-3">Seu perfil capilar</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-medium text-ink">
+            Seu perfil capilar {profileLoaded && <span className="text-ink-faint">(carregado do seu perfil salvo)</span>}
+          </h2>
+          <button
+            type="button"
+            onClick={handleSaveProfile}
+            disabled={selectedTypes.size === 0}
+            className="px-3 py-1.5 text-xs rounded-full border border-cream-dark text-ink-muted hover:border-ink hover:text-ink transition-colors disabled:opacity-40"
+          >
+            {profileSavedAt ? '✓ Perfil salvo' : '💾 Salvar meu perfil'}
+          </button>
+        </div>
         <div className="flex flex-wrap gap-2">
           {HAIR_TYPES.map((ht) => (
             <button
@@ -123,23 +190,86 @@ export default function MoonAnalyzer() {
           ))}
         </div>
         <p className="text-xs text-ink-faint mt-2">
-          Selecione 1 a 4 que melhor descrevem seu cabelo (ex: cacheado + seco + tingido).
+          Selecione 1 a 4 que melhor descrevem seu cabelo. "Salvar meu perfil" reusa essa seleção nas próximas análises.
         </p>
       </div>
 
-      {/* INCI input */}
+      {/* Input: produto do catálogo OU colar INCI */}
       <div className="rounded-lg border border-cream-dark bg-white p-5">
-        <h2 className="text-sm font-medium text-ink mb-3">Lista INCI do produto</h2>
-        <textarea
-          value={inciText}
-          onChange={(e) => setInciText(e.target.value)}
-          placeholder="Cole aqui a lista de ingredientes do rótulo (separados por vírgula). Exemplo:&#10;Aqua, Sodium Laureth Sulfate, Cocamidopropyl Betaine, Glycerin, Dimethicone, Argan Oil, Phenoxyethanol, Parfum, Limonene"
-          className="w-full h-32 p-3 text-sm rounded border border-cream-dark focus:border-ink focus:outline-none resize-none"
-        />
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setMode('product')}
+            className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+              mode === 'product' ? 'border-ink bg-ink text-cream' : 'border-cream-dark text-ink-muted hover:border-ink'
+            }`}
+          >
+            📦 Produto do catálogo
+          </button>
+          <button
+            onClick={() => setMode('inci')}
+            className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+              mode === 'inci' ? 'border-ink bg-ink text-cream' : 'border-cream-dark text-ink-muted hover:border-ink'
+            }`}
+          >
+            ✍️ Colar INCI
+          </button>
+        </div>
+
+        {mode === 'product' ? (
+          <div>
+            {selectedProduct ? (
+              <div className="flex items-center justify-between rounded border border-cream-dark p-3">
+                <div>
+                  <div className="text-sm font-medium text-ink">{selectedProduct.product_name}</div>
+                  <div className="text-xs text-ink-faint">{selectedProduct.brand_slug}</div>
+                </div>
+                <button
+                  onClick={() => { setSelectedProduct(null); setProductQuery(''); setProductResults([]); }}
+                  className="text-xs text-ink-muted hover:text-ink underline"
+                >
+                  trocar
+                </button>
+              </div>
+            ) : (
+              <div className="relative">
+                <input
+                  value={productQuery}
+                  onChange={(e) => searchProducts(e.target.value)}
+                  placeholder="Buscar produto do catálogo pelo nome (ex: máscara amend)…"
+                  className="w-full p-3 text-sm rounded border border-cream-dark focus:border-ink focus:outline-none"
+                />
+                {searching && <span className="absolute right-3 top-3 text-xs text-ink-faint">buscando…</span>}
+                {productResults.length > 0 && (
+                  <div className="mt-1 max-h-56 overflow-auto rounded border border-cream-dark divide-y divide-cream">
+                    {productResults.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => { setSelectedProduct(p); setProductResults([]); }}
+                        className="block w-full text-left px-3 py-2 text-sm hover:bg-cream/50"
+                      >
+                        <span className="text-ink">{p.product_name}</span>
+                        <span className="text-ink-faint text-xs"> · {p.brand_slug}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          <textarea
+            value={inciText}
+            onChange={(e) => setInciText(e.target.value)}
+            placeholder="Cole aqui a lista de ingredientes do rótulo (separados por vírgula). Exemplo:&#10;Aqua, Sodium Laureth Sulfate, Cocamidopropyl Betaine, Glycerin, Dimethicone, Argan Oil, Phenoxyethanol, Parfum, Limonene"
+            className="w-full h-32 p-3 text-sm rounded border border-cream-dark focus:border-ink focus:outline-none resize-none"
+          />
+        )}
+
         <div className="flex items-center justify-between mt-3">
-          <span className="text-xs text-ink-faint">
-            {ingredients.length} ingrediente{ingredients.length !== 1 ? 's' : ''} detectado{ingredients.length !== 1 ? 's' : ''}
-          </span>
+          <label className="flex items-center gap-2 text-xs text-ink-muted cursor-pointer">
+            <input type="checkbox" checked={useAi} onChange={(e) => setUseAi(e.target.checked)} className="accent-ink" />
+            🤖 Análise personalizada por IA
+          </label>
           <button
             onClick={runAnalysis}
             disabled={!canAnalyze || loading}
@@ -148,6 +278,11 @@ export default function MoonAnalyzer() {
             {loading ? 'Analisando…' : '🌙 Analisar com a Moon'}
           </button>
         </div>
+        {mode === 'inci' && (
+          <p className="text-xs text-ink-faint mt-2">
+            {ingredients.length} ingrediente{ingredients.length !== 1 ? 's' : ''} detectado{ingredients.length !== 1 ? 's' : ''}
+          </p>
+        )}
       </div>
 
       {error && (
@@ -186,6 +321,41 @@ export default function MoonAnalyzer() {
               quantos ingredientes a Moon reconhece — quanto maior, mais confiável o score.
             </div>
           </div>
+
+          {/* Análise IA (camada consultiva sobre o score) */}
+          {analysis.ai_analysis && (
+            <div className="rounded-lg border border-violet-200 bg-violet-50/40 p-5">
+              <h3 className="text-sm font-semibold text-violet-900 mb-2">🤖 Análise da Moon (IA)</h3>
+              <p className="text-sm text-violet-950 leading-relaxed">{analysis.ai_analysis.summary}</p>
+
+              {analysis.ai_analysis.synergies?.length > 0 && (
+                <div className="mt-3">
+                  <div className="text-xs font-medium text-violet-900 mb-1">Sinergias entre ingredientes</div>
+                  <ul className="list-disc list-inside space-y-1 text-xs text-violet-800">
+                    {analysis.ai_analysis.synergies.map((s, i) => <li key={i}>{s}</li>)}
+                  </ul>
+                </div>
+              )}
+
+              {analysis.ai_analysis.personalized_alerts?.length > 0 && (
+                <div className="mt-3">
+                  <div className="text-xs font-medium text-violet-900 mb-1">Alertas para o seu perfil</div>
+                  <ul className="list-disc list-inside space-y-1 text-xs text-violet-800">
+                    {analysis.ai_analysis.personalized_alerts.map((a, i) => <li key={i}>{a}</li>)}
+                  </ul>
+                </div>
+              )}
+
+              {analysis.ai_analysis.recommendation && (
+                <p className="mt-3 text-sm text-violet-950">
+                  <span className="font-medium">Recomendação:</span> {analysis.ai_analysis.recommendation}
+                </p>
+              )}
+              <p className="mt-3 text-[10px] text-violet-400">
+                Gerado por IA com base no INCI do produto — confira sempre o rótulo oficial.
+              </p>
+            </div>
+          )}
 
           <div className="grid md:grid-cols-2 gap-4">
             {/* Alerts */}
