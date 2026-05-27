@@ -351,6 +351,11 @@ def _fetch_alternatives(session: Session, hair_types: list[str],
     if product_type:
         sql += " AND product_type_normalized = :pt"
         params["pt"] = product_type
+    else:
+        # Free chat (no product in context): don't recommend coloring inputs
+        # (developer, bleach, dye) as care products — they score high on INCI
+        # but aren't standalone recommendations.
+        sql += " AND product_type_normalized NOT IN ('oxidante', 'descolorante', 'coloracao')"
     if exclude_id:
         sql += " AND id != :xid"
         params["xid"] = exclude_id
