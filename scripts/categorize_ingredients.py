@@ -50,7 +50,10 @@ def normalize(name: str) -> str:
 RULES: list[tuple[re.Pattern, str]] = [
     # FRAGRANCE (very common)
     (re.compile(r"^(parfum|perfume|fragrance|fragrancia)$"), "fragrance"),
-    (re.compile(r"^(linalool|limonene|geraniol|citronellol|citral|coumarin|hexyl cinnamal|benzyl salicylate|benzyl alcohol|hydroxycitronellal|alpha-isomethyl ionone|eugenol|farnesol|cinnamal|isoeugenol|amyl cinnamal|amylcinnamyl alcohol)$"), "fragrance_allergen"),
+    (re.compile(r"^(linalool|limonene|geraniol|citronellol|citral|coumarin|hexyl cinnamal|benzyl salicylate|benzyl alcohol|hydroxycitronellal|alpha-isomethyl ionone|eugenol|farnesol|cinnamal|isoeugenol|amyl cinnamal|amylcinnamyl alcohol|benzyl benzoate|benzyl cinnamate|butylphenyl methylpropional|cinnamyl alcohol|anise alcohol|methyl 2-octynoate|citronellal)$"), "fragrance_allergen"),
+    # Grafias PT-BR dos mesmos alérgenos (acentos já removidos pelo normalize) —
+    # eram a maior fatia de ingredientes sem categoria por frequência.
+    (re.compile(r"^(linalol|limoneno|citronelol|citronelal|cumarina|hexil cinamal|salicilato de benzila|benzoato de benzila|cinamato de benzila|alcool benzilico|alcool cinamico|alfa-?isometil ionona|hidroxicitronelal|butilfenil metilpropional|cinamaldeido|cinamal|farnesol|eugenol|isoeugenol|geraniol|citral)$"), "fragrance_allergen"),
 
     # COLORANT
     (re.compile(r"^ci ?\d{4,5}$"), "colorant"),
