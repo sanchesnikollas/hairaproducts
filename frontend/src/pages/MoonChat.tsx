@@ -1,0 +1,201 @@
+import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { motion } from 'motion/react';
+import { Moon, Sparkles, Send } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
+import { chatWithMoon, getHairProfile, type MoonChatMessage, type MoonChatResponse } from '@/lib/api';
+
+// Pre-made prompts shown in the empty state and as a quick bar above the input.
+const SUGGESTED_PROMPTS: { label: string; prompt: string; emoji: string }[] = [
+  { emoji: '📅', label: 'Cronograma capilar', prompt: 'Monte um cronograma capilar (hidratação, nutrição e reconstrução) para o meu tipo de cabelo.' },
+  { emoji: '💧', label: 'Dicas de cuidado', prompt: 'Quais cuidados diários e semanais são ideais para o meu cabelo?' },
+  { emoji: '🧴', label: 'Rotina de lavagem', prompt: 'Como deve ser a minha rotina de lavagem (frequência, low poo/no poo)?' },
+  { emoji: '✨', label: 'Reduzir o frizz', prompt: 'Como controlar o frizz no meu cabelo? Que ingredientes ajudam?' },
+  { emoji: '🚫', label: 'Ingredientes a evitar', prompt: 'Quais ingredientes eu deveria evitar nos produtos, considerando o meu perfil?' },
+  { emoji: '🎯', label: 'Finalizador ideal', prompt: 'Qual tipo de finalizador combina com o meu cabelo?' },
+];
+
+// Minimal, XSS-safe formatter: **bold** + line breaks -> React nodes.
+function formatMessage(text: string) {
+  return text.split('\n').map((line, li) => (
+    <span key={li}>
+      {line.split(/(\*\*[^*]+\*\*)/g).map((part, pi) =>
+        part.startsWith('**') && part.endsWith('**')
+          ? <strong key={pi} className="font-semibold">{part.slice(2, -2)}</strong>
+          : <span key={pi}>{part}</span>
+      )}
+      {li < text.split('\n').length - 1 && <br />}
+    </span>
+  ));
+}
+
+export default function MoonChat() {
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<MoonChatMessage[]>([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [hasProfile, setHasProfile] = useState<boolean | null>(null);
+  const [summary, setSummary] = useState<string>('');
+  const [lastAlternatives, setLastAlternatives] = useState<MoonChatResponse['alternatives']>([]);
+  const endRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    getHairProfile(user.id)
+      .then((pr) => { setHasProfile(true); setSummary((pr.derived_hair_types ?? []).join(' · ')); })
+      .catch(() => setHasProfile(false));
+  }, [user]);
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
+
+  async function send(text: string) {
+    const content = text.trim();
+    if (!content || loading) return;
+    const next: MoonChatMessage[] = [...messages, { role: 'user', content }];
+    setMessages(next); setInput(''); setLoading(true); setError(null);
+    try {
+      const res = await chatWithMoon({ messages: next, user_id: user?.id });
+      setMessages([...next, { role: 'assistant', content: res.reply }]);
+      setLastAlternatives(res.alternatives ?? []);
+      if (res.profile_summary) setSummary(res.profile_summary);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Moon indisponível');
+    } finally { setLoading(false); }
+  }
+
+  const firstName = user?.name?.split(' ')[0];
+
+  return (
+    <div className="max-w-2xl mx-auto h-[calc(100vh-3rem)] flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-cream-dark">
+        <div className="flex items-center gap-3">
+          <div className="grid place-items-center w-10 h-10 rounded-full bg-gradient-to-br from-[#ff5900] to-[#ff8a4c] text-white shadow-sm">
+            <Moon size={18} />
+          </div>
+          <div>
+            <h1 className="font-display text-2xl font-semibold text-ink leading-none">
+              Moon <span className="text-[#ff5900] italic">chat</span>
+            </h1>
+            {summary && <p className="text-xs text-ink-muted mt-1">Perfil: {summary}</p>}
+          </div>
+        </div>
+        <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Online
+        </span>
+      </div>
+
+      {hasProfile === false && (
+        <div className="mx-6 mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          Você ainda não tem um perfil capilar.{' '}
+          <Link to="/ops/profile" className="underline font-medium">Preencher agora</Link> para
+          a Moon dar recomendações sob medida.
+        </div>
+      )}
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+        {messages.length === 0 && (
+          <div className="space-y-5">
+            <div className="flex gap-2.5">
+              <div className="shrink-0 grid place-items-center w-8 h-8 rounded-full bg-[#ff5900]/10 text-[#ff5900]">
+                <Moon size={15} />
+              </div>
+              <div className="text-sm text-ink bg-cream rounded-2xl rounded-tl-md px-4 py-3 max-w-[85%] leading-relaxed">
+                Oi{firstName ? `, ${firstName}` : ''}! Sou a Moon 🌙 Posso montar seu cronograma, dar
+                dicas de cuidado e analisar produtos pelo seu perfil. Por onde quer começar?
+              </div>
+            </div>
+            {/* Pre-made prompt cards */}
+            <div className="grid grid-cols-2 gap-2.5">
+              {SUGGESTED_PROMPTS.map((s) => (
+                <button key={s.label} onClick={() => send(s.prompt)}
+                  className="flex items-start gap-2 text-left rounded-xl border border-cream-dark bg-white px-3.5 py-3 hover:border-[#ff5900] hover:shadow-sm transition-all">
+                  <span className="text-base leading-none mt-0.5">{s.emoji}</span>
+                  <span className="text-xs font-medium text-ink">{s.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {messages.map((m, i) => (
+          <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+            className={`flex gap-2.5 ${m.role === 'user' ? 'justify-end' : ''}`}>
+            {m.role === 'assistant' && (
+              <div className="shrink-0 grid place-items-center w-8 h-8 rounded-full bg-[#ff5900]/10 text-[#ff5900]">
+                <Moon size={15} />
+              </div>
+            )}
+            <div className={`text-sm px-4 py-3 max-w-[85%] leading-relaxed ${
+              m.role === 'user'
+                ? 'bg-[#ff5900]/15 text-ink rounded-2xl rounded-tr-md'
+                : 'bg-cream text-ink rounded-2xl rounded-tl-md'}`}>
+              {formatMessage(m.content)}
+            </div>
+          </motion.div>
+        ))}
+
+        {loading && (
+          <div className="flex gap-2.5">
+            <div className="shrink-0 grid place-items-center w-8 h-8 rounded-full bg-[#ff5900]/10 text-[#ff5900]">
+              <Moon size={15} />
+            </div>
+            <div className="flex items-center gap-1 bg-cream rounded-2xl rounded-tl-md px-4 py-3.5">
+              {[0, 1, 2].map((d) => (
+                <span key={d} className="w-1.5 h-1.5 rounded-full bg-ink-faint animate-bounce"
+                  style={{ animationDelay: `${d * 0.15}s` }} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {lastAlternatives.length > 0 && !loading && (
+          <div className="ml-10 rounded-xl border border-cream-dark bg-white/60 p-3.5">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-ink mb-2">
+              <Sparkles size={13} className="text-[#ff5900]" /> Alternativas compatíveis no catálogo
+            </div>
+            <ul className="space-y-1.5">
+              {lastAlternatives.map((a) => (
+                <li key={a.product_id} className="text-xs text-ink-muted flex items-center justify-between gap-2">
+                  <span>{a.name} <span className="text-ink-faint">· {a.brand}</span></span>
+                  <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-medium">
+                    {a.score >= 0 ? '+' : ''}{a.score}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <div ref={endRef} />
+      </div>
+
+      {error && <div className="mx-6 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{error}</div>}
+
+      {/* Quick prompts bar (after conversation starts) + input */}
+      <div className="px-6 py-4 border-t border-cream-dark">
+        {messages.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-3 -mb-1">
+            {SUGGESTED_PROMPTS.map((s) => (
+              <button key={s.label} onClick={() => send(s.prompt)} disabled={loading}
+                className="shrink-0 px-3 py-1.5 text-xs rounded-full border border-cream-dark text-ink-muted hover:border-[#ff5900] hover:text-ink transition-colors disabled:opacity-40">
+                {s.emoji} {s.label}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="flex gap-2">
+          <input value={input} onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') send(input); }}
+            placeholder="Pergunte à Moon"
+            className="flex-1 px-4 py-3 text-sm rounded-full border border-cream-dark focus:border-[#ff5900] focus:outline-none" />
+          <button onClick={() => send(input)} disabled={loading || !input.trim()}
+            className="grid place-items-center w-12 h-12 rounded-full bg-[#ff5900] text-white hover:bg-[#ff5900]/90 disabled:opacity-40 transition-colors">
+            <Send size={17} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

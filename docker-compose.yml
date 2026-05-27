@@ -1,0 +1,30 @@
+# Local dev stack — single-DB mode (SQLite) serving the working haira.db.
+# The image bundles API + built frontend (see Dockerfile). The local haira.db
+# is mounted as a volume so the container serves the real 27k-product catalog
+# instead of an empty schema. For multi-brand Postgres (Railway), set
+# CENTRAL_DATABASE_URL and unset the volume — the entrypoint switches modes.
+services:
+  app:
+    build: .
+    image: haira-app:local
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: sqlite:////app/haira.db
+      PORT: "8000"
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+    volumes:
+      - ./haira.db:/app/haira.db
+      # Live-mount source for dev: code changes apply without rebuild (editable
+      # install points at /app/src). Run migrations/tests via `docker compose exec`.
+      - ./src:/app/src
+      - ./config:/app/config
+      - ./scripts:/app/scripts
+      - ./tests:/app/tests
+      - ./alembic.ini:/app/alembic.ini
+      - ./alembic_central.ini:/app/alembic_central.ini
+      # Serve the freshly built frontend (run `npm run build` to refresh)
+      - ./frontend/dist:/app/frontend/dist
+    restart: unless-stopped

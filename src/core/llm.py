@@ -68,6 +68,23 @@ class LLMClient:
             logger.warning("LLM response was not valid JSON")
             return {}
 
+    def chat(self, system: str, messages: list[dict], max_tokens: int = 1024) -> str:
+        """Conversational completion for Moon. Not brand-scoped, so it does not
+        consume the per-brand extraction budget — but still records cost."""
+        if not self._client:
+            raise RuntimeError("ANTHROPIC_API_KEY not set")
+        response = self._client.messages.create(
+            model=self._model,
+            max_tokens=max_tokens,
+            system=system,
+            messages=messages,
+        )
+        self._tracker.record_call(
+            input_tokens=response.usage.input_tokens,
+            output_tokens=response.usage.output_tokens,
+        )
+        return response.content[0].text
+
     def classify_hair_relevance(self, product_name: str, page_snippet: str) -> dict:
         prompt = (
             "Based ONLY on the product name and page text below, determine if this is a hair/scalp product.\n"

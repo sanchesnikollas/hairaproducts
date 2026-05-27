@@ -181,3 +181,65 @@ export async function analyzeWithMoon(inci: string[], hair_types: string[]): Pro
     body: JSON.stringify({ inci, hair_types }),
   });
 }
+
+// --- Hair profile (the questionnaire that feeds Moon) ---
+export interface HairProfile {
+  curl_type?: string | null;
+  curl_subtype?: string | null;
+  color?: string | null;
+  volume?: string | null;
+  thickness?: string | null;
+  length?: string | null;
+  scalp_oiliness?: string | null;
+  dryness_damage?: string | null;
+  chemical_treatments?: string[];
+  heat_usage?: string | null;
+  extensions?: string | null;
+  wash_frequency?: string | null;
+  sun_exposure?: string | null;
+  water_exposure?: string | null;
+  scalp_issues?: boolean | null;
+}
+
+export interface HairProfileSaved extends HairProfile {
+  profile_id: string;
+  user_id: string | null;
+  derived_hair_types: string[];
+}
+
+export async function saveHairProfile(profile: HairProfile, user_id?: string): Promise<HairProfileSaved> {
+  return fetchJSON<HairProfileSaved>('/moon/profile', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...profile, user_id }),
+  });
+}
+
+export async function getHairProfile(user_id: string): Promise<HairProfileSaved> {
+  return fetchJSON<HairProfileSaved>(`/moon/profile/${user_id}`);
+}
+
+// --- Moon chat ---
+export interface MoonChatMessage { role: 'user' | 'assistant'; content: string; }
+
+export interface MoonChatResponse {
+  reply: string;
+  profile_summary: string;
+  hair_types: string[];
+  analysis: MoonAnalysis | null;
+  alternatives: { product_id: string; name: string; brand: string; score: number; interpretation: string }[];
+}
+
+export async function chatWithMoon(params: {
+  messages: MoonChatMessage[];
+  user_id?: string;
+  profile?: HairProfile;
+  product_id?: string;
+  inci?: string[];
+}): Promise<MoonChatResponse> {
+  return fetchJSON<MoonChatResponse>('/moon/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+}
