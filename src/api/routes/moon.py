@@ -271,16 +271,80 @@ def get_profile(user_id: str, session: Session = Depends(_get_session)):
 # ----------------------------------------------------------------------------
 # Moon chat — conversational layer over profile + product analysis + catalog
 # ----------------------------------------------------------------------------
+# In-memory indexes (process-lifetime cache). Ingredients/rules change rarely.
+_CAT_INDEX: dict[str, str] | None = None      # normalized ingredient name -> category
+_RULES_INDEX: dict[tuple[str, str], int] | None = None  # (category, hair_type) -> score
+
+
+def _ensure_indexes(session: Session) -> tuple[dict, dict]:
+    global _CAT_INDEX, _RULES_INDEX
+    if _CAT_INDEX is None:
+        idx: dict[str, str] = {}
+        for r in session.execute(text(
+            "SELECT canonical_name, category FROM ingredients WHERE category IS NOT NULL"
+        )).fetchall():
+            idx[r.canonical_name.lower()] = r.category
+            idx[normalize(r.canonical_name)] = r.category
+        _CAT_INDEX = idx
+    if _RULES_INDEX is None:
+        rules: dict[tuple[str, str], int] = {}
+        for r in session.execute(text(
+            "SELECT category, hair_type, score FROM ingredient_category_compatibility"
+        )).fetchall():
+            rules[(r.category, r.hair_type)] = r.score
+        _RULES_INDEX = rules
+    return _CAT_INDEX, _RULES_INDEX
+
+
+def _score_fast(ingredient_names: list[str], hair_types: list[str],
+                cat_index: dict, rules: dict) -> tuple[float, int]:
+    """In-memory scoring (no SQL) for ranking a large candidate pool.
+    Mirrors score_inci's weighting. Returns (overall_score, matched_count)."""
+    n = len(ingredient_names)
+    score_sum = weight_sum = 0.0
+    matched = 0
+    for idx, name in enumerate(ingredient_names):
+        cat = cat_index.get(name.lower()) or cat_index.get(normalize(name))
+        if not cat:
+            continue
+        matched += 1
+        weight = max(0.2, 1.0 - (idx / max(n, 1)) * 0.8)
+        for ht in hair_types:
+            rule = rules.get((cat, ht))
+            if rule is not None:
+                score_sum += rule * weight
+                weight_sum += weight
+    overall = score_sum / weight_sum if weight_sum else 0.0
+    return round(overall, 2), matched
+
+
+def _parse_inci(raw) -> list[str]:
+    if not raw:
+        return []
+    import json
+    try:
+        data = json.loads(raw) if isinstance(raw, str) else raw
+    except (ValueError, TypeError):
+        return []
+    return [str(x) for x in data] if isinstance(data, list) else []
+
+
 def _fetch_alternatives(session: Session, hair_types: list[str],
                         product_type: str | None, exclude_id: str | None,
-                        limit: int = 8) -> list[dict]:
-    """Catalog candidates of the same type with verified INCI, scored against
-    the profile. Returns the top-scoring few for Moon to recommend."""
+                        pool: int = 60) -> list[dict]:
+    """Score a relevance-biased pool of verified-INCI catalog products against
+    the profile and return the top matches. Biased toward richer INCI lists
+    (more reliable scoring) instead of an arbitrary first-N slice."""
+    if not hair_types:
+        return []
+    cat_index, rules = _ensure_indexes(session)
+
     sql = """
-        SELECT id, product_name, brand_slug, product_type_normalized, product_labels
+        SELECT id, product_name, brand_slug, product_type_normalized, inci_ingredients
         FROM products
         WHERE verification_status = 'verified_inci'
-          AND inci_ingredients IS NOT NULL AND length(CAST(inci_ingredients AS TEXT)) > 5
+          AND inci_ingredients IS NOT NULL
+          AND length(CAST(inci_ingredients AS TEXT)) > 20
           AND product_type_normalized IS NOT NULL
     """
     params: dict = {}
@@ -290,21 +354,23 @@ def _fetch_alternatives(session: Session, hair_types: list[str],
     if exclude_id:
         sql += " AND id != :xid"
         params["xid"] = exclude_id
-    sql += " LIMIT :lim"
-    params["lim"] = limit
+    # Richer INCI first → better-grounded scores, avoids near-empty lists scoring 0
+    sql += " ORDER BY length(CAST(inci_ingredients AS TEXT)) DESC LIMIT :pool"
+    params["pool"] = pool
     rows = session.execute(text(sql), params).fetchall()
 
     scored = []
     for r in rows:
-        inci = _resolve_product_inci(session, r.id)
-        if not inci:
+        inci = _parse_inci(r.inci_ingredients)
+        if len(inci) < 3:
             continue
-        result = score_inci(session, inci, hair_types)
+        overall, matched = _score_fast(inci, hair_types, cat_index, rules)
+        if matched < 2:  # too little signal to recommend confidently
+            continue
         scored.append({
             "product_id": r.id, "name": r.product_name, "brand": r.brand_slug,
             "type": r.product_type_normalized,
-            "score": result["overall_score"],
-            "interpretation": result["interpretation"],
+            "score": overall, "interpretation": _interpret(overall),
         })
     scored.sort(key=lambda x: x["score"], reverse=True)
     return scored[:3]
