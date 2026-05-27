@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Moon, Sparkles, Send } from 'lucide-react';
+import { Moon, Sparkles, Send, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
-import { chatWithMoon, getHairProfile, type MoonChatMessage, type MoonChatResponse } from '@/lib/api';
+import { chatWithMoon, getHairProfile, sendMoonFeedback, type MoonChatMessage, type MoonChatResponse } from '@/lib/api';
 
 // Pre-made prompts shown in the empty state and as a quick bar above the input.
 const SUGGESTED_PROMPTS: { label: string; prompt: string; emoji: string }[] = [
@@ -38,7 +38,24 @@ export default function MoonChat() {
   const [hasProfile, setHasProfile] = useState<boolean | null>(null);
   const [summary, setSummary] = useState<string>('');
   const [lastAlternatives, setLastAlternatives] = useState<MoonChatResponse['alternatives']>([]);
+  const [rated, setRated] = useState<Record<number, 'up' | 'down'>>({});
   const endRef = useRef<HTMLDivElement>(null);
+
+  async function rate(idx: number, rating: 'up' | 'down') {
+    if (rated[idx]) return;
+    setRated((prev) => ({ ...prev, [idx]: rating })); // optimistic
+    try {
+      await sendMoonFeedback({
+        rating,
+        message_content: messages[idx]?.content ?? '',
+        user_message: messages[idx - 1]?.role === 'user' ? messages[idx - 1].content : undefined,
+        profile_snapshot: { summary, hair_types: summary ? summary.split(' · ') : [] },
+        user_id: user?.id,
+      });
+    } catch {
+      setRated((prev) => { const n = { ...prev }; delete n[idx]; return n; }); // rollback
+    }
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -128,11 +145,34 @@ export default function MoonChat() {
                 <Moon size={15} />
               </div>
             )}
-            <div className={`text-sm px-4 py-3 max-w-[85%] leading-relaxed ${
-              m.role === 'user'
-                ? 'bg-[#ff5900]/15 text-ink rounded-2xl rounded-tr-md'
-                : 'bg-cream text-ink rounded-2xl rounded-tl-md'}`}>
-              {formatMessage(m.content)}
+            <div className="flex flex-col max-w-[85%]">
+              <div className={`text-sm px-4 py-3 leading-relaxed ${
+                m.role === 'user'
+                  ? 'bg-[#ff5900]/15 text-ink rounded-2xl rounded-tr-md'
+                  : 'bg-cream text-ink rounded-2xl rounded-tl-md'}`}>
+                {formatMessage(m.content)}
+              </div>
+              {m.role === 'assistant' && (
+                <div className="flex items-center gap-1.5 mt-1.5 pl-1">
+                  {rated[i] ? (
+                    <span className="text-[11px] text-ink-faint">
+                      {rated[i] === 'up' ? '👍 Obrigada pelo feedback!' : '👎 Anotado — vou melhorar.'}
+                    </span>
+                  ) : (
+                    <>
+                      <span className="text-[11px] text-ink-faint mr-0.5">Útil?</span>
+                      <button onClick={() => rate(i, 'up')} title="Útil"
+                        className="p-1 rounded-md text-ink-faint hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
+                        <ThumbsUp size={13} />
+                      </button>
+                      <button onClick={() => rate(i, 'down')} title="Não útil"
+                        className="p-1 rounded-md text-ink-faint hover:text-red-600 hover:bg-red-50 transition-colors">
+                        <ThumbsDown size={13} />
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </motion.div>
         ))}

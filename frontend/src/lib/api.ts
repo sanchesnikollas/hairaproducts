@@ -243,3 +243,19 @@ export async function chatWithMoon(params: {
     body: JSON.stringify(params),
   });
 }
+
+export async function sendMoonFeedback(params: {
+  rating: 'up' | 'down';
+  message_content: string;
+  user_message?: string;
+  profile_snapshot?: { summary?: string; hair_types?: string[] };
+  product_id?: string;
+  comment?: string;
+  user_id?: string;
+}): Promise<{ feedback_id: string }> {
+  return fetchJSON<{ feedback_id: string }>('/moon/feedback', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+}

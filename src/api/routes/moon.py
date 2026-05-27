@@ -27,6 +27,7 @@ from sqlalchemy.orm import Session as SASession
 
 from src.core.hair_profile import HairProfileInput, derive_hair_types, profile_summary
 from src.storage.hair_profile_repository import HairProfileRepository
+from src.storage.moon_models import MoonFeedbackORM
 
 logger = logging.getLogger("haira.moon")
 router = APIRouter(prefix="/moon", tags=["moon"])
@@ -415,4 +416,56 @@ def chat(body: ChatRequest, session: Session = Depends(_get_session)):
         "hair_types": hair_types,
         "analysis": analysis,
         "alternatives": alternatives,
+    }
+
+
+# ----------------------------------------------------------------------------
+# Feedback — reviewer 👍/👎 on Moon replies (north-star metric source)
+# ----------------------------------------------------------------------------
+class FeedbackRequest(BaseModel):
+    rating: str                       # "up" | "down"
+    message_content: str              # the Moon reply being rated
+    user_message: str | None = None   # what the user had asked
+    profile_snapshot: dict | None = None
+    product_id: str | None = None
+    comment: str | None = None
+    user_id: str | None = None
+
+
+@router.post("/feedback", status_code=201)
+def submit_feedback(body: FeedbackRequest, session: Session = Depends(_get_session)):
+    if body.rating not in ("up", "down"):
+        raise HTTPException(status_code=400, detail="rating must be 'up' or 'down'")
+    row = MoonFeedbackORM(
+        user_id=body.user_id, rating=body.rating,
+        message_content=body.message_content, user_message=body.user_message,
+        profile_snapshot=body.profile_snapshot, product_id=body.product_id,
+        comment=body.comment,
+    )
+    session.add(row)
+    session.commit()
+    return {"feedback_id": row.feedback_id}
+
+
+@router.get("/feedback/summary")
+def feedback_summary(session: Session = Depends(_get_session)):
+    """North-star metric: % of Moon replies rated useful, plus recent down-votes."""
+    up = session.query(MoonFeedbackORM).filter(MoonFeedbackORM.rating == "up").count()
+    down = session.query(MoonFeedbackORM).filter(MoonFeedbackORM.rating == "down").count()
+    total = up + down
+    recent_down = (
+        session.query(MoonFeedbackORM)
+        .filter(MoonFeedbackORM.rating == "down")
+        .order_by(MoonFeedbackORM.created_at.desc())
+        .limit(20).all()
+    )
+    return {
+        "total": total, "up": up, "down": down,
+        "useful_pct": round(100 * up / total, 1) if total else None,
+        "recent_downvotes": [
+            {"feedback_id": r.feedback_id, "user_message": r.user_message,
+             "message_content": r.message_content, "comment": r.comment,
+             "profile": r.profile_snapshot, "created_at": str(r.created_at)}
+            for r in recent_down
+        ],
     }
