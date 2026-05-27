@@ -280,6 +280,7 @@ def _fetch_alternatives(session: Session, hair_types: list[str],
         FROM products
         WHERE verification_status = 'verified_inci'
           AND inci_ingredients IS NOT NULL AND length(CAST(inci_ingredients AS TEXT)) > 5
+          AND product_type_normalized IS NOT NULL
     """
     params: dict = {}
     if product_type:
