@@ -22,6 +22,9 @@ fi
 echo "Seeding admin user..."
 python scripts/seed_admin.py 2>&1 || echo "WARNING: admin seed failed (may already exist)"
 
+echo "Seeding reviewer users..."
+python scripts/seed_reviewers.py 2>&1 || echo "WARNING: reviewer seed failed"
+
 echo "Starting server..."
 exec uvicorn src.api.main:app \
     --host 0.0.0.0 \
