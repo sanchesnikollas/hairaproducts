@@ -339,6 +339,11 @@ def _fetch_alternatives(session: Session, hair_types: list[str],
         return []
     cat_index, rules = _ensure_indexes(session)
 
+    # 3-layer non-hair guard (the catalog still mixes body/face/lip/perfume
+    # products from multi-category brands; Moon must never recommend those):
+    #   1) explicit pipeline flag: product_category='non_hair'
+    #   2) name-based pipeline flag: hair_relevance_reason starts with non_hair
+    #   3) name-keyword blacklist as a safety net for the gray tail
     sql = """
         SELECT id, product_name, brand_slug, product_type_normalized, inci_ingredients
         FROM products
@@ -346,6 +351,19 @@ def _fetch_alternatives(session: Session, hair_types: list[str],
           AND inci_ingredients IS NOT NULL
           AND length(CAST(inci_ingredients AS TEXT)) > 20
           AND product_type_normalized IS NOT NULL
+          AND (product_category IS NULL OR product_category != 'non_hair')
+          AND (hair_relevance_reason IS NULL OR hair_relevance_reason NOT LIKE 'non_hair%')
+          AND LOWER(product_name) NOT LIKE '%labial%'
+          AND LOWER(product_name) NOT LIKE '%facial%'
+          AND LOWER(product_name) NOT LIKE '%corporal%'
+          AND LOWER(product_name) NOT LIKE '%perfume%'
+          AND LOWER(product_name) NOT LIKE '%fps%'
+          AND LOWER(product_name) NOT LIKE '%rímel%'
+          AND LOWER(product_name) NOT LIKE '%rimel%'
+          AND LOWER(product_name) NOT LIKE '%demaquilante%'
+          AND LOWER(product_name) NOT LIKE '%sabonete em barra%'
+          AND LOWER(product_name) NOT LIKE '%secativo%'
+          AND LOWER(product_name) NOT LIKE '%desodorante%'
     """
     params: dict = {}
     if product_type:
