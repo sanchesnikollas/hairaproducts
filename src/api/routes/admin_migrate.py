@@ -415,3 +415,53 @@ def migrate_status(secret: str = ""):
         result["brands"] = {b: c for b, c in brands}
 
     return result
+
+
+# ----------------------------------------------------------------------------
+# Knowledge base sync — Doutoras proprietary content (kept out of git)
+# ----------------------------------------------------------------------------
+class KnowledgeChunkPayload(BaseModel):
+    source: str
+    content: str
+
+
+class SyncKnowledgeBaseRequest(BaseModel):
+    secret: str
+    chunks: list[KnowledgeChunkPayload]
+    replace: bool = True  # if True, delete chunks not in payload (full sync)
+
+
+@router.post("/sync-knowledge-base")
+def sync_knowledge_base(body: SyncKnowledgeBaseRequest):
+    """Upsert (and optionally prune) the Doutoras KB in prod. Auth via MIGRATION_SECRET."""
+    if not MIGRATION_SECRET or body.secret != MIGRATION_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid migration secret")
+
+    from src.storage.knowledge_models import KnowledgeChunkORM
+    from src.core.knowledge_base import reset_kb_cache
+
+    engine = get_engine()
+    from sqlalchemy.orm import Session as _S
+    incoming = {c.source for c in body.chunks}
+    upserted = 0
+    pruned = 0
+    with _S(engine) as s:
+        existing = {r.source for r in s.query(KnowledgeChunkORM.source).all()}
+        for c in body.chunks:
+            if c.source in existing:
+                row = s.get(KnowledgeChunkORM, c.source)
+                row.content = c.content
+                row.char_count = len(c.content)
+            else:
+                s.add(KnowledgeChunkORM(source=c.source, content=c.content,
+                                        char_count=len(c.content)))
+            upserted += 1
+        if body.replace:
+            for stale in existing - incoming:
+                s.delete(s.get(KnowledgeChunkORM, stale))
+                pruned += 1
+        s.commit()
+
+    # In-process cache must drop so the next /moon/chat reloads from DB.
+    reset_kb_cache()
+    return {"upserted": upserted, "pruned": pruned}

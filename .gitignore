@@ -21,4 +21,7 @@ exports/
 scripts/migration_*.json
 scripts/prod_products_dump.json
 data/*_all_urls.txt
+# Proprietary Doutoras content (do NOT commit — repo is public).
+# KB is synced to prod via /api/admin/sync-knowledge-base, not via git.
+data/knowledge_base/
 /logs/

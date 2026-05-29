@@ -25,6 +25,7 @@ services:
       - ./tests:/app/tests
       - ./alembic.ini:/app/alembic.ini
       - ./alembic_central.ini:/app/alembic_central.ini
+      - ./data:/app/data
       # Serve the freshly built frontend (run `npm run build` to refresh)
       - ./frontend/dist:/app/frontend/dist
     restart: unless-stopped

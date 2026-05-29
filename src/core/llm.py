@@ -68,15 +68,32 @@ class LLMClient:
             logger.warning("LLM response was not valid JSON")
             return {}
 
-    def chat(self, system: str, messages: list[dict], max_tokens: int = 1024) -> str:
+    def chat(self, system: str | list[dict], messages: list[dict],
+             max_tokens: int = 1024, cached_prefix: str | None = None) -> str:
         """Conversational completion for Moon. Not brand-scoped, so it does not
-        consume the per-brand extraction budget — but still records cost."""
+        consume the per-brand extraction budget — but still records cost.
+
+        Optional `cached_prefix`: a string (e.g., the Doutoras knowledge base)
+        placed BEFORE `system` and marked with `cache_control: ephemeral`. The
+        Anthropic prompt cache (~5min TTL) keeps the per-turn cost trivial
+        even with a multi-thousand-token KB always present.
+        """
         if not self._client:
             raise RuntimeError("ANTHROPIC_API_KEY not set")
+
+        if cached_prefix:
+            system_arg: list[dict] = [
+                {"type": "text", "text": cached_prefix,
+                 "cache_control": {"type": "ephemeral"}},
+                {"type": "text", "text": system if isinstance(system, str) else ""},
+            ]
+        else:
+            system_arg = system  # str or pre-built list
+
         response = self._client.messages.create(
             model=self._model,
             max_tokens=max_tokens,
-            system=system,
+            system=system_arg,
             messages=messages,
         )
         self._tracker.record_call(

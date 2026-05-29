@@ -416,10 +416,21 @@ class ChatRequest(BaseModel):
 MOON_SYSTEM = (
     "Você é a Moon, a assistente capilar do app HAIRA. Fala português do Brasil, "
     "tom acolhedor, próximo e especialista — nunca robótico. Use no máximo um emoji "
-    "🌙 por mensagem, com parcimônia. Seja concisa (2 a 5 frases). Baseie TODA "
-    "recomendação no perfil capilar da pessoa e nos dados de INCI fornecidos; nunca "
-    "invente ingredientes ou benefícios que não estejam no contexto. Quando houver "
-    "alternativas no catálogo, cite-as pelo nome. Se faltar dado, diga o que falta."
+    "🌙 por mensagem, com parcimônia. Seja concisa (2 a 5 frases).\n\n"
+    "REGRAS DE EMBASAMENTO (não negociáveis):\n"
+    "1. PRIORIZE o bloco [CONHECIMENTO PROPRIETÁRIO HAIRA] em TODA recomendação "
+    "de cuidado, rotina, protocolo, diagnóstico de necessidade capilar e análise. "
+    "Esse conteúdo é fornecido pelas Doutoras da Haira; ele substitui o seu "
+    "conhecimento geral sempre que houver sobreposição.\n"
+    "2. Quando usar o conhecimento proprietário, cite ao final entre parênteses "
+    "a fonte (ex.: \"(Rotinas e Produtos)\" ou \"(Haira-Regras)\"). Curto, sem floreio.\n"
+    "3. Para análise de produto, baseie-se nos dados de INCI fornecidos no contexto; "
+    "nunca invente ingredientes ou benefícios fora dele.\n"
+    "4. Quando houver alternativas no catálogo, cite-as pelo nome.\n"
+    "5. Se o conhecimento proprietário não cobrir a pergunta, diga isso explicitamente "
+    "(\"essa não está no nosso material ainda\") em vez de improvisar como ChatGPT.\n"
+    "6. Diagnóstico de saúde do couro (queda, dermatite, dor, ferida) → sempre "
+    "redirecione a dermatologista.\n"
 )
 
 
@@ -492,9 +503,17 @@ def chat(body: ChatRequest, session: Session = Depends(_get_session)):
     llm_messages = [{"role": "user", "content": f"[CONTEXTO INTERNO — não repita literalmente]\n{context_block}"}]
     llm_messages += [{"role": m.role, "content": m.content} for m in body.messages]
 
+    # Doutoras knowledge base — cached at the Anthropic prompt cache (5min TTL)
+    # so the per-turn cost stays trivial despite ~45k tokens always present.
+    from src.core.knowledge_base import load_knowledge_base
+    kb = load_knowledge_base()
+
     try:
         from src.core.llm import LLMClient
-        reply = LLMClient().chat(MOON_SYSTEM, llm_messages)
+        reply = LLMClient().chat(
+            system=MOON_SYSTEM, messages=llm_messages,
+            cached_prefix=kb.system_block or None,
+        )
     except Exception as e:  # noqa: BLE001
         logger.warning("Moon chat LLM failed: %s", e)
         raise HTTPException(status_code=503, detail=f"Moon indisponível: {e}")
@@ -505,6 +524,7 @@ def chat(body: ChatRequest, session: Session = Depends(_get_session)):
         "hair_types": hair_types,
         "analysis": analysis,
         "alternatives": alternatives,
+        "kb_sources": kb.sources,
     }
 
 
