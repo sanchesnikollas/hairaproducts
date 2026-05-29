@@ -185,3 +185,45 @@ export async function getIngredientGaps(): Promise<IngredientGaps> {
   const res = await authFetch(`${BASE}/ops/ingredients/gaps`);
   return res.json();
 }
+
+// ── Knowledge base (Doutoras' proprietary content) ──
+export interface KnowledgeChunkSummary {
+  source: string;
+  char_count: number;
+  token_estimate: number;
+  updated_at: string | null;
+}
+export interface KnowledgeList {
+  chunks: KnowledgeChunkSummary[];
+  total_sources: number;
+  total_chars: number;
+  total_tokens_estimate: number;
+}
+
+export async function listKnowledge(): Promise<KnowledgeList> {
+  return (await authFetch(`${BASE}/admin/knowledge`)).json();
+}
+
+export async function readKnowledge(source: string): Promise<KnowledgeChunkSummary & { content: string }> {
+  return (await authFetch(`${BASE}/admin/knowledge/${encodeURIComponent(source)}`)).json();
+}
+
+export async function uploadKnowledge(file: File): Promise<{ action: 'created' | 'updated' } & KnowledgeChunkSummary> {
+  const form = new FormData();
+  form.append('file', file);
+  // can't use authFetch because it forces JSON content-type
+  const token = localStorage.getItem('haira_token');
+  const res = await fetch(`${BASE}/admin/knowledge/upload`, {
+    method: 'POST', body: form,
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || `Upload failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function deleteKnowledge(source: string): Promise<{ deleted: string }> {
+  return (await authFetch(`${BASE}/admin/knowledge/${encodeURIComponent(source)}`, { method: 'DELETE' })).json();
+}

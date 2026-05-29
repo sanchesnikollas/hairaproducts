@@ -1,12 +1,13 @@
 import { NavLink, Outlet, Navigate } from "react-router-dom";
 import { useAuth } from "../../lib/auth";
-import { LayoutDashboard, Package, FlaskConical, Settings, LogOut, Tags, Award, Zap, ShieldCheck, Moon, MessageCircle, User } from "lucide-react";
+import { LayoutDashboard, Package, FlaskConical, Settings, LogOut, Tags, Award, Zap, ShieldCheck, Moon, MessageCircle, User, BookOpen } from "lucide-react";
 
 const NAV_ITEMS = [
   { to: "/ops", icon: LayoutDashboard, label: "Dashboard", end: true },
   { to: "/ops/moon", icon: Moon, label: "Moon" },
   { to: "/ops/moon-chat", icon: MessageCircle, label: "Moon Chat" },
   { to: "/ops/profile", icon: User, label: "Meu cabelo" },
+  { to: "/ops/knowledge", icon: BookOpen, label: "Conteúdo Moon", admin: true },
   { to: "/ops/brands", icon: Tags, label: "Marcas" },
   { to: "/ops/products", icon: Package, label: "Produtos" },
   { to: "/ops/quick-fill", icon: Zap, label: "Preencher" },

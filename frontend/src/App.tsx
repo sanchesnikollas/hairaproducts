@@ -10,6 +10,7 @@ import OpsQuickFill from './pages/ops/OpsQuickFill'
 import OpsSeals from './pages/ops/OpsSeals'
 import OpsSettings from './pages/ops/OpsSettings'
 import OpsReview from './pages/ops/OpsReview'
+import OpsKnowledge from './pages/ops/OpsKnowledge'
 import OpsDualValidation from './pages/ops/OpsDualValidation'
 import BrandsDashboard from './pages/BrandsDashboard'
 import BrandPage from './pages/BrandPage'
@@ -54,6 +55,7 @@ function App() {
           <Route path="moon" element={<MoonAnalyzer />} />
           <Route path="profile" element={<HairProfileForm />} />
           <Route path="moon-chat" element={<MoonChat />} />
+          <Route path="knowledge" element={<OpsKnowledge />} />
         </Route>
 
         {/* All redirects → unified interface */}

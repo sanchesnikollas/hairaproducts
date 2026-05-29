@@ -20,8 +20,7 @@ import sys
 import unicodedata
 from pathlib import Path
 
-from docx import Document
-from pypdf import PdfReader
+from src.core.document_extraction import extract_text
 
 KB_DIR = Path("data/knowledge_base")
 OUT_DIR = KB_DIR / "processed"
@@ -37,39 +36,6 @@ def _slug(name: str) -> str:
     n = "".join(c for c in n if unicodedata.category(c) != "Mn")
     n = re.sub(r"[^a-zA-Z0-9]+", "_", n).strip("_").lower()
     return n
-
-
-def _extract_docx(path: Path) -> str:
-    d = Document(str(path))
-    parts: list[str] = []
-    for p in d.paragraphs:
-        t = p.text.strip()
-        if t:
-            parts.append(t)
-    for table in d.tables:
-        for row in table.rows:
-            cells = [c.text.strip() for c in row.cells if c.text.strip()]
-            if cells:
-                parts.append(" | ".join(cells))
-    return "\n".join(parts)
-
-
-def _extract_pdf(path: Path) -> str:
-    r = PdfReader(str(path))
-    pages = []
-    for p in r.pages:
-        t = p.extract_text() or ""
-        t = re.sub(r"[ \t]+", " ", t)
-        pages.append(t.strip())
-    return "\n\n".join(pages)
-
-
-def _clean(text: str) -> str:
-    # Collapse extra whitespace but keep paragraph breaks
-    text = re.sub(r"\r\n?", "\n", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    text = re.sub(r"[ \t]+", " ", text)
-    return text.strip()
 
 
 def main() -> None:
@@ -97,13 +63,9 @@ def main() -> None:
         path = KB_DIR / fn
         if path.is_dir():
             continue
-        if fn.endswith(".docx"):
-            text = _extract_docx(path)
-        elif fn.endswith(".pdf"):
-            text = _extract_pdf(path)
-        else:
+        if not (fn.endswith(".docx") or fn.endswith(".pdf")):
             continue
-        text = _clean(text)
+        text = extract_text(fn, path=path)
         out = OUT_DIR / f"{_slug(path.stem)}.txt"
         out.write_text(text, encoding="utf-8")
         rows.append((fn, text, len(text)))
