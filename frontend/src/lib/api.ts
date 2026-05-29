@@ -236,12 +236,50 @@ export async function chatWithMoon(params: {
   profile?: HairProfile;
   product_id?: string;
   inci?: string[];
-}): Promise<MoonChatResponse> {
-  return fetchJSON<MoonChatResponse>('/moon/chat', {
+  conversation_id?: string;
+}): Promise<MoonChatResponse & { conversation_id: string; intent?: string }> {
+  return fetchJSON<MoonChatResponse & { conversation_id: string; intent?: string }>('/moon/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
   });
+}
+
+// --- Moon conversations (persisted history) ---
+export interface ConversationSummary {
+  conversation_id: string;
+  user_id: string | null;
+  title: string | null;
+  created_at: string | null;
+  last_message_at: string | null;
+  message_count: number;
+}
+export interface ConversationDetail extends ConversationSummary {
+  messages: {
+    message_id: string;
+    role: 'user' | 'assistant';
+    content: string;
+    intent?: string | null;
+    kb_sources?: string[] | null;
+    analysis?: MoonAnalysis | null;
+    alternatives?: { product_id: string; name: string; brand: string; score: number; interpretation: string }[] | null;
+    created_at: string | null;
+  }[];
+}
+
+export async function listMoonConversations(user_id?: string, limit = 30): Promise<{ conversations: ConversationSummary[]; total: number }> {
+  const qs = new URLSearchParams();
+  if (user_id) qs.set('user_id', user_id);
+  qs.set('limit', String(limit));
+  return fetchJSON(`/moon/conversations?${qs}`);
+}
+
+export async function getMoonConversation(conversation_id: string): Promise<ConversationDetail> {
+  return fetchJSON(`/moon/conversations/${conversation_id}`);
+}
+
+export async function deleteMoonConversation(conversation_id: string): Promise<void> {
+  await fetch(`/api/moon/conversations/${conversation_id}`, { method: 'DELETE' });
 }
 
 export async function sendMoonFeedback(params: {

@@ -1,9 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Moon, Sparkles, Send, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Moon, Sparkles, Send, ThumbsUp, ThumbsDown, MessageSquarePlus, Trash2, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
-import { chatWithMoon, getHairProfile, sendMoonFeedback, type MoonChatMessage, type MoonChatResponse } from '@/lib/api';
+import {
+  chatWithMoon, getHairProfile, sendMoonFeedback,
+  listMoonConversations, getMoonConversation, deleteMoonConversation,
+  type MoonChatMessage, type MoonChatResponse, type ConversationSummary,
+} from '@/lib/api';
 
 // Pre-made prompts shown in the empty state and as a quick bar above the input.
 const SUGGESTED_PROMPTS: { label: string; prompt: string; emoji: string }[] = [
@@ -39,7 +43,55 @@ export default function MoonChat() {
   const [summary, setSummary] = useState<string>('');
   const [lastAlternatives, setLastAlternatives] = useState<MoonChatResponse['alternatives']>([]);
   const [rated, setRated] = useState<Record<number, 'up' | 'down'>>({});
+  // Persisted conversation state — null = new conversation will be created on first send.
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const endRef = useRef<HTMLDivElement>(null);
+
+  const refreshConversations = useCallback(async () => {
+    if (!user) return;
+    try {
+      const r = await listMoonConversations(user.id, 30);
+      setConversations(r.conversations);
+    } catch { /* ignore */ }
+  }, [user]);
+
+  useEffect(() => { refreshConversations(); }, [refreshConversations]);
+
+  function startNew() {
+    setConversationId(null);
+    setMessages([]);
+    setLastAlternatives([]);
+    setRated({});
+    setError(null);
+  }
+
+  async function openConversation(cid: string) {
+    setLoading(true); setError(null);
+    try {
+      const d = await getMoonConversation(cid);
+      setConversationId(d.conversation_id);
+      setMessages(d.messages.map((m) => ({ role: m.role, content: m.content })));
+      // restore last alternatives from the most recent assistant turn
+      const lastA = [...d.messages].reverse().find((m) => m.role === 'assistant' && m.alternatives);
+      setLastAlternatives((lastA?.alternatives ?? []) as MoonChatResponse['alternatives']);
+      setRated({});
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro ao abrir conversa');
+    } finally { setLoading(false); }
+  }
+
+  async function removeConversation(cid: string) {
+    if (!confirm('Apagar essa conversa? Não dá pra desfazer.')) return;
+    try {
+      await deleteMoonConversation(cid);
+      if (cid === conversationId) startNew();
+      await refreshConversations();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro ao remover');
+    }
+  }
 
   async function rate(idx: number, rating: 'up' | 'down') {
     if (rated[idx]) return;
@@ -72,10 +124,20 @@ export default function MoonChat() {
     const next: MoonChatMessage[] = [...messages, { role: 'user', content }];
     setMessages(next); setInput(''); setLoading(true); setError(null);
     try {
-      const res = await chatWithMoon({ messages: next, user_id: user?.id });
+      // When the conversation already exists, the backend has the history —
+      // send only the new turn to avoid duplicating it.
+      const payloadMessages: MoonChatMessage[] = conversationId
+        ? [{ role: 'user', content }]
+        : next;
+      const res = await chatWithMoon({
+        messages: payloadMessages, user_id: user?.id,
+        conversation_id: conversationId ?? undefined,
+      });
+      setConversationId(res.conversation_id);
       setMessages([...next, { role: 'assistant', content: res.reply }]);
       setLastAlternatives(res.alternatives ?? []);
       if (res.profile_summary) setSummary(res.profile_summary);
+      refreshConversations(); // sidebar reflects the new last_message_at
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Moon indisponível');
     } finally { setLoading(false); }
@@ -84,7 +146,53 @@ export default function MoonChat() {
   const firstName = user?.name?.split(' ')[0];
 
   return (
-    <div className="max-w-2xl mx-auto h-[calc(100vh-3rem)] flex flex-col">
+    <div className="max-w-6xl mx-auto h-[calc(100vh-3rem)] flex">
+      {/* Conversation sidebar */}
+      {sidebarOpen && (
+        <aside className="w-64 shrink-0 border-r border-cream-dark flex flex-col bg-white/30">
+          <div className="px-3 py-3 border-b border-cream-dark flex items-center gap-2">
+            <button onClick={startNew}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-full bg-ink text-cream hover:bg-ink/90">
+              <MessageSquarePlus size={14} /> Nova conversa
+            </button>
+            <button onClick={() => setSidebarOpen(false)} title="Esconder"
+              className="p-1.5 text-ink-muted hover:text-ink">‹</button>
+          </div>
+          <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
+            {conversations.length === 0 && (
+              <p className="text-xs text-ink-faint text-center mt-6 px-3">
+                Nenhuma conversa ainda. Escreva uma pergunta abaixo pra começar 🌙
+              </p>
+            )}
+            {conversations.map((c) => (
+              <div key={c.conversation_id}
+                onClick={() => openConversation(c.conversation_id)}
+                className={`group flex items-start gap-2 px-2.5 py-2 rounded-lg cursor-pointer transition-colors ${
+                  c.conversation_id === conversationId ? 'bg-cream' : 'hover:bg-cream/60'}`}>
+                <MessageCircle size={13} className="text-ink-muted shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs text-ink line-clamp-2 leading-snug">
+                    {c.title || 'Conversa sem título'}
+                  </div>
+                  <div className="text-[10px] text-ink-faint mt-0.5">
+                    {c.message_count} {c.message_count === 1 ? 'mensagem' : 'mensagens'}
+                  </div>
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); removeConversation(c.conversation_id); }}
+                  className="opacity-0 group-hover:opacity-100 p-1 text-ink-faint hover:text-red-600 transition-opacity">
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </aside>
+      )}
+
+      <div className={`flex-1 flex flex-col ${sidebarOpen ? '' : 'max-w-2xl mx-auto'}`}>
+        {!sidebarOpen && (
+          <button onClick={() => setSidebarOpen(true)} title="Ver conversas"
+            className="absolute left-2 top-20 z-10 p-2 rounded-md bg-white border border-cream-dark text-ink-muted hover:text-ink">›</button>
+        )}
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-cream-dark">
         <div className="flex items-center gap-3">
@@ -235,6 +343,7 @@ export default function MoonChat() {
             <Send size={17} />
           </button>
         </div>
+      </div>
       </div>
     </div>
   );

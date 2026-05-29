@@ -27,7 +27,7 @@ from sqlalchemy.orm import Session as SASession
 
 from src.core.hair_profile import HairProfileInput, derive_hair_types, profile_summary
 from src.storage.hair_profile_repository import HairProfileRepository
-from src.storage.moon_models import MoonFeedbackORM
+from src.storage.moon_models import MoonFeedbackORM, MoonConversationORM, MoonMessageORM
 
 logger = logging.getLogger("haira.moon")
 router = APIRouter(prefix="/moon", tags=["moon"])
@@ -411,6 +411,11 @@ class ChatRequest(BaseModel):
     product_id: str | None = None
     inci: list[str] | None = None
     suggest_alternatives: bool = True
+    # Conversation persistence — if None, a new conversation is created.
+    conversation_id: str | None = None
+    # How many previous turns to include in the LLM context. Default 8 keeps
+    # the prompt cheap while giving Moon enough memory for follow-ups.
+    history_turns: int = 8
 
 
 import re
@@ -518,9 +523,39 @@ MOON_SYSTEM = (
 @router.post("/chat")
 def chat(body: ChatRequest, session: Session = Depends(_get_session)):
     """Conversational Moon: grounds an LLM reply in the user's profile, the
-    analyzed product (if any) and scored catalog alternatives."""
+    analyzed product (if any) and scored catalog alternatives. Persists the
+    turn so reviewers can resume past conversations."""
     if not body.messages:
         raise HTTPException(status_code=400, detail="messages is required")
+
+    # Resolve or create the conversation. Auth on /moon/profile is HAIRA-155;
+    # until then user_id is best-effort.
+    conv: MoonConversationORM | None = None
+    if body.conversation_id:
+        conv = session.get(MoonConversationORM, body.conversation_id)
+        if not conv:
+            raise HTTPException(status_code=404, detail="conversation_id not found")
+    else:
+        # Auto-title from the first user message (truncated)
+        first_user = next((m.content for m in body.messages if m.role == "user"), "")
+        title = (first_user.strip()[:80] or "Conversa com a Moon")
+        conv = MoonConversationORM(user_id=body.user_id, title=title)
+        session.add(conv)
+        session.flush()  # ensure conv.conversation_id
+
+    # Load previous persisted turns (history_turns most recent) so Moon remembers
+    # the conversation across requests. Older turns are dropped; client doesn't
+    # have to round-trip them.
+    history: list[MoonMessageORM] = []
+    if body.conversation_id:
+        history = (
+            session.query(MoonMessageORM)
+            .filter(MoonMessageORM.conversation_id == conv.conversation_id)
+            .order_by(MoonMessageORM.created_at.desc())
+            .limit(max(0, body.history_turns) * 2)
+            .all()
+        )
+        history.reverse()  # back to chronological
 
     # Resolve profile (inline or persisted)
     profile = body.profile
@@ -601,6 +636,10 @@ def chat(body: ChatRequest, session: Session = Depends(_get_session)):
 
     context_block = "\n".join(ctx)
     llm_messages = [{"role": "user", "content": f"[CONTEXTO INTERNO — não repita literalmente]\n{context_block}"}]
+    # Histórico persistido (Moon lembra do que foi falado antes nesta conversa)
+    for h in history:
+        llm_messages.append({"role": h.role, "content": h.content})
+    # Mensagens do request atual (último turno)
     llm_messages += [{"role": m.role, "content": m.content} for m in body.messages]
 
     # Intent-specific system addendum — anchors the LLM to the right behavior
@@ -625,8 +664,23 @@ def chat(body: ChatRequest, session: Session = Depends(_get_session)):
         logger.warning("Moon chat LLM failed: %s", e)
         raise HTTPException(status_code=503, detail=f"Moon indisponível: {e}")
 
+    # Persist this turn (user msg + assistant reply) and bump last_message_at.
+    from datetime import datetime, timezone
+    for m in body.messages:
+        session.add(MoonMessageORM(
+            conversation_id=conv.conversation_id, role=m.role, content=m.content,
+        ))
+    session.add(MoonMessageORM(
+        conversation_id=conv.conversation_id, role="assistant", content=reply,
+        intent=intent, kb_sources=kb.sources,
+        analysis=analysis, alternatives=alternatives or None,
+    ))
+    conv.last_message_at = datetime.now(timezone.utc)
+    session.commit()
+
     return {
         "reply": reply,
+        "conversation_id": conv.conversation_id,
         "intent": intent,
         "profile_summary": summary,
         "hair_types": hair_types,
@@ -686,3 +740,76 @@ def feedback_summary(session: Session = Depends(_get_session)):
             for r in recent_down
         ],
     }
+
+
+# ----------------------------------------------------------------------------
+# Conversations — persisted Moon chat threads (sidebar list + retomar)
+# ----------------------------------------------------------------------------
+@router.get("/conversations")
+def list_conversations(user_id: str | None = None,
+                       limit: int = 30,
+                       session: Session = Depends(_get_session)):
+    """List most recent conversations, optionally filtered by user_id."""
+    q = session.query(MoonConversationORM)
+    if user_id:
+        q = q.filter(MoonConversationORM.user_id == user_id)
+    rows = q.order_by(MoonConversationORM.last_message_at.desc()).limit(limit).all()
+    out = []
+    for c in rows:
+        n_messages = (
+            session.query(MoonMessageORM)
+            .filter(MoonMessageORM.conversation_id == c.conversation_id)
+            .count()
+        )
+        out.append({
+            "conversation_id": c.conversation_id,
+            "user_id": c.user_id,
+            "title": c.title,
+            "created_at": c.created_at.isoformat() if c.created_at else None,
+            "last_message_at": c.last_message_at.isoformat() if c.last_message_at else None,
+            "message_count": n_messages,
+        })
+    return {"conversations": out, "total": len(out)}
+
+
+@router.get("/conversations/{conversation_id}")
+def get_conversation(conversation_id: str,
+                     session: Session = Depends(_get_session)):
+    conv = session.get(MoonConversationORM, conversation_id)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Not found")
+    msgs = (
+        session.query(MoonMessageORM)
+        .filter(MoonMessageORM.conversation_id == conversation_id)
+        .order_by(MoonMessageORM.created_at.asc())
+        .all()
+    )
+    return {
+        "conversation_id": conv.conversation_id,
+        "user_id": conv.user_id,
+        "title": conv.title,
+        "created_at": conv.created_at.isoformat() if conv.created_at else None,
+        "last_message_at": conv.last_message_at.isoformat() if conv.last_message_at else None,
+        "messages": [
+            {"message_id": m.message_id, "role": m.role, "content": m.content,
+             "intent": m.intent, "kb_sources": m.kb_sources,
+             "analysis": m.analysis, "alternatives": m.alternatives,
+             "created_at": m.created_at.isoformat() if m.created_at else None}
+            for m in msgs
+        ],
+    }
+
+
+@router.delete("/conversations/{conversation_id}", status_code=204)
+def delete_conversation(conversation_id: str,
+                        session: Session = Depends(_get_session)):
+    conv = session.get(MoonConversationORM, conversation_id)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Not found")
+    # Cascade messages then convo
+    session.query(MoonMessageORM).filter(
+        MoonMessageORM.conversation_id == conversation_id
+    ).delete(synchronize_session=False)
+    session.delete(conv)
+    session.commit()
+    return None
