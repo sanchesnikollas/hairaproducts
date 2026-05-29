@@ -413,6 +413,87 @@ class ChatRequest(BaseModel):
     suggest_alternatives: bool = True
 
 
+import re
+
+# Intent routing — keep the LLM focused (and tokens cheap) by injecting only the
+# context that the question type actually needs. Detection is heuristic (regex
+# over the last user message) — fast, free, deterministic, easy to tweak.
+# Regexes intencionalmente sem `\b` ao final — usamos prefixos que matcham
+# variações ("cronogra" pega cronograma; "suger" pega sugere/sugerir/sugeriu).
+_SAUDE_KWS = re.compile(
+    r"\b(queda|caspa|coceira|coca[nr]|co[cç]a[nr]|descama|vermelh|dor(\s|$)|dor(ido|imento)|"
+    r"ferida|alergi|alopec|dermatite|sebor|psor[ií]ase|inflama|infec)",
+    re.I,
+)
+_ROTINA_KWS = re.compile(
+    r"\b(cronogra|rotina|protocol|frequ[êe]ncia|hidrata[cç][aã]o|nutri[cç][aã]o|"
+    r"reconstru[cç][aã]o|low.?poo|no.?poo|co.?wash|umecta|cuidad|finaliz|"
+    r"como.+cuid|qual.+cuid)",
+    re.I,
+)
+_ANALISE_KWS = re.compile(
+    r"\b(esse|este|esta|essa|aqui|inci|composi[cç][aã]o|ingrediente)",
+    re.I,
+)
+_RECOMENDACAO_KWS = re.compile(
+    r"\b(suger|sugest|indica|indique|indicar|recomend|qual.+(produto|shampoo|condicionador|"
+    r"m[áa]scara|leave|creme)|preciso.+(de um|de uma)|qual.+combina|qual.+melhor|me.+passa)",
+    re.I,
+)
+
+
+def _detect_intent(last_user_msg: str, has_product_context: bool) -> str:
+    """Classify the user question to drive context construction.
+
+    Returns one of: saude_couro, analise_produto, recomendacao, rotina_cuidado, geral.
+    Order matters — saúde tem prioridade (segurança), depois caminhos com produto
+    explícito, depois rotina, depois fallback.
+    """
+    msg = (last_user_msg or "").strip()
+    if not msg:
+        return "geral"
+    if _SAUDE_KWS.search(msg):
+        return "saude_couro"
+    if has_product_context or _ANALISE_KWS.search(msg):
+        # com produto em contexto, "esse" / "posso usar" → análise
+        if has_product_context or re.search(r"\b(serve|posso|combina|bom|ruim|funciona)\b", msg, re.I):
+            return "analise_produto"
+    if _RECOMENDACAO_KWS.search(msg):
+        return "recomendacao"
+    if _ROTINA_KWS.search(msg):
+        return "rotina_cuidado"
+    return "geral"
+
+
+_INTENT_ADDENDUMS: dict[str, str] = {
+    "saude_couro": (
+        "A pessoa descreve sintomas no couro cabeludo (queda, caspa, vermelhidão, dor, etc.). "
+        "Sua resposta DEVE: (a) acolher com empatia; (b) NÃO sugerir produtos como tratamento; "
+        "(c) redirecionar a uma avaliação dermatológica como primeiro passo; (d) só depois "
+        "mencionar cuidados gerais que se alinhem ao perfil. Nunca diagnostique."
+    ),
+    "analise_produto": (
+        "A pessoa quer avaliar um produto específico. Use os dados da ANÁLISE INCI e do PRODUTO "
+        "no contexto interno como base principal da resposta. Cite alertas e benefícios concretos. "
+        "Se houver ALTERNATIVAS MAIS COMPATÍVEIS no catálogo, ofereça-as ao final."
+    ),
+    "recomendacao": (
+        "A pessoa pede sugestão de produto. Priorize as ALTERNATIVAS NO CATÁLOGO do contexto interno "
+        "(produtos reais da Haira), citando 1-3 pelo nome. Justifique brevemente por que combinam com "
+        "o perfil. Não invente produtos fora dessa lista."
+    ),
+    "rotina_cuidado": (
+        "A pessoa pede orientação de cuidado, rotina, cronograma ou protocolo. Esta resposta deve "
+        "vir DIRETO do CONHECIMENTO PROPRIETÁRIO HAIRA (material das Doutoras). Não traga alternativas "
+        "de catálogo a menos que sejam citadas nominalmente no conteúdo. Cite a fonte ao final."
+    ),
+    "geral": (
+        "Conversa geral — saudação, esclarecimento ou off-topic leve. Mantenha o tom Moon e seja "
+        "concisa. Se for uma pergunta vaga sobre cabelo, peça o esclarecimento que falta."
+    ),
+}
+
+
 MOON_SYSTEM = (
     "Você é a Moon, a assistente capilar do app HAIRA. Fala português do Brasil, "
     "tom acolhedor, próximo e especialista — nunca robótico. Use no máximo um emoji "
@@ -463,6 +544,16 @@ def chat(body: ChatRequest, session: Session = Depends(_get_session)):
     hair_types = derive_hair_types(profile)
     summary = profile_summary(profile)
 
+    # Detect intent from the latest user message + presence of product context.
+    # The intent drives WHICH heavy context blocks we build (analysis, alternatives)
+    # — we don't waste tokens scoring INCI for a "monte um cronograma" question,
+    # and we always force a safety redirect for "saude_couro".
+    last_user = next((m.content for m in reversed(body.messages) if m.role == "user"), "")
+    intent = _detect_intent(
+        last_user_msg=last_user,
+        has_product_context=bool(body.product_id or body.inci),
+    )
+
     # Analyze the product in context (scanned or queried), if any
     analysis = None
     product_name = None
@@ -476,11 +567,20 @@ def chat(body: ChatRequest, session: Session = Depends(_get_session)):
         ).first()
         if prow:
             product_name, product_type = prow.product_name, prow.product_type_normalized
-    if ingredient_names and hair_types:
+
+    # INCI analysis: only when there's a product AND the intent will use it
+    needs_inci_analysis = intent in {"analise_produto", "recomendacao"} and ingredient_names
+    if needs_inci_analysis and hair_types:
         analysis = score_inci(session, ingredient_names, hair_types)
 
+    # Alternatives: skip for pure routine/care/safety conversations — they
+    # distract the LLM and burn tokens without value.
     alternatives = []
-    if body.suggest_alternatives and hair_types:
+    wants_alternatives = (
+        body.suggest_alternatives and hair_types
+        and intent in {"analise_produto", "recomendacao"}
+    )
+    if wants_alternatives:
         alternatives = _fetch_alternatives(session, hair_types, product_type, body.product_id)
 
     # Build the grounding context for the LLM
@@ -503,6 +603,13 @@ def chat(body: ChatRequest, session: Session = Depends(_get_session)):
     llm_messages = [{"role": "user", "content": f"[CONTEXTO INTERNO — não repita literalmente]\n{context_block}"}]
     llm_messages += [{"role": m.role, "content": m.content} for m in body.messages]
 
+    # Intent-specific system addendum — anchors the LLM to the right behavior
+    # for the type of question, without rewriting the whole MOON_SYSTEM.
+    system_prompt = MOON_SYSTEM
+    addendum = _INTENT_ADDENDUMS.get(intent)
+    if addendum:
+        system_prompt = MOON_SYSTEM + "\n\n[INTENÇÃO DETECTADA]\n" + addendum
+
     # Doutoras knowledge base — cached at the Anthropic prompt cache (5min TTL)
     # so the per-turn cost stays trivial despite ~45k tokens always present.
     from src.core.knowledge_base import load_knowledge_base
@@ -511,7 +618,7 @@ def chat(body: ChatRequest, session: Session = Depends(_get_session)):
     try:
         from src.core.llm import LLMClient
         reply = LLMClient().chat(
-            system=MOON_SYSTEM, messages=llm_messages,
+            system=system_prompt, messages=llm_messages,
             cached_prefix=kb.system_block or None,
         )
     except Exception as e:  # noqa: BLE001
@@ -520,6 +627,7 @@ def chat(body: ChatRequest, session: Session = Depends(_get_session)):
 
     return {
         "reply": reply,
+        "intent": intent,
         "profile_summary": summary,
         "hair_types": hair_types,
         "analysis": analysis,
