@@ -72,6 +72,24 @@ class IngestStats(BaseModel):
     sample_errors: list[str] = []
 
 
+_JSONLD_SIGNATURES = (
+    '"@type"', '"@context"', '"@graph"', '"contactPoint"', '"telephone"',
+    '"availableLanguage"', '"areaServed"', '"streetAddress"', '"postalCode"',
+    'application/ld+json',
+)
+
+
+def _looks_like_garbage_inci(text: str) -> bool:
+    """Reject text that's clearly JSON-LD/script content masquerading as INCI."""
+    if not text or len(text) < 10:
+        return True
+    if any(sig in text for sig in _JSONLD_SIGNATURES):
+        return True
+    # Too many quotes/braces means it's serialized JSON, not a real ingredient list
+    brace_ratio = sum(text.count(c) for c in '{}[]') / max(len(text), 1)
+    return brace_ratio > 0.02
+
+
 def _ingest_items(items: list[ApifyItem], brand_slug: str, source: str,
                   session: Session) -> IngestStats:
     repo = ProductRepository(session)
@@ -79,7 +97,10 @@ def _ingest_items(items: list[ApifyItem], brand_slug: str, source: str,
                        quarantined=0, failed=0)
     for it in items:
         try:
-            inci_result = extract_and_validate_inci(it.inci_text or "", has_section_context=False)
+            raw_inci = it.inci_text or ""
+            if _looks_like_garbage_inci(raw_inci):
+                raw_inci = ""  # treat as no-INCI so qa gate downgrades, not poisons
+            inci_result = extract_and_validate_inci(raw_inci, has_section_context=False)
             inci_ingredients = inci_result.cleaned if inci_result.valid else None
 
             extraction = ProductExtraction(
@@ -156,13 +177,29 @@ def run_and_ingest(body: RunAndIngestRequest,
         if final.get("status") != "SUCCEEDED":
             raise HTTPException(status_code=502, detail=f"Apify run {final.get('status')}: {final.get('exitCode')}")
         items_raw = fetch_dataset_items(dataset_id, limit=1000)
-        items = [ApifyItem(**it) for it in items_raw if it]
-        stats = _ingest_items(items, body.brand_slug, body.source, session)
+        # The actor may emit error rows ({"#error": True, ...}) or rows missing
+        # required fields — separate them out so the run still surfaces useful info.
+        errored = [it for it in items_raw if isinstance(it, dict) and it.get("#error")]
+        valid_dicts = [it for it in items_raw if isinstance(it, dict) and not it.get("#error")]
+        items: list[ApifyItem] = []
+        bad_shape: list[dict] = []
+        for it in valid_dicts:
+            try:
+                items.append(ApifyItem(**it))
+            except Exception:  # noqa: BLE001
+                bad_shape.append(it)
+        stats = _ingest_items(items, body.brand_slug, body.source, session) if items else IngestStats(
+            received=0, upserted=0, skipped_no_inci=0, quarantined=0, failed=0)
         return {
             "run_id": run_id,
             "dataset_id": dataset_id,
             "status": final.get("status"),
             "duration_seconds": final.get("stats", {}).get("durationMillis", 0) // 1000,
+            "dataset_raw_count": len(items_raw),
+            "actor_errors": len(errored),
+            "bad_shape": len(bad_shape),
+            "sample_actor_error": (errored[0].get("#debug") if errored else None) if errored else None,
+            "sample_bad_shape": (bad_shape[0] if bad_shape else None),
             "stats": stats.model_dump(),
         }
     except ApifyError as e:

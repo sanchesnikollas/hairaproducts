@@ -48,21 +48,37 @@ def start_actor_run(actor_id: str, run_input: dict[str, Any]) -> dict:
 
 def get_run(run_id: str) -> dict:
     url = f"{BASE_URL}/actor-runs/{run_id}"
-    with httpx.Client(timeout=DEFAULT_TIMEOUT) as c:
-        r = c.get(url, params={"token": _token()})
-        if r.status_code >= 300:
-            raise ApifyError(f"get_run {r.status_code}: {r.text[:300]}")
-        return r.json().get("data", {})
+    last_exc: Exception | None = None
+    for attempt in range(4):
+        try:
+            with httpx.Client(timeout=DEFAULT_TIMEOUT) as c:
+                r = c.get(url, params={"token": _token()})
+                if r.status_code >= 300:
+                    raise ApifyError(f"get_run {r.status_code}: {r.text[:300]}")
+                return r.json().get("data", {})
+        except (httpx.RemoteProtocolError, httpx.ConnectError, httpx.ReadTimeout) as e:
+            last_exc = e
+            time.sleep(2 ** attempt)  # backoff: 1, 2, 4, 8s
+    raise ApifyError(f"get_run failed after retries: {last_exc}")
 
 
 def wait_for_run(run_id: str, max_seconds: int = MAX_WAIT_SECONDS) -> dict:
-    """Poll until the run leaves the RUNNING/READY state. Returns the final run object."""
+    """Poll until the run leaves the RUNNING/READY state. Returns the final run object.
+    Tolerates transient poll failures (network blips) without aborting the wait."""
     waited = 0
+    consecutive_failures = 0
     while waited < max_seconds:
-        run = get_run(run_id)
-        status = run.get("status")
-        if status in ("SUCCEEDED", "FAILED", "ABORTED", "TIMED-OUT"):
-            return run
+        try:
+            run = get_run(run_id)
+            consecutive_failures = 0
+            status = run.get("status")
+            if status in ("SUCCEEDED", "FAILED", "ABORTED", "TIMED-OUT"):
+                return run
+        except ApifyError as e:
+            consecutive_failures += 1
+            if consecutive_failures >= 5:
+                raise ApifyError(f"too many consecutive poll failures: {e}")
+            logger.warning("poll failure %d for run %s: %s", consecutive_failures, run_id, e)
         time.sleep(POLL_INTERVAL)
         waited += POLL_INTERVAL
     raise ApifyError(f"run {run_id} did not finish within {max_seconds}s")
