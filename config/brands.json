@@ -5519,7 +5519,7 @@
   {
     "brand_name": "Davines",
     "brand_slug": "davines",
-    "official_url_root": "",
+    "official_url_root": "https://www.davines.com/br/",
     "country": "Itália",
     "priority": null,
     "catalog_entrypoints": [],
@@ -5687,7 +5687,7 @@
   {
     "brand_name": "Floland",
     "brand_slug": "floland",
-    "official_url_root": "",
+    "official_url_root": "https://www.flolandbrasil.com.br/",
     "country": "Coreia do Sul",
     "priority": null,
     "catalog_entrypoints": [],
@@ -6830,7 +6830,7 @@
   {
     "brand_name": "Wella Professionals",
     "brand_slug": "wella-professionals",
-    "official_url_root": "",
+    "official_url_root": "https://www.wella.com/professional/pt-BR/",
     "country": "Alemanha",
     "priority": null,
     "catalog_entrypoints": [],
