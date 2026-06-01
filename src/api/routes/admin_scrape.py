@@ -153,6 +153,30 @@ def _run_scrape(job_id: str, brand: str, run_labels: bool) -> None:
                 session.commit()
                 _jobs[job_id]["labels_updated"] = updated
 
+        # Sync the central registry so /api/brands list view shows the new
+        # numbers immediately. Without this the brand card reads frozen
+        # migration-era counters (see HAIRA-143 comment, 2026-06-01).
+        try:
+            from src.api.dependencies import get_router as _get_central_router
+            from src.storage.central_sync import sync_brand_counters
+
+            central_router = _get_central_router()
+            sync_result = sync_brand_counters(central_router, brand)
+            _jobs[job_id]["central_sync"] = {
+                "previous_count": sync_result.previous_count,
+                "new_count": sync_result.new_count,
+                "previous_rate": round(sync_result.previous_rate, 4),
+                "new_rate": round(sync_result.new_rate, 4),
+                "changed": sync_result.changed,
+                "error": sync_result.error,
+            }
+        except Exception as sync_exc:
+            # Single-DB mode (no central router) or transient failure — log and
+            # keep the scrape result as success. The admin endpoint can resync
+            # on demand.
+            logger.warning("central sync skipped for %s: %s", brand, sync_exc)
+            _jobs[job_id]["central_sync"] = {"error": str(sync_exc)}
+
         _jobs[job_id]["status"] = "done"
         logger.info("Job %s complete for %s", job_id, brand)
 
