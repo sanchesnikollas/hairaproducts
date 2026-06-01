@@ -27,6 +27,11 @@ COPY entrypoint.sh ./
 # Install Python package
 RUN pip install --no-cache-dir -e .
 
+# Chromium + system deps para o scraper (HAIRA-159). Sem isso, Playwright
+# falha tanto no CLI (haira scrape) quanto em qualquer ferramenta que use
+# browser. ~300 MB adicionais na imagem, mas é o necessário pra DOM crawls.
+RUN playwright install --with-deps chromium
+
 # Expose port (Railway sets PORT env var)
 EXPOSE ${PORT:-8000}
 
