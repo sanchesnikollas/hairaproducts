@@ -23,8 +23,27 @@ function QualityBar({ quality }: { quality: DataQuality }) {
 }
 
 function CreateProductModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ brand_slug: "", product_name: "", description: "", product_category: "", product_url: "", image_url_main: "", price: "", size_volume: "" });
+  const [form, setForm] = useState({
+    brand_slug: "",
+    product_name: "",
+    description: "",
+    product_category: "",
+    product_url: "",
+    image_url_main: "",
+    price: "",
+    size_volume: "",
+    inci_text: "",
+    composition: "",
+    usage_instructions: "",
+  });
   const [saving, setSaving] = useState(false);
+
+  // Parse the multiline INCI box into an array (split by comma or newline,
+  // trim, drop blanks). Backend stores it as JSON array.
+  const parseInci = (raw: string): string[] | undefined => {
+    const cleaned = raw.split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
+    return cleaned.length > 0 ? cleaned : undefined;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +59,9 @@ function CreateProductModal({ onClose, onCreated }: { onClose: () => void; onCre
         image_url_main: form.image_url_main || undefined,
         price: form.price ? parseFloat(form.price) : undefined,
         size_volume: form.size_volume || undefined,
+        inci_ingredients: parseInci(form.inci_text),
+        composition: form.composition || undefined,
+        usage_instructions: form.usage_instructions || undefined,
       });
       onCreated();
       onClose();
@@ -100,6 +122,30 @@ function CreateProductModal({ onClose, onCreated }: { onClose: () => void; onCre
             <label className="mb-1 block text-xs text-ink-muted">Descrição</label>
             <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2}
               className="w-full rounded-lg border border-cream-dark bg-cream px-3 py-2 text-sm text-ink outline-none focus:border-ink" />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-ink-muted">
+              INCI <span className="text-ink-muted/70">— ingredientes separados por vírgula ou linha</span>
+            </label>
+            <textarea
+              value={form.inci_text}
+              onChange={(e) => setForm({ ...form, inci_text: e.target.value })}
+              rows={4}
+              placeholder="Aqua, Cocamidopropyl Betaine, Sodium Laureth Sulfate, ..."
+              className="w-full rounded-lg border border-cream-dark bg-cream px-3 py-2 text-sm text-ink outline-none focus:border-ink font-mono"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block text-xs text-ink-muted">Composição (opcional)</label>
+              <textarea value={form.composition} onChange={(e) => setForm({ ...form, composition: e.target.value })} rows={2}
+                className="w-full rounded-lg border border-cream-dark bg-cream px-3 py-2 text-sm text-ink outline-none focus:border-ink" />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-ink-muted">Modo de uso (opcional)</label>
+              <textarea value={form.usage_instructions} onChange={(e) => setForm({ ...form, usage_instructions: e.target.value })} rows={2}
+                className="w-full rounded-lg border border-cream-dark bg-cream px-3 py-2 text-sm text-ink outline-none focus:border-ink" />
+            </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="rounded-lg border border-cream-dark px-4 py-2 text-sm hover:bg-cream">
