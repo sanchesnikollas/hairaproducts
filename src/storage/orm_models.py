@@ -69,6 +69,13 @@ class ProductORM(Base):
     decision_data = Column(JSON, nullable=True)
     extraction_method = Column(String(50), nullable=True)
     extracted_at = Column(DateTime, nullable=True)
+    # --- Soft delete (added 2026-06-02) ---
+    # Hide-not-erase pattern: reviewer audits flag rows as not-a-product
+    # (collection pages, blog posts, non_hair items). Rows stay queryable for
+    # restore via /api/admin/products/restore. Default queries filter is_hidden.
+    is_hidden = Column(Boolean, nullable=False, default=False, index=True)
+    hidden_reason = Column(String(50), nullable=True)  # non_hair | page_not_product | bad_name | manual
+    hidden_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, nullable=False, default=_utcnow)
     updated_at = Column(DateTime, nullable=False, default=_utcnow, onupdate=_utcnow)
 

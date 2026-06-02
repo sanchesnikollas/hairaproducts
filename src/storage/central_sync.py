@@ -69,14 +69,16 @@ class _Counts:
 def _canonical_counts(session: Session, brand_slug: str) -> _Counts:
     """Return granular counts for a brand from the live product table.
 
-    `total_hair` excludes `product_category == 'non_hair'`; kits stay in.
+    `total_hair` excludes `product_category == 'non_hair'` and soft-deleted
+    (`is_hidden == True`); kits stay in.
     """
     non_hair_filter = or_(
         ProductORM.product_category != "non_hair",
         ProductORM.product_category.is_(None),
     )
     base_q = session.query(func.count(ProductORM.id)).filter(
-        ProductORM.brand_slug == brand_slug
+        ProductORM.brand_slug == brand_slug,
+        ProductORM.is_hidden.is_(False),
     )
 
     total_hair = base_q.filter(non_hair_filter).scalar() or 0

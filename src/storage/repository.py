@@ -135,7 +135,7 @@ class ProductRepository:
 
         return product_id
 
-    def _apply_filters(self, query, brand_slug=None, verified_only=False, search=None, category=None, exclude_kits=False, exclude_non_hair=True):
+    def _apply_filters(self, query, brand_slug=None, verified_only=False, search=None, category=None, exclude_kits=False, exclude_non_hair=True, include_hidden=False):
         if brand_slug:
             query = query.filter(ProductORM.brand_slug == brand_slug)
         if verified_only:
@@ -152,6 +152,10 @@ class ProductRepository:
             )
         if exclude_kits:
             query = query.filter(ProductORM.is_kit == False)
+        if not include_hidden:
+            # Soft-deleted rows: hidden via reviewer audit. include_hidden=True
+            # is only set by admin restore endpoints.
+            query = query.filter(ProductORM.is_hidden.is_(False))
         if search:
             pattern = f"%{search}%"
             query = query.filter(
