@@ -694,9 +694,12 @@ def get_seals_summary(
 ):
     """Return all seals with product counts."""
     import json as _json
+    from sqlalchemy import cast, String
+    # CAST necessário em Postgres: JSON column não tem operador != com texto.
+    # Mesmo padrão do fix de length(json) — ver commit eefce55.
     rows = session.query(ProductORM.product_labels).filter(
         ProductORM.product_labels.isnot(None),
-        ProductORM.product_labels != "null",
+        cast(ProductORM.product_labels, String) != "null",
     ).all()
 
     seal_counts: dict[str, int] = {}

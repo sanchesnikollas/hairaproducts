@@ -147,6 +147,12 @@ class IngredientORM(Base):
     category = Column(String(100), nullable=True)
     safety_rating = Column(String(50), nullable=True)
     created_at = Column(DateTime, nullable=False, default=_utcnow)
+    # Soft delete (2026-06-04): hide JS code, marketing sentences, product
+    # names that contaminated the table during early extraction. See
+    # scripts/cleanup_ingredients_phase1.py for the audit criteria.
+    is_hidden = Column(Boolean, nullable=False, default=False, index=True)
+    hidden_reason = Column(String(50), nullable=True)
+    hidden_at = Column(DateTime, nullable=True)
     aliases = relationship("IngredientAliasORM", back_populates="ingredient", cascade="all, delete-orphan")
     product_ingredients = relationship("ProductIngredientORM", back_populates="ingredient")
 

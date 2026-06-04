@@ -282,6 +282,7 @@ class ProductRepository:
     def search_ingredients(self, query: str, limit: int = 50) -> list[IngredientORM]:
         return (
             self._session.query(IngredientORM)
+            .filter(IngredientORM.is_hidden.is_(False))
             .filter(or_(
                 IngredientORM.canonical_name.ilike(f"%{query}%"),
                 IngredientORM.inci_name.ilike(f"%{query}%"),

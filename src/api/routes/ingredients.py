@@ -40,7 +40,7 @@ def list_ingredients(
     if q:
         ingredients = repo.search_ingredients(q, limit=limit)
     else:
-        query = session.query(IngredientORM)
+        query = session.query(IngredientORM).filter(IngredientORM.is_hidden.is_(False))
         if category:
             query = query.filter_by(category=category)
         ingredients = query.limit(limit).all()
