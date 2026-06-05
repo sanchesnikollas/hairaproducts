@@ -3,8 +3,19 @@ import type { BrandCoverage, BrandSummary, GlobalStats, IngredientSummary, Pagin
 const BASE_URL = '/api';
 
 async function fetchJSON<T>(url: string, options?: RequestInit): Promise<T> {
+  // Anexa token JWT se presente (mesma chave usada por ops-api.authFetch).
+  // HAIRA-155: /moon/chat agora exige auth; outras rotas aceitam o token
+  // sem prejuízo (apenas enriquecem o request).
+  const token = typeof window !== 'undefined' ? localStorage.getItem('haira_token') : null;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options?.headers as Record<string, string> ?? {}),
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
   const response = await fetch(`${BASE_URL}${url}`, {
     ...options,
+    headers,
   });
   if (!response.ok) {
     throw new Error(`API error: ${response.status} ${response.statusText}`);
@@ -144,5 +155,158 @@ export async function resolveReviewItem(itemId: string, status: string, notes?: 
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status, reviewer_notes: notes }),
+  });
+}
+
+// ── Moon AI ──
+
+export interface MoonMatch {
+  hair_type: string;
+  score: number;
+  reason: string;
+}
+
+export interface MoonBreakdown {
+  name: string;
+  category: string | null;
+  weight: number;
+  matches: MoonMatch[];
+}
+
+export interface MoonAnalysis {
+  overall_score: number;
+  interpretation: string;
+  hair_types: string[];
+  ingredients_total: number;
+  ingredients_categorized: number;
+  coverage_pct: number;
+  alerts: { name: string; category: string; hair_type: string; reason: string }[];
+  benefits: { name: string; category: string; hair_type: string; reason: string }[];
+  breakdown: MoonBreakdown[];
+}
+
+export async function analyzeWithMoon(inci: string[], hair_types: string[]): Promise<MoonAnalysis> {
+  return fetchJSON<MoonAnalysis>('/moon/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ inci, hair_types }),
+  });
+}
+
+// --- Hair profile (the questionnaire that feeds Moon) ---
+export interface HairProfile {
+  curl_type?: string | null;
+  curl_subtype?: string | null;
+  color?: string | null;
+  volume?: string | null;
+  thickness?: string | null;
+  length?: string | null;
+  scalp_oiliness?: string | null;
+  dryness_damage?: string | null;
+  chemical_treatments?: string[];
+  heat_usage?: string | null;
+  extensions?: string | null;
+  wash_frequency?: string | null;
+  sun_exposure?: string | null;
+  water_exposure?: string | null;
+  scalp_issues?: boolean | null;
+}
+
+export interface HairProfileSaved extends HairProfile {
+  profile_id: string;
+  user_id: string | null;
+  derived_hair_types: string[];
+}
+
+export async function saveHairProfile(profile: HairProfile, user_id?: string): Promise<HairProfileSaved> {
+  return fetchJSON<HairProfileSaved>('/moon/profile', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...profile, user_id }),
+  });
+}
+
+export async function getHairProfile(user_id: string): Promise<HairProfileSaved> {
+  return fetchJSON<HairProfileSaved>(`/moon/profile/${user_id}`);
+}
+
+// --- Moon chat ---
+export interface MoonChatMessage { role: 'user' | 'assistant'; content: string; }
+
+export interface MoonChatResponse {
+  reply: string;
+  profile_summary: string;
+  hair_types: string[];
+  analysis: MoonAnalysis | null;
+  alternatives: { product_id: string; name: string; brand: string; score: number; interpretation: string }[];
+  kb_sources?: string[];
+  intent?: string;
+}
+
+export async function chatWithMoon(params: {
+  messages: MoonChatMessage[];
+  user_id?: string;
+  profile?: HairProfile;
+  product_id?: string;
+  inci?: string[];
+  conversation_id?: string;
+}): Promise<MoonChatResponse & { conversation_id: string; intent?: string }> {
+  return fetchJSON<MoonChatResponse & { conversation_id: string; intent?: string }>('/moon/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+}
+
+// --- Moon conversations (persisted history) ---
+export interface ConversationSummary {
+  conversation_id: string;
+  user_id: string | null;
+  title: string | null;
+  created_at: string | null;
+  last_message_at: string | null;
+  message_count: number;
+}
+export interface ConversationDetail extends ConversationSummary {
+  messages: {
+    message_id: string;
+    role: 'user' | 'assistant';
+    content: string;
+    intent?: string | null;
+    kb_sources?: string[] | null;
+    analysis?: MoonAnalysis | null;
+    alternatives?: { product_id: string; name: string; brand: string; score: number; interpretation: string }[] | null;
+    created_at: string | null;
+  }[];
+}
+
+export async function listMoonConversations(user_id?: string, limit = 30): Promise<{ conversations: ConversationSummary[]; total: number }> {
+  const qs = new URLSearchParams();
+  if (user_id) qs.set('user_id', user_id);
+  qs.set('limit', String(limit));
+  return fetchJSON(`/moon/conversations?${qs}`);
+}
+
+export async function getMoonConversation(conversation_id: string): Promise<ConversationDetail> {
+  return fetchJSON(`/moon/conversations/${conversation_id}`);
+}
+
+export async function deleteMoonConversation(conversation_id: string): Promise<void> {
+  await fetch(`/api/moon/conversations/${conversation_id}`, { method: 'DELETE' });
+}
+
+export async function sendMoonFeedback(params: {
+  rating: 'up' | 'down';
+  message_content: string;
+  user_message?: string;
+  profile_snapshot?: { summary?: string; hair_types?: string[] };
+  product_id?: string;
+  comment?: string;
+  user_id?: string;
+}): Promise<{ feedback_id: string }> {
+  return fetchJSON<{ feedback_id: string }>('/moon/feedback', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
   });
 }

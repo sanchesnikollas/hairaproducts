@@ -1,13 +1,20 @@
 import { NavLink, Outlet, Navigate } from "react-router-dom";
 import { useAuth } from "../../lib/auth";
-import { LayoutDashboard, Package, ListChecks, FlaskConical, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, FlaskConical, Settings, LogOut, Tags, Award, Zap, ShieldCheck, Moon, MessageCircle, User, BookOpen } from "lucide-react";
 
 const NAV_ITEMS = [
   { to: "/ops", icon: LayoutDashboard, label: "Dashboard", end: true },
+  { to: "/ops/moon", icon: Moon, label: "Moon" },
+  { to: "/ops/moon-chat", icon: MessageCircle, label: "Moon Chat" },
+  { to: "/ops/profile", icon: User, label: "Meu cabelo" },
+  { to: "/ops/knowledge", icon: BookOpen, label: "Conteúdo Moon", admin: true },
+  { to: "/ops/brands", icon: Tags, label: "Marcas" },
   { to: "/ops/products", icon: Package, label: "Produtos" },
-  { to: "/ops/review", icon: ListChecks, label: "Revisao" },
+  { to: "/ops/quick-fill", icon: Zap, label: "Preencher" },
+  { to: "/ops/dual-validation", icon: ShieldCheck, label: "Dupla Verificação" },
+  { to: "/ops/seals", icon: Award, label: "Selos" },
   { to: "/ops/ingredients", icon: FlaskConical, label: "Ingredientes", admin: true },
-  { to: "/ops/settings", icon: Settings, label: "Settings", admin: true },
+  { to: "/ops/settings", icon: Settings, label: "Configurações", admin: true },
 ];
 
 export default function OpsLayout() {
@@ -22,7 +29,7 @@ export default function OpsLayout() {
     <div className="flex h-screen bg-cream">
       <aside className="flex w-56 flex-col border-r border-cream-dark bg-white">
         <div className="border-b border-cream-dark px-4 py-4">
-          <h2 className="text-sm font-semibold text-ink">HAIRA Ops</h2>
+          <h2 className="text-sm font-semibold text-ink">HAIRA</h2>
           <p className="text-xs text-ink-muted">{user.name} ({user.role})</p>
         </div>
         <nav className="flex-1 space-y-1 p-2">

@@ -1,0 +1,82 @@
+brand_slug: abelha-rainha
+brand_name: Abelha Rainha
+platform: vtex
+domain: abelharainha.com.br
+allowed_domains:
+- abelharainha.com.br
+- www.abelharainha.com.br
+entrypoints:
+- https://www.abelharainha.com.br/abelha-rainha/cabelos
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.abelharainha.com.br/sitemap.xml
+  - https://www.abelharainha.com.br/sitemap-1.xml
+  - https://www.abelharainha.com.br/sitemap-product-1.xml
+  product_url_pattern: ^https?://(?:www\.)?abelharainha\.com\.br/[\w-]+/p$
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: true
+  delay_seconds: 2
+  name_selectors:
+  - h1.vtex-store-components-3-x-productNameContainer
+  - h1.product-name
+  - h1
+  image_selectors:
+  - img.vtex-store-components-3-x-productImageTag
+  - .product-image img
+  price_selectors:
+  - span.vtex-product-price
+  - .vtex-product-price-1-x-sellingPrice
+  - .price
+  inci_selectors:
+  - .vtex-store-components-3-x-productDescriptionText
+  - .product-description
+  section_label_map:
+    description:
+      labels:
+      - descrição
+      - sobre
+      - detalhes
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - aplicação
+    composition:
+      labels:
+      - composição
+      - fórmula
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - inci
+    benefits:
+      labels:
+      - benefícios
+      - resultado
+  use_llm_fallback: false
+notes:
+  auto_generated: true
+  platform_detail: vtex_faststore
+  inci_available: false
+  inci_note: |
+    Confirmed 2026-05-13 (pipeline-doctor): site does NOT publish INCI/ingredients/composition.
+    Verified across 3 hair products + 1 non-hair sample:
+      - JSON-LD "description" field is empty string
+      - VTEX catalog API (/api/catalog_system/pub/products/search) "description" + "metaTagDescription" empty
+      - No "specificationGroups" / allSpecifications populated
+      - SSR HTML contains zero ingredient/composição/aqua tokens
+    Blueprint CSS selectors match VTEX legacy theme but this is FastStore deployment with empty
+    description containers. Not a blueprint bug — fundamental gap at source.
+    Action: mark for M3 source-scrape (PDF labels / manufacturer catalog) — re-scraping with
+    current blueprint will not improve INCI coverage.
+  triage_tier: tier_3_source_scrape
+  inci_coverage_current: 0.0
+  inci_coverage_achievable_via_scrape: 0.0
+version: 2

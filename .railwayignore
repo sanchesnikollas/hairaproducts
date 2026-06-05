@@ -1,0 +1,14 @@
+.git
+.claude
+.venv
+node_modules
+frontend/node_modules
+haira.db
+haira.db-*
+haira.db.bak.*
+haira.db.backup-*
+haira_central.db
+data
+docs
+tests
+*.fuse_hidden*

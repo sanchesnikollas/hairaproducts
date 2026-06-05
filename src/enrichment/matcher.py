@@ -20,7 +20,7 @@ PRODUCT_TYPES = {
 }
 
 
-def normalize_name(name: str) -> str:
+def normalize_name(name: str, strip_brand: str | None = None) -> str:
     name = name.lower()
     name = "".join(
         c for c in unicodedata.normalize("NFD", name)
@@ -29,6 +29,19 @@ def normalize_name(name: str) -> str:
     name = re.sub(r"\b\d+[.,]?\d*\s*(ml|g|kg|l|oz|lt)\b", "", name)
     name = re.sub(r"\s*[-/]\s*(un|und|unid)\b", "", name)
     name = re.sub(r"\s*kit\s+com\s+\d+", "kit", name)
+
+    if strip_brand:
+        brand_norm = "".join(
+            c for c in unicodedata.normalize("NFD", strip_brand.lower())
+            if unicodedata.category(c) != "Mn"
+        )
+        # Remove brand as standalone word, possibly hyphenated; also handles "X-Brand"
+        name = re.sub(rf"\b{re.escape(brand_norm)}\b", "", name)
+        # Common variations: bio extratus, bioextratus, bio-extratus
+        flat = brand_norm.replace("-", "").replace(" ", "")
+        if flat != brand_norm:
+            name = re.sub(rf"\b{re.escape(flat)}\b", "", name)
+
     name = re.sub(r"\s+", " ", name).strip()
     return name
 
@@ -50,6 +63,7 @@ def match_products(
     review_threshold: float = 0.75,
 ) -> list[dict]:
     norm_name = normalize_name(product_name)
+    norm_name_stripped = normalize_name(product_name, strip_brand=product_brand)
     product_type = detect_product_type(product_name)
 
     matches = []
@@ -57,12 +71,26 @@ def match_products(
         if not cand.get("inci_ingredients"):
             continue
 
-        cand_norm = normalize_name(cand["product_name"] or "")
-        seq_ratio = SequenceMatcher(None, norm_name, cand_norm).ratio()
-        norm_sorted = " ".join(sorted(norm_name.split()))
-        cand_sorted = " ".join(sorted(cand_norm.split()))
-        token_ratio = SequenceMatcher(None, norm_sorted, cand_sorted).ratio()
-        ratio = max(seq_ratio, token_ratio)
+        cand_raw = cand["product_name"] or ""
+        cand_norm = normalize_name(cand_raw)
+        cand_norm_stripped = normalize_name(cand_raw, strip_brand=product_brand)
+
+        # Compare across 4 variants and take best ratio
+        ratios = []
+        for left, right in (
+            (norm_name, cand_norm),
+            (norm_name_stripped, cand_norm_stripped),
+            (norm_name, cand_norm_stripped),
+            (norm_name_stripped, cand_norm),
+        ):
+            if not left or not right:
+                continue
+            seq_ratio = SequenceMatcher(None, left, right).ratio()
+            l_sorted = " ".join(sorted(left.split()))
+            r_sorted = " ".join(sorted(right.split()))
+            tok_ratio = SequenceMatcher(None, l_sorted, r_sorted).ratio()
+            ratios.append(max(seq_ratio, tok_ratio))
+        ratio = max(ratios) if ratios else 0.0
 
         if ratio < review_threshold:
             continue

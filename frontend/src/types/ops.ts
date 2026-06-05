@@ -17,6 +17,10 @@ export interface DashboardKPIs {
   quarantined: number;
   published: number;
   avg_confidence: number;
+  category_pct?: number;
+  description_pct?: number;
+  image_pct?: number;
+  volume_pct?: number;
 }
 
 export interface DashboardData {

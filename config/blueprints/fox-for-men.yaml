@@ -1,0 +1,75 @@
+brand_slug: fox-for-men
+brand_name: Fox For Men
+platform: woocommerce
+domain: foxformen.com.br
+allowed_domains:
+- foxformen.com.br
+- www.foxformen.com.br
+entrypoints:
+- https://foxformen.com.br/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://foxformen.com.br/product-sitemap.xml
+  - https://foxformen.com.br/sitemap_index.xml
+  - https://foxformen.com.br/sitemap.xml
+  product_url_pattern: ^https?://(?:www\.)?foxformen\.com\.br/(?:produto|product)/[\w-]+/?$
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: true
+  delay_seconds: 2
+  name_selectors:
+  - h1.product_title
+  - h1.entry-title
+  - h1
+  image_selectors:
+  - .woocommerce-product-gallery__image img
+  - img.wp-post-image
+  price_selectors:
+  - p.price
+  - span.price
+  - .woocommerce-Price-amount
+  # Porto WooCommerce theme nests product content in <script type="text/template">.
+  # The extractor unpacks it; INCI lives inside #tab-description as a <p> starting with
+  # "Composição (INCI):" or "Composition (INCI):" — left empty so the tab-label
+  # heuristic isolates just the INCI <p> instead of matching the whole tab body.
+  inci_selectors: []
+  section_label_map:
+    description:
+      labels:
+      - descrição
+      - detalhes
+      - sobre
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - modo de usar
+      - aplicação
+      - como aplicar
+    composition:
+      labels:
+      - composição
+      - fórmula
+      - ingredientes ativos
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - inci
+    benefits:
+      labels:
+      - benefícios
+      - resultado
+  use_llm_fallback: false
+notes:
+  auto_generated: true
+  platform_detail: woocommerce
+  inci_available: unknown
+  inci_note: Auto-generated blueprint; review after first scrape.
+  triage_tier: tier_1_easy
+version: 1

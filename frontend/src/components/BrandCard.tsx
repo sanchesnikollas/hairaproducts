@@ -46,7 +46,7 @@ export default function BrandCard({ slug, name, productCount, inciRate, platform
   const avatarColor = getAvatarColor(slug);
 
   return (
-    <Link to={`/brands/${slug}`} className="block group/brand-card">
+    <Link to={`/ops/brands/${slug}`} className="block group/brand-card">
       <div className="bg-white rounded-xl border border-neutral-200/60 p-4 transition-all duration-200 group-hover/brand-card:shadow-md group-hover/brand-card:border-neutral-300/60">
         <div className="flex items-center gap-3 mb-3">
           <div className="relative flex-shrink-0">

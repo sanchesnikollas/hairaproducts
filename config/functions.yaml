@@ -1,0 +1,83 @@
+# Function/objective vocabulary
+# Enum único — função primária declarada do produto
+# Inferido via product_category + keywords em nome/descrição
+
+limpar:
+  display_name_pt: Limpar
+  description_pt: Remove sujeira, oleosidade e resíduos
+  category_match: ["shampoo", "shampoo_pet", "esfoliante_capilar", "co_wash"]
+  keywords_pt: ["shampoo", "limpeza", "co-wash", "co wash", "low poo", "no poo"]
+
+condicionar:
+  display_name_pt: Condicionar
+  description_pt: Desembaraça, sela cutícula, dá maciez
+  category_match: ["condicionador"]
+  keywords_pt: ["condicionador", "conditioner", "desembaraçante"]
+
+hidratar:
+  display_name_pt: Hidratar
+  description_pt: Repõe água ao fio
+  category_match: ["mascara_hidratacao", "hidratacao"]
+  keywords_pt: ["hidratação", "hidratante", "hidrata", "water", "moisture", "h2o"]
+
+nutrir:
+  display_name_pt: Nutrir
+  description_pt: Repõe lipídios e óleos
+  category_match: ["mascara_nutricao", "oleo"]
+  keywords_pt: ["nutrição", "nutritivo", "óleo nutritivo", "manteiga"]
+
+reconstruir:
+  display_name_pt: Reconstruir
+  description_pt: Repõe queratina e proteínas
+  category_match: ["mascara_reconstrucao", "ampola"]
+  keywords_pt: ["reconstrução", "reconstrutor", "proteína", "queratina", "ampola", "sos"]
+
+definir:
+  display_name_pt: Definir
+  description_pt: Define cachos / forma do fio
+  keywords_pt: ["definição", "ativador de cachos", "definidor"]
+
+finalizar:
+  display_name_pt: Finalizar
+  description_pt: Última etapa do styling
+  category_match: ["leave_in", "creme_de_pentear", "oleo_finalizador", "serum"]
+  keywords_pt: ["leave-in", "leave in", "creme para pentear", "creme de pentear", "finalizador", "sérum", "serum"]
+
+proteger:
+  display_name_pt: Proteger
+  description_pt: Protege contra calor / UV / agressões
+  keywords_pt: ["protetor térmico", "protetor solar", "filtro uv", "thermal", "heat protect"]
+
+tratar:
+  display_name_pt: Tratar
+  description_pt: Tratamento intensivo / capilar
+  category_match: ["tratamento", "ampola"]
+  keywords_pt: ["tratamento", "treatment"]
+
+modelar:
+  display_name_pt: Modelar
+  description_pt: Cria forma e fixação
+  category_match: ["gel", "pomada", "spray_fixador", "mousse"]
+  keywords_pt: ["modelador", "fixador", "gel", "pomada", "mousse", "spray fixador"]
+
+esfoliar:
+  display_name_pt: Esfoliar
+  description_pt: Remove células mortas do couro cabeludo
+  category_match: ["esfoliante_capilar"]
+  keywords_pt: ["esfoliante", "esfoliação", "scrub"]
+
+alisar:
+  display_name_pt: Alisar
+  description_pt: Alinhamento / alisamento químico ou térmico
+  keywords_pt: ["alisamento", "progressiva", "escova progressiva", "alisador"]
+
+ondular:
+  display_name_pt: Ondular
+  description_pt: Cria ondas / cachos artificialmente
+  keywords_pt: ["permanente", "ondulação", "wave"]
+
+colorir:
+  display_name_pt: Colorir
+  description_pt: Tinge ou tonaliza o fio
+  category_match: ["coloracao", "matizador", "tonalizante"]
+  keywords_pt: ["coloração", "tinta", "tintura", "matizador", "tonalizante"]

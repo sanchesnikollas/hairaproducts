@@ -135,15 +135,27 @@ class ProductRepository:
 
         return product_id
 
-    def _apply_filters(self, query, brand_slug=None, verified_only=False, search=None, category=None, exclude_kits=False):
+    def _apply_filters(self, query, brand_slug=None, verified_only=False, search=None, category=None, exclude_kits=False, exclude_non_hair=True, include_hidden=False):
         if brand_slug:
             query = query.filter(ProductORM.brand_slug == brand_slug)
         if verified_only:
             query = query.filter(ProductORM.verification_status == "verified_inci")
         if category:
             query = query.filter(ProductORM.product_category == category)
+        elif exclude_non_hair:
+            # Hide non_hair products from default listings (preserves data, hides from views)
+            query = query.filter(
+                or_(
+                    ProductORM.product_category != "non_hair",
+                    ProductORM.product_category.is_(None),
+                )
+            )
         if exclude_kits:
             query = query.filter(ProductORM.is_kit == False)
+        if not include_hidden:
+            # Soft-deleted rows: hidden via reviewer audit. include_hidden=True
+            # is only set by admin restore endpoints.
+            query = query.filter(ProductORM.is_hidden.is_(False))
         if search:
             pattern = f"%{search}%"
             query = query.filter(
@@ -270,7 +282,12 @@ class ProductRepository:
     def search_ingredients(self, query: str, limit: int = 50) -> list[IngredientORM]:
         return (
             self._session.query(IngredientORM)
-            .filter(IngredientORM.canonical_name.ilike(f"%{query}%"))
+            .filter(IngredientORM.is_hidden.is_(False))
+            .filter(or_(
+                IngredientORM.canonical_name.ilike(f"%{query}%"),
+                IngredientORM.inci_name.ilike(f"%{query}%"),
+            ))
+            .order_by(IngredientORM.canonical_name)
             .limit(limit)
             .all()
         )

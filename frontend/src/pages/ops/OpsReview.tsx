@@ -24,7 +24,7 @@ export default function OpsReview() {
       setActiveItem(item);
       refetch();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Erro ao iniciar revisao");
+      alert(err instanceof Error ? err.message : "Erro ao iniciar revisão");
     }
   };
 
@@ -45,7 +45,7 @@ export default function OpsReview() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold text-ink">Fila de Revisao</h1>
+      <h1 className="text-xl font-semibold text-ink">Fila de Revisão</h1>
 
       {/* Filters */}
       <div className="flex items-center gap-3">
@@ -73,9 +73,9 @@ export default function OpsReview() {
               <Link to={`/ops/products/${activeItem.id}`} className="text-lg font-medium text-ink hover:underline">
                 {activeItem.product_name}
               </Link>
-              <p className="text-sm text-ink-muted">{activeItem.brand_slug} · Confianca: {activeItem.confidence}%</p>
+              <p className="text-sm text-ink-muted">{activeItem.brand_slug} · Confiança: {activeItem.confidence}%</p>
             </div>
-            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">Em revisao</span>
+            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">Em revisão</span>
           </div>
           <div>
             <label className="mb-1 block text-xs text-ink-muted">Notas (opcional)</label>
@@ -84,7 +84,7 @@ export default function OpsReview() {
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               className="w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-400"
-              placeholder="Observacoes sobre a revisao..."
+              placeholder="Observações sobre a revisão..."
             />
           </div>
           <div className="flex gap-2">
@@ -145,7 +145,7 @@ export default function OpsReview() {
                     {item.assigned_to && (
                       <>
                         <span>·</span>
-                        <span className="text-blue-600">Atribuido</span>
+                        <span className="text-blue-600">Atribuído</span>
                       </>
                     )}
                   </div>
@@ -161,11 +161,11 @@ export default function OpsReview() {
               </div>
             ))}
             {data.items.length === 0 && (
-              <p className="py-8 text-center text-ink-muted">Nenhum item na fila de revisao</p>
+              <p className="py-8 text-center text-ink-muted">Nenhum item na fila de revisão</p>
             )}
           </div>
 
-          {/* Pagination */}
+          {/* Págination */}
           <div className="flex items-center justify-between text-sm text-ink-muted">
             <span>{data.total} itens total</span>
             <div className="flex gap-2">
@@ -176,13 +176,13 @@ export default function OpsReview() {
               >
                 Anterior
               </button>
-              <span className="flex items-center px-2">Pagina {page}</span>
+              <span className="flex items-center px-2">Página {page}</span>
               <button
                 onClick={() => setPage((p) => p + 1)}
                 disabled={data.items.length < data.per_page}
                 className="rounded-lg border border-cream-dark px-3 py-1 hover:bg-cream disabled:opacity-50"
               >
-                Proxima
+                Próxima
               </button>
             </div>
           </div>

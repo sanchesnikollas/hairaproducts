@@ -153,6 +153,36 @@ def _run_scrape(job_id: str, brand: str, run_labels: bool) -> None:
                 session.commit()
                 _jobs[job_id]["labels_updated"] = updated
 
+        # Refresh the denormalised counter so the /api/brands list view shows
+        # the new numbers immediately. Routes by storage mode: central
+        # BrandDatabaseORM when multi-DB, BrandCoverageORM when single-DB.
+        # (See HAIRA-143 comment 2026-06-01 — reviewers saw "tabela 27, link
+        # 112" before this hook existed.)
+        try:
+            from src.api.dependencies import is_multi_db as _is_multi_db
+            from src.storage.central_sync import (
+                sync_brand_counters,
+                sync_brand_coverage,
+            )
+
+            if _is_multi_db():
+                from src.api.dependencies import get_router as _get_router
+                sync_result = sync_brand_counters(_get_router(), brand)
+            else:
+                with SASession(db_engine) as _sync_sess:
+                    sync_result = sync_brand_coverage(_sync_sess, brand)
+            _jobs[job_id]["central_sync"] = {
+                "previous_count": sync_result.previous_count,
+                "new_count": sync_result.new_count,
+                "previous_rate": round(sync_result.previous_rate, 4),
+                "new_rate": round(sync_result.new_rate, 4),
+                "changed": sync_result.changed,
+                "error": sync_result.error,
+            }
+        except Exception as sync_exc:  # never block a successful scrape
+            logger.warning("counter sync skipped for %s: %s", brand, sync_exc)
+            _jobs[job_id]["central_sync"] = {"error": str(sync_exc)}
+
         _jobs[job_id]["status"] = "done"
         logger.info("Job %s complete for %s", job_id, brand)
 

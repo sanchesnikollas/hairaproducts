@@ -1,0 +1,77 @@
+brand_slug: paiolla-professional
+brand_name: Paiolla Professional
+platform: wake
+domain: paiolla.com.br
+allowed_domains:
+- paiolla.com.br
+- www.paiolla.com.br
+entrypoints:
+- https://paiolla.com.br/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://paiolla.com.br/sitemap.xml
+  - https://paiolla.com.br/sitemap-produtos.xml
+  - https://paiolla.com.br/produtos.xml
+  product_url_pattern: ^https?://(?:www\.)?paiolla\.com\.br/[\w-]+\b
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: true
+  delay_seconds: 2
+  name_selectors:
+  - h1.fbits-produto-nome
+  - h1.product-name
+  - h1.titulo
+  - h1
+  image_selectors:
+  - .fbits-produto-imagensMinicarrossel img
+  - .product-image img
+  price_selectors:
+  - .fbits-preco
+  - .product-price
+  - .price
+  inci_selectors:
+  - .conteudoAbasProduto
+  - .product-description
+  - .description
+  section_label_map:
+    description:
+      labels:
+      - descrição
+      - detalhes
+      - sobre o produto
+      - detalhes do produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - aplicação
+      - aplicação / uso
+    composition:
+      labels:
+      - composição
+      - fórmula
+      - composição / tecnologia
+      - tecnologia
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - inci
+    benefits:
+      labels:
+      - benefícios
+      - resultado
+      - resultados esperados
+  use_llm_fallback: false
+notes:
+  auto_generated: true
+  platform_detail: wake
+  inci_available: unknown
+  inci_note: Auto-generated blueprint; review after first scrape.
+  triage_tier: tier_2_check
+version: 1

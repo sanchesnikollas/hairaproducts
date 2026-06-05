@@ -51,6 +51,13 @@ class ProductORM(Base):
     variants = Column(JSON, nullable=True)
     product_labels = Column(JSON, nullable=True, default=None)
     confidence = Column(Float, nullable=False, default=0.0)
+    # --- Hair classification fields (added 2026-04-28) ---
+    ph = Column(Float, nullable=True, index=True)
+    hair_type = Column(JSON, nullable=True)
+    audience_age = Column(String(20), nullable=True, index=True)
+    function_objective = Column(String(100), nullable=True, index=True)
+    image_url_front = Column(String(2000), nullable=True)
+    image_url_back = Column(String(2000), nullable=True)
     # --- Ops Panel v1 columns ---
     status_operacional = Column(String(50), nullable=True)   # bruto|extraido|normalizado|parseado|validado
     status_editorial = Column(String(50), nullable=True)     # pendente|em_revisao|aprovado|corrigido|rejeitado
@@ -62,6 +69,13 @@ class ProductORM(Base):
     decision_data = Column(JSON, nullable=True)
     extraction_method = Column(String(50), nullable=True)
     extracted_at = Column(DateTime, nullable=True)
+    # --- Soft delete (added 2026-06-02) ---
+    # Hide-not-erase pattern: reviewer audits flag rows as not-a-product
+    # (collection pages, blog posts, non_hair items). Rows stay queryable for
+    # restore via /api/admin/products/restore. Default queries filter is_hidden.
+    is_hidden = Column(Boolean, nullable=False, default=False, index=True)
+    hidden_reason = Column(String(50), nullable=True)  # non_hair | page_not_product | bad_name | manual
+    hidden_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, nullable=False, default=_utcnow)
     updated_at = Column(DateTime, nullable=False, default=_utcnow, onupdate=_utcnow)
 
@@ -119,6 +133,27 @@ class BrandCoverageORM(Base):
     coverage_report = Column(JSON, nullable=True)
 
 
+class BrandRegistryORM(Base):
+    """Catálogo editável de marcas. Seedado inicialmente do `config/brands.json`,
+    mas a UI admin (`/ops/brands` → "+ Nova Marca") escreve direto aqui pra
+    sobreviver a redeploys do container sem alterar o arquivo.
+
+    `/api/brands` (list) mescla esta tabela com `brand_coverage` (live counts).
+    """
+    __tablename__ = "brand_registry"
+
+    brand_slug = Column(String(255), primary_key=True)
+    brand_name = Column(String(255), nullable=False)
+    official_url_root = Column(String(2000), nullable=True)
+    country = Column(String(80), nullable=True)        # Brasil | Internacional | Outros
+    priority = Column(Integer, nullable=True)          # 1 (alta) | 2 | 3 | null
+    status = Column(String(50), nullable=False, default="active")  # active | blocked | blocked_maintenance | out_of_scope
+    platform = Column(String(50), nullable=True)       # VTEX | Shopify | WooCommerce | Custom | None
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=_utcnow)
+    updated_at = Column(DateTime, nullable=False, default=_utcnow, onupdate=_utcnow)
+
+
 class IngredientORM(Base):
     __tablename__ = "ingredients"
     id = Column(String(36), primary_key=True, default=_uuid)
@@ -133,6 +168,12 @@ class IngredientORM(Base):
     category = Column(String(100), nullable=True)
     safety_rating = Column(String(50), nullable=True)
     created_at = Column(DateTime, nullable=False, default=_utcnow)
+    # Soft delete (2026-06-04): hide JS code, marketing sentences, product
+    # names that contaminated the table during early extraction. See
+    # scripts/cleanup_ingredients_phase1.py for the audit criteria.
+    is_hidden = Column(Boolean, nullable=False, default=False, index=True)
+    hidden_reason = Column(String(50), nullable=True)
+    hidden_at = Column(DateTime, nullable=True)
     aliases = relationship("IngredientAliasORM", back_populates="ingredient", cascade="all, delete-orphan")
     product_ingredients = relationship("ProductIngredientORM", back_populates="ingredient")
 

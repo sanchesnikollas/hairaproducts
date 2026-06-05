@@ -6,8 +6,8 @@
     "country": "Brasil",
     "priority": null,
     "catalog_entrypoints": [],
-    "status": "active",
-    "notes": "inci_on_site=não"
+    "status": "out_of_scope",
+    "notes": "Vitrine multi-marca em stilohair.com.br — apenas ~9% produtos são da marca 1Ka"
   },
   {
     "brand_name": "A-line",
@@ -36,8 +36,8 @@
     "country": "Brasil",
     "priority": null,
     "catalog_entrypoints": [],
-    "status": "active",
-    "notes": "inci_on_site=não"
+    "status": "out_of_scope",
+    "notes": "Multi-categoria — apenas ~16% são produtos capilares"
   },
   {
     "brand_name": "Acquaflora",
@@ -503,8 +503,8 @@
     "country": "Brasil",
     "priority": null,
     "catalog_entrypoints": [],
-    "status": "active",
-    "notes": null
+    "status": "out_of_scope",
+    "notes": "Acessórios (lenços, elásticos, grampos) — não é hair care"
   },
   {
     "brand_name": "Belofio Professional",
@@ -825,8 +825,8 @@
     "country": "Brasil",
     "priority": null,
     "catalog_entrypoints": [],
-    "status": "active",
-    "notes": null
+    "status": "out_of_scope",
+    "notes": "Vitrine multi-marca em requintehair.com.br — produtos extraídos são páginas de UI sem produtos reais"
   },
   {
     "brand_name": "Charming",
@@ -1746,8 +1746,8 @@
     "country": "Brasil",
     "priority": null,
     "catalog_entrypoints": [],
-    "status": "active",
-    "notes": null
+    "status": "out_of_scope",
+    "notes": "Catálogo dominado por multipacks/atacado — não-SKUs individuais"
   },
   {
     "brand_name": "Fox Professional",
@@ -2843,8 +2843,8 @@
     "country": "Brasil",
     "priority": null,
     "catalog_entrypoints": [],
-    "status": "active",
-    "notes": null
+    "status": "out_of_scope",
+    "notes": "Domínio redireciona para drjack.com.br — duplicado de dr-jack"
   },
   {
     "brand_name": "Mahair Cosmetics",
@@ -3689,8 +3689,8 @@
     "country": "Brasil",
     "priority": null,
     "catalog_entrypoints": [],
-    "status": "active",
-    "notes": null
+    "status": "out_of_scope",
+    "notes": "Eletrodomésticos (TVs, frigobares, cooktops) — não é cosmético capilar"
   },
   {
     "brand_name": "Philips Walita",
@@ -5519,7 +5519,7 @@
   {
     "brand_name": "Davines",
     "brand_slug": "davines",
-    "official_url_root": "",
+    "official_url_root": "https://www.davines.com/br/",
     "country": "Itália",
     "priority": null,
     "catalog_entrypoints": [],
@@ -5687,7 +5687,7 @@
   {
     "brand_name": "Floland",
     "brand_slug": "floland",
-    "official_url_root": "",
+    "official_url_root": "https://www.flolandbrasil.com.br/",
     "country": "Coreia do Sul",
     "priority": null,
     "catalog_entrypoints": [],
@@ -6830,7 +6830,7 @@
   {
     "brand_name": "Wella Professionals",
     "brand_slug": "wella-professionals",
-    "official_url_root": "",
+    "official_url_root": "https://www.wella.com/professional/pt-BR/",
     "country": "Alemanha",
     "priority": null,
     "catalog_entrypoints": [],

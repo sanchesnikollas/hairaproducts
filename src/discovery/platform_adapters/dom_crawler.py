@@ -7,7 +7,7 @@ from urllib.parse import urljoin, urlparse
 
 from src.core.models import DiscoveredURL
 from src.discovery.platform_adapters.base import BaseAdapter
-from src.discovery.url_classifier import classify_url, URLType
+from src.discovery.url_classifier import classify_url, normalize_discovery_url, URLType
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +35,9 @@ class DOMCrawlerAdapter(BaseAdapter):
             parsed = urlparse(full_url)
             host = parsed.hostname or ""
             if any(host == d or host.endswith(f".{d}") for d in allowed_domains):
-                clean_url = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
-                if parsed.query:
-                    clean_url += f"?{parsed.query}"
-                links.add(clean_url)
+                normalized = normalize_discovery_url(full_url)
+                if normalized:
+                    links.add(normalized)
         return list(links)
 
     def _extract_links_via_browser(self, url: str, allowed_domains: list[str]) -> list[str]:

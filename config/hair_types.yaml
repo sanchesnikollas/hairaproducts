@@ -1,0 +1,81 @@
+# Hair type vocabulary for classifier
+# Multi-valor: produtos podem indicar mais de um tipo (ex: ["cacheado", "danificado"])
+# Inferido via heurística (regex/keywords) em product_name + description + INCI
+
+# --- Curvatura ---
+liso:
+  display_name_pt: Liso
+  display_name_en: Straight
+  keywords_pt: ["liso", "lisos", "alisado", "alisamento", "anti-frizz para lisos"]
+  keywords_en: ["straight"]
+
+ondulado:
+  display_name_pt: Ondulado
+  display_name_en: Wavy
+  keywords_pt: ["ondulado", "ondas", "wavy", "ondas suaves"]
+  keywords_en: ["wavy", "waves"]
+
+cacheado:
+  display_name_pt: Cacheado
+  display_name_en: Curly
+  keywords_pt: ["cachos", "cacheado", "cacheados", "encaracolado", "definição de cachos", "curl"]
+  keywords_en: ["curly", "curls"]
+
+crespo:
+  display_name_pt: Crespo
+  display_name_en: Coily / Kinky
+  keywords_pt: ["crespo", "crespos", "afro", "kinky", "afro hair", "cabelo afro"]
+  keywords_en: ["coily", "kinky", "afro"]
+
+# --- Condição ---
+oleoso:
+  display_name_pt: Oleoso
+  keywords_pt: ["oleoso", "oleosos", "controle de oleosidade", "anti-oleosidade", "anti-resíduo", "antioleosidade"]
+  keywords_en: ["oily", "greasy"]
+
+seco:
+  display_name_pt: Seco
+  keywords_pt: ["seco", "secos", "ressecado", "hidratação intensa", "muito seco", "extra seco"]
+  keywords_en: ["dry", "dehydrated"]
+
+misto:
+  display_name_pt: Misto
+  keywords_pt: ["misto", "mistos", "raiz oleosa pontas secas"]
+  keywords_en: ["combination"]
+
+normal:
+  display_name_pt: Normal
+  keywords_pt: ["normal", "normais", "todos os tipos", "uso diário"]
+  keywords_en: ["normal", "all hair types"]
+
+# --- Histórico químico ---
+com_quimica:
+  display_name_pt: Com química
+  keywords_pt: ["químico", "química", "tingido", "descolorido", "platinado", "com química", "alisado quimicamente"]
+  keywords_en: ["chemically treated", "color-treated", "bleached"]
+
+tingido:
+  display_name_pt: Tingido
+  keywords_pt: ["tingido", "tinturado", "tingido", "coloração", "cabelo colorido", "color"]
+  keywords_en: ["color-treated", "dyed", "colored hair"]
+
+# --- Saúde do fio ---
+danificado:
+  display_name_pt: Danificado
+  keywords_pt: ["danificado", "estragado", "extremamente danificado", "muito danificado"]
+  keywords_en: ["damaged"]
+
+sensibilizado:
+  display_name_pt: Sensibilizado
+  keywords_pt: ["sensibilizado", "fragilizado", "frágil", "reconstrução", "sos"]
+  keywords_en: ["sensitized", "fragile"]
+
+fino:
+  display_name_pt: Fino
+  keywords_pt: ["fino", "finos", "ralo", "sem volume"]
+  keywords_en: ["fine hair", "thin"]
+
+grosso:
+  display_name_pt: Grosso
+  keywords_pt: ["grosso", "grossos", "espesso", "muito volume"]
+  keywords_en: ["thick", "coarse"]

@@ -63,13 +63,31 @@ export interface DataQuality {
   pct: number;
 }
 
-export async function opsListProducts(params?: { brand?: string; status_editorial?: string; search?: string; page?: number }): Promise<{
+export interface InciSummaryBrand {
+  brand_slug: string;
+  total: number;
+  pending: number;
+  verified: number;
+  pct: number;
+}
+
+export async function opsGetInciSummary(): Promise<{
+  brands: InciSummaryBrand[];
+  total_pending: number;
+}> {
+  const res = await authFetch(`${BASE}/ops/inci-summary`);
+  return res.json();
+}
+
+export async function opsListProducts(params?: { brand?: string; status_editorial?: string; search?: string; page?: number; verification_status?: string; per_page?: number; gap?: string }): Promise<{
   items: {
     id: string; product_name: string; brand_slug: string;
     verification_status: string; status_operacional: string | null;
     status_editorial: string | null; status_publicacao: string | null;
     confidence: number; assigned_to: string | null;
     data_quality?: DataQuality;
+    image_url_main?: string;
+    product_category?: string;
   }[];
   total: number; page: number; per_page: number;
 }> {
@@ -78,6 +96,9 @@ export async function opsListProducts(params?: { brand?: string; status_editoria
   if (params?.status_editorial) qs.set("status_editorial", params.status_editorial);
   if (params?.search) qs.set("search", params.search);
   if (params?.page) qs.set("page", String(params.page));
+  if (params?.verification_status) qs.set("verification_status", params.verification_status);
+  if (params?.per_page) qs.set("per_page", String(params.per_page));
+  if (params?.gap) qs.set("gap", params.gap);
   const res = await authFetch(`${BASE}/ops/products?${qs}`);
   return res.json();
 }
@@ -163,4 +184,152 @@ export async function opsUpdateIngredient(id: string, data: Record<string, unkno
 export async function getIngredientGaps(): Promise<IngredientGaps> {
   const res = await authFetch(`${BASE}/ops/ingredients/gaps`);
   return res.json();
+}
+
+// ── Knowledge base (Doutoras' proprietary content) ──
+export interface KnowledgeChunkSummary {
+  source: string;
+  char_count: number;
+  token_estimate: number;
+  updated_at: string | null;
+}
+export interface KnowledgeList {
+  chunks: KnowledgeChunkSummary[];
+  total_sources: number;
+  total_chars: number;
+  total_tokens_estimate: number;
+}
+
+export async function listKnowledge(): Promise<KnowledgeList> {
+  return (await authFetch(`${BASE}/admin/knowledge`)).json();
+}
+
+export async function readKnowledge(source: string): Promise<KnowledgeChunkSummary & { content: string }> {
+  return (await authFetch(`${BASE}/admin/knowledge/${encodeURIComponent(source)}`)).json();
+}
+
+export async function uploadKnowledge(file: File): Promise<{ action: 'created' | 'updated' } & KnowledgeChunkSummary> {
+  const form = new FormData();
+  form.append('file', file);
+  // can't use authFetch because it forces JSON content-type
+  const token = localStorage.getItem('haira_token');
+  const res = await fetch(`${BASE}/admin/knowledge/upload`, {
+    method: 'POST', body: form,
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || `Upload failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function deleteKnowledge(source: string): Promise<{ deleted: string }> {
+  return (await authFetch(`${BASE}/admin/knowledge/${encodeURIComponent(source)}`, { method: 'DELETE' })).json();
+}
+
+// Moon personality config (DB-backed, editável via UI) ────────────────────────
+
+export interface MoonConfigItem {
+  key: string;
+  value: string;
+  description: string | null;
+  updated_at: string | null;
+  updated_by: string | null;
+  char_count: number;
+  token_estimate: number;
+}
+
+export interface MoonConfigList {
+  config: MoonConfigItem[];
+  total_keys: number;
+}
+
+export async function listMoonConfig(): Promise<MoonConfigList> {
+  return (await authFetch(`${BASE}/admin/moon/config`)).json();
+}
+
+export async function getMoonConfigKey(key: string): Promise<MoonConfigItem> {
+  return (await authFetch(`${BASE}/admin/moon/config/${encodeURIComponent(key)}`)).json();
+}
+
+export async function updateMoonConfigKey(key: string, value: string): Promise<MoonConfigItem> {
+  return (await authFetch(`${BASE}/admin/moon/config/${encodeURIComponent(key)}`, {
+    method: 'PUT', body: JSON.stringify({ value }),
+  })).json();
+}
+
+export async function resetMoonConfigKey(key: string): Promise<MoonConfigItem> {
+  return (await authFetch(`${BASE}/admin/moon/config/${encodeURIComponent(key)}/reset`, {
+    method: 'POST',
+  })).json();
+}
+
+// Moon metrics (admin) — wraps existing /moon/feedback/summary ─────────────────
+
+export interface MoonFeedbackSummary {
+  total: number;
+  up: number;
+  down: number;
+  useful_pct: number | null;
+  recent_downvotes: Array<{
+    feedback_id: string;
+    user_message: string | null;
+    message_content: string;
+    comment: string | null;
+    profile: Record<string, unknown> | null;
+    created_at: string;
+  }>;
+}
+
+export async function getMoonFeedbackSummary(): Promise<MoonFeedbackSummary> {
+  return (await authFetch(`${BASE}/moon/feedback/summary`)).json();
+}
+
+// Brand registry CRUD (admin) ─────────────────────────────────────────────────
+
+export interface BrandRegistryItem {
+  brand_slug: string;
+  brand_name: string;
+  official_url_root: string | null;
+  country: string | null;
+  priority: number | null;
+  status: string;
+  platform: string | null;
+  notes: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface BrandCreatePayload {
+  brand_name: string;
+  brand_slug?: string;
+  official_url_root?: string;
+  country?: 'Brasil' | 'Internacional' | 'Outros';
+  priority?: number;
+  status?: 'active' | 'blocked' | 'blocked_maintenance' | 'out_of_scope';
+  platform?: string;
+  notes?: string;
+}
+
+export type BrandUpdatePayload = Partial<BrandCreatePayload>;
+
+export async function listBrandRegistry(): Promise<{ brands: BrandRegistryItem[]; total: number }> {
+  return (await authFetch(`${BASE}/admin/brands/registry`)).json();
+}
+
+export async function createBrand(data: BrandCreatePayload): Promise<BrandRegistryItem> {
+  return (await authFetch(`${BASE}/admin/brands/registry`, {
+    method: 'POST', body: JSON.stringify(data),
+  })).json();
+}
+
+export async function updateBrand(slug: string, data: BrandUpdatePayload): Promise<BrandRegistryItem> {
+  return (await authFetch(`${BASE}/admin/brands/registry/${encodeURIComponent(slug)}`, {
+    method: 'PATCH', body: JSON.stringify(data),
+  })).json();
+}
+
+export async function deleteBrand(slug: string): Promise<void> {
+  await authFetch(`${BASE}/admin/brands/registry/${encodeURIComponent(slug)}`, { method: 'DELETE' });
 }

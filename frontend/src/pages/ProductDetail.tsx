@@ -88,11 +88,11 @@ export default function ProductDetail() {
       {/* Breadcrumb */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
         <div className="flex items-center gap-2 text-sm text-ink-muted flex-wrap">
-          <Link to="/" className="hover:text-ink transition-colors">Home</Link>
+          <Link to="/ops" className="hover:text-ink transition-colors">Home</Link>
           <span>/</span>
-          <Link to="/brands" className="hover:text-ink transition-colors">Brands</Link>
+          <Link to="/ops/brands" className="hover:text-ink transition-colors">Marcas</Link>
           <span>/</span>
-          <Link to={`/brands/${slug}`} className="hover:text-ink transition-colors">
+          <Link to={`/ops/brands/${slug}`} className="hover:text-ink transition-colors">
             {formatBrandName(slug!)}
           </Link>
           <span>/</span>
@@ -146,7 +146,7 @@ export default function ProductDetail() {
             </h1>
             <div className="flex items-center gap-3 mt-3 flex-wrap">
               <Link
-                to={`/brands/${slug}`}
+                to={`/ops/brands/${slug}`}
                 className="text-sm text-champagne-dark hover:underline font-medium"
               >
                 {formatBrandName(slug!)}

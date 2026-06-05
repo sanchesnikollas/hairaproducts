@@ -1,0 +1,72 @@
+brand_slug: natuhair
+brand_name: NatuHair
+platform: loja_integrada
+domain: lojanatuhair.com.br
+allowed_domains:
+- lojanatuhair.com.br
+- www.lojanatuhair.com.br
+entrypoints:
+- https://www.lojanatuhair.com.br/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.lojanatuhair.com.br/sitemap.xml
+  product_url_pattern: ^https?://(?:www\.)?lojanatuhair\.com\.br/(?!pagina/|carrinho|sitemap|lancamentos$|produtos$|linhas$|categoria|marca/|sobre|contato|finalizadores$|transformacao$)[\w-]+$
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: false
+  delay_seconds: 2
+  name_selectors:
+  - h1.produto-nome
+  - h1.product-name
+  - h1
+  image_selectors:
+  - .produto-imagem img
+  - .imagem-produto img
+  - .product-image img
+  price_selectors:
+  - .produto-preco-por
+  - .preco-por
+  - .product-price
+  - .price
+  inci_selectors:
+  - .produto-descricao
+  - .descricao-produto
+  - .product-description
+  section_label_map:
+    description:
+      labels:
+      - descrição
+      - detalhes
+      - sobre o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - aplicação
+    composition:
+      labels:
+      - composição
+      - fórmula
+      - ativos
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - inci
+    benefits:
+      labels:
+      - benefícios
+      - resultado
+  use_llm_fallback: false
+notes:
+  auto_generated: true
+  platform_detail: loja_integrada
+  inci_available: unknown
+  inci_note: Auto-generated blueprint; review after first scrape.
+  triage_tier: tier_2_check
+version: 1

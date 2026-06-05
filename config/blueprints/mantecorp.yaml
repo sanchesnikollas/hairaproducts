@@ -1,0 +1,70 @@
+brand_slug: mantecorp
+brand_name: Mantecorp
+platform: vtex
+domain: mantecorpskincare.com.br
+allowed_domains:
+- mantecorpskincare.com.br
+- www.mantecorpskincare.com.br
+entrypoints:
+- https://www.mantecorpskincare.com.br/mantecorp---cabelos?productclusterids=184&fuzzy=0&operator=and&facets=productclusterids%2Cfuzzy%2Coperator&sort=discount_desc&page=0
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.mantecorpskincare.com.br/sitemap.xml
+  - https://www.mantecorpskincare.com.br/sitemap-1.xml
+  - https://www.mantecorpskincare.com.br/sitemap-product-1.xml
+  product_url_pattern: ^https?://(?:www\.)?mantecorpskincare\.com\.br/[\w-]+/p$
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: true
+  delay_seconds: 2
+  name_selectors:
+  - h1.vtex-store-components-3-x-productNameContainer
+  - h1.product-name
+  - h1
+  image_selectors:
+  - img.vtex-store-components-3-x-productImageTag
+  - .product-image img
+  price_selectors:
+  - span.vtex-product-price
+  - .vtex-product-price-1-x-sellingPrice
+  - .price
+  inci_selectors:
+  - .vtex-store-components-3-x-productDescriptionText
+  - .product-description
+  section_label_map:
+    description:
+      labels:
+      - descrição
+      - sobre
+      - detalhes
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - aplicação
+    composition:
+      labels:
+      - composição
+      - fórmula
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - inci
+    benefits:
+      labels:
+      - benefícios
+      - resultado
+  use_llm_fallback: false
+notes:
+  auto_generated: true
+  platform_detail: vtex
+  inci_available: unknown
+  inci_note: Auto-generated blueprint; review after first scrape.
+  triage_tier: tier_1_easy
+version: 1

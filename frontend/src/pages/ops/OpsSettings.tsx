@@ -26,7 +26,7 @@ export default function OpsSettings() {
       setShowForm(false);
       refetch();
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Erro ao criar usuario");
+      setFormError(err instanceof Error ? err.message : "Erro ao criar usuário");
     } finally {
       setCreating(false);
     }
@@ -35,19 +35,19 @@ export default function OpsSettings() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-ink">Configuracoes</h1>
+        <h1 className="text-xl font-semibold text-ink">Configurações</h1>
         <button
           onClick={() => setShowForm(!showForm)}
           className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white hover:opacity-90"
         >
-          {showForm ? "Cancelar" : "Novo Usuario"}
+          {showForm ? "Cancelar" : "Novo Usuário"}
         </button>
       </div>
 
       {/* Create user form */}
       {showForm && (
         <div className="rounded-xl border border-cream-dark bg-white p-6">
-          <h2 className="mb-4 text-sm font-semibold text-ink">Criar Usuario</h2>
+          <h2 className="mb-4 text-sm font-semibold text-ink">Criar Usuário</h2>
           <form onSubmit={handleCreate} className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -90,7 +90,7 @@ export default function OpsSettings() {
               type="submit" disabled={creating}
               className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
             >
-              {creating ? "Criando..." : "Criar Usuario"}
+              {creating ? "Criando..." : "Criar Usuário"}
             </button>
           </form>
         </div>
@@ -99,7 +99,7 @@ export default function OpsSettings() {
       {/* Users list */}
       <div className="rounded-xl border border-cream-dark bg-white">
         <div className="border-b border-cream-dark px-5 py-3">
-          <h2 className="text-sm font-semibold text-ink">Usuarios</h2>
+          <h2 className="text-sm font-semibold text-ink">Usuários</h2>
         </div>
         {loading ? (
           <p className="p-5 text-ink-muted">Carregando...</p>

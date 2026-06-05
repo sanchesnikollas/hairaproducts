@@ -97,6 +97,29 @@ def change_password(body: ChangePasswordRequest, user: dict = Depends(get_curren
     return {"status": "ok"}
 
 
+class ResetAdminRequest(BaseModel):
+    email: str
+    new_password: str
+    reset_key: str
+
+
+@router.post("/reset-admin")
+def reset_admin_password(body: ResetAdminRequest, session: Session = Depends(get_ops_session)):
+    """Emergency admin password reset. Requires ADMIN_RESET_KEY env var."""
+    import os
+    expected_key = os.getenv("ADMIN_RESET_KEY")
+    if not expected_key:
+        raise HTTPException(status_code=404, detail="Not found")
+    if body.reset_key != expected_key:
+        raise HTTPException(status_code=403, detail="Invalid reset key")
+    user = session.query(UserORM).filter(UserORM.email == body.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.password_hash = bcrypt.hashpw(body.new_password.encode(), bcrypt.gensalt()).decode()
+    session.commit()
+    return {"status": "ok", "message": f"Password reset for {body.email}"}
+
+
 @router.post("/logout")
 def logout(user: dict = Depends(get_current_user)):
     # JWT is stateless — logout is handled client-side by removing the token.

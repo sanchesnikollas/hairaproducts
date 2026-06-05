@@ -56,7 +56,8 @@ INCI_TAB_LABELS = [
     # Most specific labels first (longer matches take priority)
     "lista completa de ingredientes", "full ingredient list",
     "composição completa", "composição do produto",
-    "composição", "composicao",
+    "composition (inci)", "composição (inci)",
+    "composição", "composicao", "composition",
     "ingredientes", "ingredients", "inci",
 ]
 
@@ -231,6 +232,24 @@ def _extract_inci_by_tab_labels(soup) -> tuple[str | None, str | None]:
                         candidates.append((content, f"data_attr:{attr}:{label}", priority))
                     break
 
+    # Strategy 5: blind panel scan — for FAQ/tab/accordion panels, find any
+    # panel whose content looks like INCI. Useful for sites where tab nav
+    # labels (<label>, <button>) are decoupled from the content panels
+    # (e.g., Apice Cosmeticos uses .jump-faq-tab-panel--N divs).
+    panel_selectors = [
+        "[class*=tab-panel]",
+        "[class*=faq-panel]",
+        "[class*=accordion-panel]",
+        "[class*=accordion-content]",
+    ]
+    for sel in panel_selectors:
+        for panel in soup.select(sel):
+            content = panel.get_text(strip=True)
+            if _looks_like_inci(content):
+                # Lower priority than label-driven matches but better than nothing
+                priority = len(INCI_TAB_LABELS) + 1
+                candidates.append((content, f"panel_scan:{sel}", priority))
+
     if not candidates:
         return None, None
 
@@ -244,9 +263,15 @@ def extract_by_selectors(
     inci_selectors: list[str] | None = None,
     name_selectors: list[str] | None = None,
     image_selectors: list[str] | None = None,
+    price_selectors: list[str] | None = None,
+    description_selectors: list[str] | None = None,
 ) -> dict:
     soup = _get_soup(html)
-    result: dict = {"name": None, "inci_raw": None, "image": None, "inci_selector": None, "name_selector": None}
+    result: dict = {
+        "name": None, "inci_raw": None, "image": None,
+        "inci_selector": None, "name_selector": None,
+        "price": None, "currency": None, "description": None,
+    }
 
     if name_selectors:
         for sel in name_selectors:
@@ -281,6 +306,40 @@ def extract_by_selectors(
                     src = el.get("data-src")
                 if src:
                     result["image"] = src
+                    break
+
+    # Price extraction via selectors + regex
+    if price_selectors:
+        for sel in price_selectors:
+            els = soup.select(sel)
+            for el in els:
+                text = el.get_text(strip=True)
+                # Match Brazilian price format: R$ 1.234,56 or R$ 100,00
+                m = re.search(r"R\$\s*([\d.]+,\d{2})", text)
+                if m:
+                    raw = m.group(1).replace(".", "").replace(",", ".")
+                    try:
+                        result["price"] = float(raw)
+                        result["currency"] = "BRL"
+                    except ValueError:
+                        continue
+                    break
+            if result["price"] is not None:
+                break
+
+    # Description via selectors (use first selector that returns >= 30 chars)
+    if description_selectors:
+        for sel in description_selectors:
+            el = soup.select_one(sel)
+            if el:
+                # meta tag — read content attribute
+                if el.name == "meta":
+                    text = (el.get("content") or "").strip()
+                else:
+                    text = el.get_text(separator=" ", strip=True)
+                text = re.sub(r"\s+", " ", text)
+                if len(text) >= 30 and not text.lower().startswith(("benefícios", "como usar", "ingredientes")):
+                    result["description"] = text[:2000]
                     break
 
     # Fallback: extract image from Vue media-gallery :variants JSON
@@ -330,6 +389,53 @@ def _is_domain_name(text: str) -> bool:
     return bool(re.match(r'^(www\.)?[a-z0-9-]+\.[a-z]{2,}(\.[a-z]{2,})?$', text))
 
 
+def _unpack_porto_templates(html: str) -> str:
+    """Inject Porto WooCommerce theme's <script type="text/template"> content into the DOM.
+
+    The Porto theme (used by foxformen.com.br and other WooCommerce stores) renders
+    the product summary, description tabs, and additional info inside a JSON-encoded
+    HTML blob in a <script type="text/template"> tag. BeautifulSoup CSS selectors
+    don't see this content unless we parse the template and inject it into <body>.
+
+    Returns the original html unchanged if no Porto template is detected, so this
+    is safe to call on any page.
+    """
+    if "tab-description" not in html and "product-summary-wrap" not in html:
+        return html
+    try:
+        soup = _get_soup(html)
+    except Exception:
+        return html
+    injected = False
+    for s in list(soup.find_all("script", {"type": "text/template"})):
+        raw = (s.string or "").strip()
+        if not raw:
+            continue
+        if "tab-description" not in raw and "product-summary-wrap" not in raw:
+            continue
+        # Porto renders the template as a JSON-encoded HTML string
+        if raw.startswith('"'):
+            try:
+                decoded = json.loads(raw)
+            except (json.JSONDecodeError, ValueError):
+                try:
+                    decoded = raw[1:-1].encode().decode("unicode_escape", errors="replace")
+                except Exception:
+                    continue
+        else:
+            decoded = raw
+        try:
+            frag = _get_soup(decoded)
+        except Exception:
+            continue
+        body = soup.find("body") or soup
+        frag_root = frag.body if frag.body else frag
+        for child in list(frag_root.children):
+            body.append(child)
+        injected = True
+    return str(soup) if injected else html
+
+
 def extract_product_deterministic(
     html: str,
     url: str,
@@ -337,6 +443,8 @@ def extract_product_deterministic(
     name_selectors: list[str] | None = None,
     image_selectors: list[str] | None = None,
     section_label_map: dict | None = None,
+    price_selectors: list[str] | None = None,
+    description_selectors: list[str] | None = None,
 ) -> dict:
     evidence_list = []
     result = {
@@ -357,6 +465,9 @@ def extract_product_deterministic(
     if _is_waf_challenge_page(html):
         logger.warning(f"WAF challenge page detected for {url}, skipping extraction")
         return result
+
+    # Unpack Porto WooCommerce theme script templates (no-op on other sites)
+    html = _unpack_porto_templates(html)
 
     # Try JSON-LD first
     jsonld = extract_jsonld(html)
@@ -481,12 +592,40 @@ def extract_product_deterministic(
         "[data-tab='ingredientes']",
     ]
 
+    # Description from section_classifier may be junk header text ("Benefícios", "Como usar", "Ingredientes").
+    # When blueprint provides explicit description_selectors, we re-run them to override junk.
+    _current_desc = result["description"] or ""
+    _is_junk_desc = _current_desc.strip().lower() in ("benefícios", "beneficios", "como usar", "ingredientes", "ciência", "ciencia", "fragrância", "fragrancia")
+    _force_desc = bool(description_selectors) and (not _current_desc or _is_junk_desc)
+
     sel_result = extract_by_selectors(
         html,
         inci_selectors=default_inci_selectors,
         name_selectors=default_name_selectors if not result["product_name"] else None,
         image_selectors=(image_selectors or [".product-image", "img.product-img"]) if not result["image_url_main"] else None,
+        price_selectors=price_selectors if not result["price"] else None,
+        description_selectors=description_selectors if _force_desc else None,
     )
+
+    # If we re-ran description selectors and got valid content, override
+    if _force_desc and sel_result.get("description"):
+        result["description"] = sel_result["description"]
+
+    # Apply price/description from selector pass
+    if not result["price"] and sel_result.get("price") is not None:
+        result["price"] = sel_result["price"]
+        result["currency"] = sel_result.get("currency") or "BRL"
+        evidence_list.append(create_evidence(
+            "price", url, "price_selectors",
+            f"R$ {sel_result['price']}", ExtractionMethod.HTML_SELECTOR,
+        ))
+
+    if not result["description"] and sel_result.get("description"):
+        result["description"] = sanitize_text(sel_result["description"])
+        evidence_list.append(create_evidence(
+            "description", url, "description_selectors",
+            sel_result["description"][:300], ExtractionMethod.HTML_SELECTOR,
+        ))
 
     if not result["product_name"] and sel_result["name"]:
         result["product_name"] = sanitize_text(sel_result["name"])

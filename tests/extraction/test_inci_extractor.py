@@ -45,6 +45,22 @@ class TestNewlineSeparator:
         assert result.valid
         assert len(result.cleaned) >= 5
 
+    def test_bullet_with_wrap_newlines(self):
+        """Real Kerastase case: bullet-separated list with newlines wrapping
+        a single ingredient name across two lines (e.g. 'Cetearyl\\nAlcohol'
+        is ONE ingredient, not two)."""
+        raw = (
+            "Aqua / Water•Cetearyl\n"
+            "                Alcohol•Amodimethicone•Hydroxypropyl Starch Phosphate\n"
+            "                Behentrimonium Chloride•Phenoxyethanol"
+        )
+        result = extract_and_validate_inci(raw, has_section_context=True)
+        assert result.valid
+        # Cetearyl Alcohol must remain a single ingredient
+        joined = " | ".join(result.cleaned).lower()
+        assert "cetearyl alcohol" in joined
+        assert len(result.cleaned) >= 5
+
 
 class TestBilingualParenthetical:
     def test_bilingual_parenthetical_stripped(self):

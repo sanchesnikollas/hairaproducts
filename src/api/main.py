@@ -21,7 +21,12 @@ from src.api.routes.auth import router as auth_router
 from src.api.routes.ops import router as ops_router
 from src.api.routes.ops_ingredients import router as ops_ingredients_router
 from src.api.routes.admin_migrate import router as admin_migrate_router
+from src.api.routes.admin_knowledge import router as admin_knowledge_router
+from src.api.routes.admin_apify import router as admin_apify_router
+from src.api.routes.admin_brands import router as admin_brands_router
+from src.api.routes.admin_moon import router as admin_moon_router
 from src.api.routes.admin_scrape import router as admin_scrape_router
+from src.api.routes.moon import router as moon_router
 
 logger = logging.getLogger("haira.api")
 
@@ -34,13 +39,40 @@ _request_log: dict[str, collections.deque] = {}
 
 app = FastAPI(title="HAIRA v2", version="2.0.0", description="Hair Product Intelligence Platform API")
 
+# Origin whitelisting — em prod, set ALLOWED_ORIGINS=https://haira-app-production-deb8.up.railway.app
+# (vírgulas pra múltiplos). Default no Railway hoje cobre o domínio público + dev local.
+_DEFAULT_ORIGINS = (
+    "https://haira-app-production-deb8.up.railway.app,"
+    "http://localhost:5173,"
+    "http://localhost:3000"
+)
+_ALLOWED_ORIGINS = [
+    o.strip() for o in os.environ.get("ALLOWED_ORIGINS", _DEFAULT_ORIGINS).split(",") if o.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
 )
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    """Headers HTTP de segurança aplicados em toda resposta.
+
+    Não inclui CSP estrito porque o frontend serve assets variáveis (Vite +
+    imagens externas dos catálogos). HSTS, frame-deny e nosniff são triviais
+    e cobrem os ataques mais comuns.
+    """
+    response = await call_next(request)
+    response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    return response
 
 
 @app.middleware("http")
@@ -86,7 +118,12 @@ app.include_router(auth_router, prefix="/api")
 app.include_router(ops_router, prefix="/api")
 app.include_router(ops_ingredients_router, prefix="/api")
 app.include_router(admin_migrate_router, prefix="/api")  # temporary migration
+app.include_router(admin_knowledge_router, prefix="/api")
+app.include_router(admin_apify_router, prefix="/api")
+app.include_router(admin_brands_router, prefix="/api")  # central counter sync
+app.include_router(admin_moon_router, prefix="/api")    # Moon personality editor
 app.include_router(admin_scrape_router, prefix="/api")  # remote scrape trigger
+app.include_router(moon_router, prefix="/api")  # Moon AI ingredient analysis
 
 
 @app.on_event("startup")

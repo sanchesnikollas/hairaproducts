@@ -64,7 +64,8 @@ INCI_ANCHOR_INGREDIENTS = {
 }
 
 # Heading-like elements to search for section labels
-HEADING_TAGS = ["h2", "h3", "h4", "button", "strong", "b", "span"]
+# label: Shopify FAQ-tabs (e.g., Apice Cosmeticos uses <label class="jump-faq-tab-label">)
+HEADING_TAGS = ["h2", "h3", "h4", "button", "strong", "b", "span", "label"]
 
 
 def _normalize_label(text: str) -> str:
@@ -230,6 +231,14 @@ def extract_sections_from_html(
             if not content:
                 break
 
+            # Tab-nav heuristic: when a <button> or <label> heading is followed
+            # by another tab in the same nav (e.g., button "Como usar" → button
+            # "Ingredientes", or label "Composição" → label "Modo de uso"), the
+            # sibling text is just another tab label or short noise.
+            # Real section content is always > 30 chars, so reject short matches.
+            if el.name in ("button", "label") and len(content) < 30:
+                break
+
             actual_field = taxonomy_field
 
             # For ingredients_inci, validate the content
@@ -388,6 +397,82 @@ def extract_sections_from_html(
                 result.ingredients_inci_raw = content
 
             break
+
+    # Strategy 4b: Tab-nav with indexed panels (e.g., Apice Cosmeticos)
+    # Structure: div.jump-faq-tab-nav > label[for=...] tabs, paired with
+    # div[class*="jump-faq-tab-panel--N"] panels by sequential index position.
+    # Used when <label> tab-nav heuristic rejects tabs because the next sibling
+    # is another tab label (content < 30 chars), but actual content is in a
+    # positionally-indexed panel.
+    for nav in soup.find_all(class_=re.compile(r"tab.?nav|faq.?nav|faq-tab-nav", re.IGNORECASE)):
+        nav_labels = nav.find_all("label")
+        if not nav_labels:
+            continue
+        # Find all indexed panels: class containing "tab-panel--N" or "faq-tab-panel--N"
+        # Use parent container's scope if possible, else entire soup
+        container = nav.parent or soup
+        indexed_panels: dict[int, str] = {}
+        for panel in container.find_all(class_=re.compile(r"(?:tab|faq)[_-](?:tab[_-])?panel[_-]{1,2}(\d+)", re.IGNORECASE)):
+            classes = " ".join(panel.get("class", []))
+            m = re.search(r"panel[_-]{1,2}(\d+)", classes, re.IGNORECASE)
+            if m:
+                idx = int(m.group(1))
+                indexed_panels[idx] = panel.get_text(strip=True)
+
+        if not indexed_panels:
+            continue
+
+        for i, label_el in enumerate(nav_labels):
+            label_text = label_el.get_text(strip=True)
+            if not label_text:
+                continue
+            label_normalized = _normalize_label(label_text)
+
+            for norm_label, taxonomy_field, original_label, validators in label_lookup:
+                if not label_normalized.startswith(norm_label):
+                    continue
+
+                content = indexed_panels.get(i)
+                if not content or len(content) < 30:
+                    break
+
+                actual_field = taxonomy_field
+
+                if taxonomy_field == "ingredients_inci":
+                    if validate_inci_content(content):
+                        actual_field = "ingredients_inci"
+                    else:
+                        actual_field = "composition"
+
+                if taxonomy_field == "composition":
+                    if validate_inci_content(content):
+                        actual_field = "ingredients_inci"
+                    else:
+                        words = {w.lower().strip(",.;:") for w in content.split()}
+                        anchor_matches = words & INCI_ANCHOR_INGREDIENTS
+                        if len(anchor_matches) >= 3:
+                            actual_field = "ingredients_inci"
+
+                section = PageSection(
+                    label=norm_label,
+                    content=content,
+                    selector=f"tab-nav-panel-{i}:{label_text}",
+                    element_tag="div",
+                    taxonomy_field=actual_field,
+                    source_section_label=label_text,
+                )
+                result.sections.append(section)
+
+                if actual_field == "description" and result.description is None:
+                    result.description = content
+                elif actual_field == "care_usage" and result.care_usage is None:
+                    result.care_usage = content
+                elif actual_field == "composition" and result.composition is None:
+                    result.composition = content
+                elif actual_field == "ingredients_inci" and result.ingredients_inci_raw is None:
+                    result.ingredients_inci_raw = content
+
+                break
 
     # Strategy 4: FAQ / Q&A containers (e.g., Alva Shopify FAQ accordion)
     # Structure: container div > header div (with label) + content div (with text)

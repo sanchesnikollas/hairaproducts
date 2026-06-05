@@ -31,8 +31,34 @@ def _get_session():
             yield session
 
 
+@router.get("/brand-groups")
+def get_brand_groups():
+    """Return brand groupings from the Excel spreadsheet (Principais, Nacionais, Internacionais)."""
+    import json
+    from pathlib import Path
+    groups_path = Path("config/brand_groups.json")
+    if not groups_path.exists():
+        return {"groups": {}}
+    return {"groups": json.loads(groups_path.read_text())}
+
+
 @router.get("/brands")
 def list_brands(session: Session = Depends(_get_session)):
+    # Load brands.json scope status (used by both multi-DB and single-DB paths)
+    import json
+    from pathlib import Path
+    brand_scope: dict[str, str] = {}
+    brand_notes: dict[str, str] = {}
+    brands_json_path = Path("config/brands.json")
+    if brands_json_path.exists():
+        try:
+            for bj in json.loads(brands_json_path.read_text()):
+                brand_scope[bj["brand_slug"]] = bj.get("status", "active")
+                if bj.get("notes"):
+                    brand_notes[bj["brand_slug"]] = bj["notes"]
+        except Exception:
+            pass
+
     if is_multi_db():
         # Multi-DB mode: read brand list from central database
         db_router = get_router()
@@ -45,6 +71,8 @@ def list_brands(session: Session = Depends(_get_session)):
                 "inci_rate": b.inci_rate,
                 "platform": b.platform,
                 "is_active": b.is_active,
+                "scope": brand_scope.get(b.brand_slug, "active"),
+                "scope_notes": brand_notes.get(b.brand_slug),
                 "created_at": str(b.created_at) if b.created_at else None,
                 "updated_at": str(b.updated_at) if b.updated_at else None,
             }
@@ -55,11 +83,17 @@ def list_brands(session: Session = Depends(_get_session)):
     repo = ProductRepository(session)
     coverages = repo.get_all_brand_coverages()
 
+    # brand_scope/brand_notes already loaded above
+
     # Compute quality metrics per brand
     quality = _compute_brand_quality_metrics(session)
 
-    return [
-        {
+    # Build results from coverage records
+    coverage_slugs = set()
+    results = []
+    for c in coverages:
+        coverage_slugs.add(c.brand_slug)
+        results.append({
             "brand_slug": c.brand_slug,
             "discovered_total": c.discovered_total,
             "hair_total": c.hair_total,
@@ -69,11 +103,79 @@ def list_brands(session: Session = Depends(_get_session)):
             "catalog_only_total": c.catalog_only_total,
             "quarantined_total": c.quarantined_total,
             "status": c.status,
+            "scope": brand_scope.get(c.brand_slug, "active"),
+            "scope_notes": brand_notes.get(c.brand_slug),
             "last_run": str(c.last_run) if c.last_run else None,
             "quality": quality.get(c.brand_slug, {}),
-        }
-        for c in coverages
-    ]
+        })
+
+    # Add brands that exist in products but have no coverage record
+    from sqlalchemy import func, case
+    from src.storage.orm_models import ProductORM
+    product_brands = (
+        session.query(
+            ProductORM.brand_slug,
+            func.count(ProductORM.id).label("total"),
+            func.sum(case((ProductORM.verification_status == "verified_inci", 1), else_=0)).label("verified"),
+            func.sum(case((ProductORM.verification_status == "catalog_only", 1), else_=0)).label("catalog"),
+            func.sum(case((ProductORM.verification_status == "quarantined", 1), else_=0)).label("quarantined"),
+        )
+        .group_by(ProductORM.brand_slug)
+        .all()
+    )
+    for row in product_brands:
+        if row.brand_slug not in coverage_slugs:
+            total = row.total or 0
+            verified = row.verified or 0
+            rate = round(verified / total, 4) if total > 0 else 0.0
+            results.append({
+                "brand_slug": row.brand_slug,
+                "discovered_total": total,
+                "hair_total": 0,
+                "extracted_total": total,
+                "verified_inci_total": verified,
+                "verified_inci_rate": rate,
+                "catalog_only_total": row.catalog or 0,
+                "quarantined_total": row.quarantined or 0,
+                "status": "discovered",
+                "scope": brand_scope.get(row.brand_slug, "active"),
+                "scope_notes": brand_notes.get(row.brand_slug),
+                "last_run": None,
+                "quality": quality.get(row.brand_slug, {}),
+            })
+
+    # Add registered brands from brands.json — ONLY "marcas principais" (priority <= 1)
+    # or brands that have been actively configured (have blueprints)
+    import json
+    from pathlib import Path
+    known_slugs = {r["brand_slug"] for r in results}
+    brands_json = Path("config/brands.json")
+    if brands_json.exists():
+        try:
+            registered = json.loads(brands_json.read_text())
+            for b in registered:
+                slug = b.get("brand_slug", "")
+                priority = b.get("priority", 99)
+                if slug and slug not in known_slugs and priority is not None:
+                    results.append({
+                        "brand_slug": slug,
+                        "discovered_total": 0,
+                        "hair_total": 0,
+                        "extracted_total": 0,
+                        "verified_inci_total": 0,
+                        "verified_inci_rate": 0.0,
+                        "catalog_only_total": 0,
+                        "quarantined_total": 0,
+                        "status": b.get("status", "registered"),
+                        "scope": b.get("status", "active"),
+                        "scope_notes": b.get("notes"),
+                        "last_run": None,
+                        "quality": {},
+                    })
+        except Exception:
+            pass  # brands.json malformed, skip
+
+    return results
 
 
 def _compute_brand_quality_metrics(session: SASession) -> dict:
@@ -126,23 +228,54 @@ def get_brand_coverage(
 ):
     repo = ProductRepository(brand_session)
     cov = repo.get_brand_coverage(slug)
-    if not cov:
-        raise HTTPException(status_code=404, detail="Brand coverage not found")
+    if cov:
+        return {
+            "brand_slug": cov.brand_slug,
+            "discovered_total": cov.discovered_total,
+            "hair_total": cov.hair_total,
+            "kits_total": cov.kits_total,
+            "non_hair_total": cov.non_hair_total,
+            "extracted_total": cov.extracted_total,
+            "verified_inci_total": cov.verified_inci_total,
+            "verified_inci_rate": cov.verified_inci_rate,
+            "catalog_only_total": cov.catalog_only_total,
+            "quarantined_total": cov.quarantined_total,
+            "status": cov.status,
+            "last_run": str(cov.last_run) if cov.last_run else None,
+            "blueprint_version": cov.blueprint_version,
+            "coverage_report": cov.coverage_report,
+        }
+
+    # Fallback: compute coverage from products table
+    from sqlalchemy import func as sa_func, case as sa_case
+    row = brand_session.query(
+        sa_func.count(ProductORM.id).label("total"),
+        sa_func.sum(sa_case((ProductORM.verification_status == "verified_inci", 1), else_=0)).label("verified"),
+        sa_func.sum(sa_case((ProductORM.verification_status == "catalog_only", 1), else_=0)).label("catalog"),
+        sa_func.sum(sa_case((ProductORM.verification_status == "quarantined", 1), else_=0)).label("quarantined"),
+    ).filter(ProductORM.brand_slug == slug).first()
+
+    if not row or not row.total:
+        raise HTTPException(status_code=404, detail="Brand not found")
+
+    total = row.total or 0
+    verified = row.verified or 0
+    rate = round(verified / total, 4) if total > 0 else 0.0
     return {
-        "brand_slug": cov.brand_slug,
-        "discovered_total": cov.discovered_total,
-        "hair_total": cov.hair_total,
-        "kits_total": cov.kits_total,
-        "non_hair_total": cov.non_hair_total,
-        "extracted_total": cov.extracted_total,
-        "verified_inci_total": cov.verified_inci_total,
-        "verified_inci_rate": cov.verified_inci_rate,
-        "catalog_only_total": cov.catalog_only_total,
-        "quarantined_total": cov.quarantined_total,
-        "status": cov.status,
-        "last_run": str(cov.last_run) if cov.last_run else None,
-        "blueprint_version": cov.blueprint_version,
-        "coverage_report": cov.coverage_report,
+        "brand_slug": slug,
+        "discovered_total": total,
+        "hair_total": 0,
+        "kits_total": 0,
+        "non_hair_total": 0,
+        "extracted_total": total,
+        "verified_inci_total": verified,
+        "verified_inci_rate": rate,
+        "catalog_only_total": row.catalog or 0,
+        "quarantined_total": row.quarantined or 0,
+        "status": "discovered",
+        "last_run": None,
+        "blueprint_version": None,
+        "coverage_report": None,
     }
 
 

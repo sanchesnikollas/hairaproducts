@@ -115,6 +115,17 @@ seals:
       - "leaping bunny"
       - "peta certified"
 
+  peta_certified:
+    keywords:
+      - "peta"
+      - "peta-approved"
+      - "peta approved"
+      - "peta certified"
+      - "certificado peta"
+      - "approved by peta"
+      - "aprovado pela peta"
+      - "global beauty without bunnies"
+
   organic:
     keywords:
       - "organico"

@@ -139,3 +139,26 @@ Dados estao corretos?     -> data-quality-auditor
 UI quebrada?              -> frontend-reviewer
 Tudo pronto, subir?       -> deploy-operator
 ```
+
+## Documentacao no Jira (OBRIGATORIO)
+
+**Padrao operacional oficial:** [docs/cloudcode-jira-standard.md](docs/cloudcode-jira-standard.md).
+Toda atividade tecnica via CloudCode vira documentacao acionavel no Jira — nada existe so
+no codigo ou so na conversa.
+
+- **Site:** `sanchescreative.atlassian.net` (cloudId `715ed417-3bdb-4268-aca5-b49c04cbf59e`, projeto `HAIRA`)
+- **Epico-log:** [HAIRA-143](https://sanchescreative.atlassian.net/browse/HAIRA-143) ("Engenharia & Dados")
+- **Sprint ativa:** `customfield_10020` = id 966 · Start = `customfield_10015` · Due = `duedate`
+- **Backlog 0→100 (9 tarefas filhas):** HAIRA-144 cobertura loop · 145 Moon deploy · 146 INCI fixes ·
+  147 source-scrape · 148 cleanup non_hair+quarantined · 149 price+care_usage · 150 infra Postgres ·
+  151 aceite 100%+manutencao · 152 onboarding manual tier_2
+
+**Convencao (resumo — detalhe no doc):**
+1. Frente nova = **tarefa filha de HAIRA-143** com estrutura completa (Summary, Context, Problem,
+   Objective, Technical Scope, Acceptance Criteria, Implementation Plan, Risks, Dependencies,
+   QA Validation, Release Notes). Modelo: HAIRA-152.
+2. Wave/lote/fix executado = **comentario datado** na tarefa (metricas antes/depois + commit hash).
+3. Decisao/incidente = comentario (ex: branch master only, SQLite single-writer).
+4. Comentario solto do usuario → converter em ticket estruturado.
+5. Curto prazo entra na sprint ativa com datas; nunca deixar oculto no backlog.
+- MCP: `createJiraIssue`, `addCommentToJiraIssue`, `editJiraIssue`, `searchJiraIssuesUsingJql`.

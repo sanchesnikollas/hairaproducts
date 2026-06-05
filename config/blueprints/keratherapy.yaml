@@ -1,0 +1,77 @@
+brand_slug: keratherapy
+brand_name: Keratherapy
+platform: shopify
+domain: keratherapy.com
+allowed_domains:
+- keratherapy.com
+- www.keratherapy.com
+entrypoints:
+- https://keratherapy.com/
+discovery:
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://keratherapy.com/sitemap.xml
+  - https://keratherapy.com/sitemap_products_1.xml
+  product_url_pattern: ^https?://(?:www\.)?keratherapy\.com/products/[\w-]+$
+  max_pages: 500
+  pagination:
+    type: none
+    max_pages: 1
+extraction:
+  requires_js: false
+  headless: true
+  delay_seconds: 2
+  name_selectors:
+  - h1.product-title
+  - h1.product__title
+  - h1.product-meta__title
+  - h1
+  image_selectors:
+  - img[src*='cdn.shopify.com']
+  - .product-image img
+  - .product__media img
+  price_selectors:
+  - .product-price
+  - '[class*=''price'']'
+  - sale-price
+  - .price-item
+  inci_selectors:
+  - details.accordion .accordion__content .prose
+  - .product-description
+  section_label_map:
+    description:
+      labels:
+      - descrição
+      - detalhes
+      - sobre o produto
+      - o produto
+    care_usage:
+      labels:
+      - como usar
+      - modo de uso
+      - modo de usar
+      - aplicação
+    composition:
+      labels:
+      - composição
+      - fórmula
+      - principais ingredientes
+    ingredients_inci:
+      labels:
+      - ingredientes
+      - ingredients
+      - inci
+      - composição completa
+    benefits:
+      labels:
+      - benefícios
+      - resultado
+      - resultados esperados
+  use_llm_fallback: false
+notes:
+  auto_generated: true
+  platform_detail: shopify
+  inci_available: unknown
+  inci_note: Auto-generated blueprint; review after first scrape.
+  triage_tier: tier_1_easy
+version: 1

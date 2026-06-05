@@ -1,20 +1,31 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
+import { Plus } from 'lucide-react';
 import { getBrands } from '@/lib/api';
 import { useAPI } from '@/hooks/useAPI';
 import type { BrandCoverage } from '@/types/api';
 import ProgressBar from '@/components/ProgressBar';
 import StatusBadge from '@/components/StatusBadge';
 import LoadingState, { ErrorState, EmptyState } from '@/components/LoadingState';
+import BrandFormModal from '@/components/BrandFormModal';
 
 type SortField = 'brand_slug' | 'verified_inci_rate' | 'extracted_total' | 'discovered_total' | 'avg_confidence' | 'completeness';
 type SortDir = 'asc' | 'desc';
 
 function getCompleteness(b: BrandCoverage): number {
   const q = b.quality;
-  if (!q) return 0;
-  return Math.round((q.has_description_pct + q.has_image_pct + q.has_category_pct + q.has_labels_pct) / 4);
+  if (!q || !q.has_description_pct) return 0;
+  return Math.round(((q.has_description_pct || 0) + (q.has_image_pct || 0) + (q.has_category_pct || 0) + (q.has_labels_pct || 0)) / 4);
+}
+
+type BrandGroup = 'all' | 'principais' | 'nacionais' | 'internacionais' | 'com_dados' | 'fora_escopo';
+
+function slugify(name: string): string {
+  return name.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 export default function BrandsDashboard() {
@@ -22,12 +33,43 @@ export default function BrandsDashboard() {
   const [search, setSearch] = useState('');
   const [sortField, setSortField] = useState<SortField>('verified_inci_rate');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [activeGroup, setActiveGroup] = useState<BrandGroup>('com_dados');
+  const [brandGroups, setBrandGroups] = useState<Record<string, string[]>>({});
+  const [showCreate, setShowCreate] = useState(false);
+
+  // Fetch brand groups on mount
+  useState(() => {
+    fetch('/api/brand-groups').then(r => r.json()).then(d => {
+      if (d.groups) setBrandGroups(d.groups);
+    }).catch(() => {});
+  });
 
   const filtered = useMemo(() => {
     if (!brands) return [];
-    const result = brands.filter((b) =>
-      b.brand_slug.toLowerCase().includes(search.toLowerCase())
-    );
+
+    // Filter by group first
+    let groupSlugs: Set<string> | null = null;
+    if (activeGroup === 'principais' && brandGroups['Marcas Principais']) {
+      groupSlugs = new Set(brandGroups['Marcas Principais'].map(slugify));
+    } else if (activeGroup === 'nacionais' && brandGroups['Nacionais']) {
+      groupSlugs = new Set(brandGroups['Nacionais'].map(slugify));
+    } else if (activeGroup === 'internacionais' && brandGroups['Internacionais']) {
+      groupSlugs = new Set(brandGroups['Internacionais'].map(slugify));
+    } else if (activeGroup === 'com_dados') {
+      groupSlugs = null; // will filter below
+    }
+
+    const result = brands.filter((b) => {
+      if (!b.brand_slug.toLowerCase().includes(search.toLowerCase())) return false;
+      const isOutOfScope = b.scope === 'out_of_scope';
+      if (activeGroup === 'fora_escopo') return isOutOfScope;
+      // All other tabs hide out-of-scope brands
+      if (isOutOfScope) return false;
+      if (activeGroup === 'com_dados') return (b.extracted_total || 0) > 0;
+      if (activeGroup === 'all') return true;
+      if (groupSlugs) return groupSlugs.has(b.brand_slug);
+      return true;
+    });
     result.sort((a, b) => {
       let aVal: number | string;
       let bVal: number | string;
@@ -47,7 +89,7 @@ export default function BrandsDashboard() {
       return sortDir === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
     });
     return result;
-  }, [brands, search, sortField, sortDir]);
+  }, [brands, search, sortField, sortDir, activeGroup, brandGroups]);
 
   const stats = useMemo(() => {
     if (!brands || brands.length === 0) return null;
@@ -88,14 +130,30 @@ export default function BrandsDashboard() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
+        className="flex items-start justify-between gap-4"
       >
-        <h1 className="font-display text-4xl font-semibold tracking-tight text-ink">
-          Brand Coverage
-        </h1>
-        <p className="mt-2 text-sm text-ink-muted">
-          Monitoring INCI verification and data quality across all registered brands.
-        </p>
+        <div>
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-ink">
+            Brand Coverage
+          </h1>
+          <p className="mt-2 text-sm text-ink-muted">
+            Monitoring INCI verification and data quality across all registered brands.
+          </p>
+        </div>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+        >
+          <Plus size={16} /> Nova marca
+        </button>
       </motion.div>
+
+      {showCreate && (
+        <BrandFormModal
+          onClose={() => setShowCreate(false)}
+          onSaved={() => { setShowCreate(false); refetch(); }}
+        />
+      )}
 
       {/* Stats Cards */}
       {stats && (
@@ -117,6 +175,40 @@ export default function BrandsDashboard() {
           />
         </motion.div>
       )}
+
+      {/* Group Tabs */}
+      <div className="flex gap-1 border-b border-cream-dark">
+        {([
+          ['com_dados', 'Com Dados'],
+          ['principais', 'Marcas Principais'],
+          ['nacionais', 'Nacionais'],
+          ['internacionais', 'Internacionais'],
+          ['all', 'Todas'],
+          ['fora_escopo', 'Fora de Escopo'],
+        ] as [BrandGroup, string][]).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setActiveGroup(key)}
+            className={`px-4 py-2 text-sm transition-colors ${
+              activeGroup === key
+                ? 'border-b-2 border-ink font-medium text-ink'
+                : 'text-ink-muted hover:text-ink'
+            }`}
+          >
+            {label}
+            {brands && key === 'com_dados' && (
+              <span className="ml-1.5 text-[10px] text-ink-muted">
+                {brands.filter(b => (b.extracted_total || 0) > 0 && b.scope !== 'out_of_scope').length}
+              </span>
+            )}
+            {brands && key === 'fora_escopo' && (
+              <span className="ml-1.5 text-[10px] text-ink-muted">
+                {brands.filter(b => b.scope === 'out_of_scope').length}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
 
       {/* Search */}
       <motion.div
@@ -167,7 +259,7 @@ export default function BrandsDashboard() {
             </thead>
             <tbody>
               {filtered.map((brand, i) => (
-                <BrandRow key={brand.brand_slug} brand={brand} index={i} onClick={() => navigate(`/brands/${brand.brand_slug}`)} />
+                <BrandRow key={brand.brand_slug} brand={brand} index={i} onClick={() => navigate(`/ops/brands/${brand.brand_slug}`)} />
               ))}
             </tbody>
           </table>
