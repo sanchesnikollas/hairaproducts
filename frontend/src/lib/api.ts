@@ -239,6 +239,8 @@ export interface MoonChatResponse {
   hair_types: string[];
   analysis: MoonAnalysis | null;
   alternatives: { product_id: string; name: string; brand: string; score: number; interpretation: string }[];
+  kb_sources?: string[];
+  intent?: string;
 }
 
 export async function chatWithMoon(params: {

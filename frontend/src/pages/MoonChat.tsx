@@ -20,22 +20,173 @@ const SUGGESTED_PROMPTS: { label: string; prompt: string; emoji: string }[] = [
 ];
 
 // Minimal, XSS-safe formatter: **bold** + line breaks -> React nodes.
-function formatMessage(text: string) {
-  return text.split('\n').map((line, li) => (
-    <span key={li}>
-      {line.split(/(\*\*[^*]+\*\*)/g).map((part, pi) =>
-        part.startsWith('**') && part.endsWith('**')
-          ? <strong key={pi} className="font-semibold">{part.slice(2, -2)}</strong>
-          : <span key={pi}>{part}</span>
+/** Inline formatter: bold `**...**` + italic `*...*` (single asterisk, not bold). */
+function renderInline(line: string): React.ReactNode[] {
+  const tokens: React.ReactNode[] = [];
+  const re = /(\*\*[^*]+\*\*|\*[^*]+\*)/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let k = 0;
+  while ((m = re.exec(line))) {
+    if (m.index > last) tokens.push(<span key={`t${k++}`}>{line.slice(last, m.index)}</span>);
+    const tk = m[0];
+    if (tk.startsWith('**')) {
+      tokens.push(<strong key={`b${k++}`} className="font-semibold text-ink">{tk.slice(2, -2)}</strong>);
+    } else {
+      tokens.push(<em key={`i${k++}`} className="italic">{tk.slice(1, -1)}</em>);
+    }
+    last = m.index + tk.length;
+  }
+  if (last < line.length) tokens.push(<span key={`t${k++}`}>{line.slice(last)}</span>);
+  return tokens;
+}
+
+/** Mini-renderer markdown: headings (## ###), bullets (- ou •), separadores (---),
+ * parágrafos. Sem heavy deps. */
+function formatMessage(text: string): React.ReactNode {
+  const lines = text.split('\n');
+  const blocks: React.ReactNode[] = [];
+  let para: string[] = [];
+  let bullets: string[] = [];
+
+  const flushPara = () => {
+    if (para.length) {
+      blocks.push(
+        <p key={`p${blocks.length}`} className="leading-relaxed">
+          {para.map((l, i) => (
+            <span key={i}>
+              {renderInline(l)}
+              {i < para.length - 1 && <br />}
+            </span>
+          ))}
+        </p>,
+      );
+      para = [];
+    }
+  };
+  const flushBullets = () => {
+    if (bullets.length) {
+      blocks.push(
+        <ul key={`u${blocks.length}`} className="list-disc list-outside pl-5 space-y-1">
+          {bullets.map((b, i) => (
+            <li key={i} className="leading-relaxed">{renderInline(b)}</li>
+          ))}
+        </ul>,
+      );
+      bullets = [];
+    }
+  };
+
+  for (const raw of lines) {
+    const line = raw.replace(/\s+$/, '');
+    if (!line.trim()) { flushPara(); flushBullets(); continue; }
+    if (/^---+$/.test(line.trim())) {
+      flushPara(); flushBullets();
+      blocks.push(<hr key={`h${blocks.length}`} className="border-cream-dark/60 my-2" />);
+      continue;
+    }
+    const h3 = line.match(/^###\s+(.*)$/);
+    if (h3) {
+      flushPara(); flushBullets();
+      blocks.push(<h3 key={`h${blocks.length}`} className="font-display text-base font-semibold text-ink mt-1">{renderInline(h3[1])}</h3>);
+      continue;
+    }
+    const h2 = line.match(/^##\s+(.*)$/);
+    if (h2) {
+      flushPara(); flushBullets();
+      blocks.push(<h2 key={`h${blocks.length}`} className="font-display text-lg font-semibold text-ink mt-1">{renderInline(h2[1])}</h2>);
+      continue;
+    }
+    const bullet = line.match(/^\s*(?:[-•*])\s+(.*)$/);
+    if (bullet) { flushPara(); bullets.push(bullet[1]); continue; }
+    flushBullets();
+    para.push(line);
+  }
+  flushPara(); flushBullets();
+
+  return <div className="space-y-2">{blocks}</div>;
+}
+
+/** Enriched message: in addition to role+content, carries the reasoning
+ * metadata the chat endpoint returns (intent detectado, KB consultada,
+ * scoring, alternativas) pra mostrar no painel "Como cheguei". */
+interface ChatTurn extends MoonChatMessage {
+  intent?: string;
+  kb_sources?: string[];
+  alternatives?: MoonChatResponse['alternatives'];
+  analysis?: MoonChatResponse['analysis'];
+}
+
+const INTENT_LABEL: Record<string, string> = {
+  saude_couro: 'Saúde do couro',
+  analise_produto: 'Análise de produto',
+  recomendacao: 'Recomendação',
+  rotina_cuidado: 'Rotina / cronograma',
+  geral: 'Conversa geral',
+};
+
+function ReasoningPanel({ turn, profileSummary }: { turn: ChatTurn; profileSummary?: string }) {
+  const [open, setOpen] = useState(false);
+  const hasData = turn.intent || (turn.kb_sources && turn.kb_sources.length) || (turn.alternatives && turn.alternatives.length) || turn.analysis;
+  if (!hasData) return null;
+  return (
+    <div className="mt-2">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="text-[11px] text-ink-faint hover:text-ink underline-offset-2 hover:underline inline-flex items-center gap-1"
+      >
+        {open ? '▾' : '▸'} Como Moon chegou a essa resposta
+      </button>
+      {open && (
+        <div className="mt-1.5 rounded-lg bg-white/70 border border-cream-dark px-3 py-2 text-[11px] space-y-1.5">
+          {turn.intent && (
+            <div>
+              <span className="text-ink-faint">Intenção detectada:</span>{' '}
+              <span className="text-ink font-medium">{INTENT_LABEL[turn.intent] ?? turn.intent}</span>
+            </div>
+          )}
+          {profileSummary && (
+            <div>
+              <span className="text-ink-faint">Perfil considerado:</span>{' '}
+              <span className="text-ink">{profileSummary}</span>
+            </div>
+          )}
+          {turn.kb_sources && turn.kb_sources.length > 0 && (
+            <div>
+              <span className="text-ink-faint">Material consultado:</span>{' '}
+              <span className="text-ink">{turn.kb_sources.join(' · ')}</span>
+            </div>
+          )}
+          {turn.analysis && (
+            <div>
+              <span className="text-ink-faint">Análise INCI:</span>{' '}
+              <span className="text-ink">
+                score {(turn.analysis.overall_score ?? 0).toFixed(2)} —{' '}
+                {turn.analysis.interpretation ?? 'sem interpretação'}
+              </span>
+            </div>
+          )}
+          {turn.alternatives && turn.alternatives.length > 0 && (
+            <div>
+              <span className="text-ink-faint">Alternativas do catálogo:</span>
+              <ul className="mt-0.5 ml-3 list-disc space-y-0.5">
+                {turn.alternatives.slice(0, 3).map((a) => (
+                  <li key={a.product_id} className="text-ink">
+                    {a.name} <span className="text-ink-faint">({a.brand}, score {a.score.toFixed(2)})</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       )}
-      {li < text.split('\n').length - 1 && <br />}
-    </span>
-  ));
+    </div>
+  );
 }
 
 export default function MoonChat() {
   const { user } = useAuth();
-  const [messages, setMessages] = useState<MoonChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatTurn[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -121,20 +272,27 @@ export default function MoonChat() {
   async function send(text: string) {
     const content = text.trim();
     if (!content || loading) return;
-    const next: MoonChatMessage[] = [...messages, { role: 'user', content }];
+    const next: ChatTurn[] = [...messages, { role: 'user', content }];
     setMessages(next); setInput(''); setLoading(true); setError(null);
     try {
       // When the conversation already exists, the backend has the history —
       // send only the new turn to avoid duplicating it.
       const payloadMessages: MoonChatMessage[] = conversationId
         ? [{ role: 'user', content }]
-        : next;
+        : next.map((m) => ({ role: m.role, content: m.content }));
       const res = await chatWithMoon({
         messages: payloadMessages, user_id: user?.id,
         conversation_id: conversationId ?? undefined,
       });
       setConversationId(res.conversation_id);
-      setMessages([...next, { role: 'assistant', content: res.reply }]);
+      setMessages([...next, {
+        role: 'assistant',
+        content: res.reply,
+        intent: res.intent,
+        kb_sources: res.kb_sources,
+        alternatives: res.alternatives,
+        analysis: res.analysis,
+      }]);
       setLastAlternatives(res.alternatives ?? []);
       if (res.profile_summary) setSummary(res.profile_summary);
       refreshConversations(); // sidebar reflects the new last_message_at
@@ -260,6 +418,9 @@ export default function MoonChat() {
                   : 'bg-cream text-ink rounded-2xl rounded-tl-md'}`}>
                 {formatMessage(m.content)}
               </div>
+              {m.role === 'assistant' && (
+                <ReasoningPanel turn={m} profileSummary={summary} />
+              )}
               {m.role === 'assistant' && (
                 <div className="flex items-center gap-1.5 mt-1.5 pl-1">
                   {rated[i] ? (
