@@ -126,32 +126,120 @@ app.include_router(admin_scrape_router, prefix="/api")  # remote scrape trigger
 app.include_router(moon_router, prefix="/api")  # Moon AI ingredient analysis
 
 
+def _normalise_pg_url(url: str) -> str:
+    """Railway/Heroku usam `postgres://` — SQLAlchemy precisa `postgresql://`."""
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql://", 1)
+    return url
+
+
+def _make_engine(url: str, *, pool_size: int = 3, max_overflow: int = 2):
+    from sqlalchemy import create_engine
+    return create_engine(
+        url,
+        pool_size=pool_size,
+        max_overflow=max_overflow,
+        pool_pre_ping=True,
+        pool_recycle=300,
+    )
+
+
 @app.on_event("startup")
-def _init_multi_db() -> None:
-    """Initialise multi-database routing if CENTRAL_DATABASE_URL is set."""
+def _init_databases() -> None:
+    """Inicializa até 3 engines (core/catalog/audit) + DatabaseRouter legacy.
+
+    Cada engine só é criado se sua env específica estiver setada — o resto
+    cai em fallback chain via `dependencies.py:_resolve_default_engine()`,
+    que volta pro modo single-DB se nenhuma envvar nova existir.
+
+    Compatibilidade backward:
+    - Setar apenas `DATABASE_URL` → modo single-DB (legacy, é o estado atual prod).
+    - Setar `CENTRAL_DATABASE_URL` → multi-brand mode antigo (per-brand DB).
+    - Setar `CORE_DATABASE_URL` + `CATALOG_DATABASE_URL` + `AUDIT_DATABASE_URL`
+      → split 3-DB novo (objetivo da arquitetura).
+    """
+    from src.api.dependencies import (
+        init_router,
+        set_audit_engine,
+        set_catalog_engine,
+        set_core_engine,
+    )
+
+    enabled: list[str] = []
+
+    # ── haira_core ─────────────────────────────────────────────────────────
+    core_url = os.environ.get("CORE_DATABASE_URL", "").strip()
+    if core_url:
+        core_engine = _make_engine(_normalise_pg_url(core_url), pool_size=3, max_overflow=2)
+        set_core_engine(core_engine)
+        enabled.append("core")
+
+    # ── haira_catalog (pool maior, mais leitura) ───────────────────────────
+    catalog_url = os.environ.get("CATALOG_DATABASE_URL", "").strip()
+    if catalog_url:
+        catalog_engine = _make_engine(_normalise_pg_url(catalog_url), pool_size=5, max_overflow=5)
+        set_catalog_engine(catalog_engine)
+        enabled.append("catalog")
+
+    # ── haira_audit (pool menor, append-only) ──────────────────────────────
+    audit_url = os.environ.get("AUDIT_DATABASE_URL", "").strip()
+    if audit_url:
+        audit_engine = _make_engine(_normalise_pg_url(audit_url), pool_size=2, max_overflow=1)
+        set_audit_engine(audit_engine)
+        enabled.append("audit")
+
+    # ── legacy multi-brand (per-brand DBs via CENTRAL_DATABASE_URL) ───────
     central_url = os.environ.get("CENTRAL_DATABASE_URL", "").strip()
     if central_url:
         from sqlalchemy import create_engine
-        from src.api.dependencies import init_router
-
-        if central_url.startswith("postgres://"):
-            central_url = central_url.replace("postgres://", "postgresql://", 1)
         central_engine = create_engine(
-            central_url,
-            pool_size=3,
-            max_overflow=2,
-            pool_pre_ping=True,
-            pool_recycle=300,
+            _normalise_pg_url(central_url),
+            pool_size=3, max_overflow=2, pool_pre_ping=True, pool_recycle=300,
         )
         init_router(central_engine)
-        logger.info("Multi-database mode enabled (CENTRAL_DATABASE_URL set)")
+        enabled.append("central(legacy multi-brand)")
+
+    if enabled:
+        logger.info("DB mode: %s", " + ".join(enabled))
     else:
-        logger.info("Single-database mode (CENTRAL_DATABASE_URL not set)")
+        logger.info("DB mode: single-db (DATABASE_URL only)")
 
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/api/admin/dbs/status")
+def dbs_status():
+    """Reporta connectivity das 3+ DBs. Útil em smoke tests pós-cutover.
+
+    Retorna 200 mesmo se algumas estiverem em fallback — só sinaliza qual é
+    qual. `same_engine=True` em pares indica que ainda compartilham origem
+    (cutover não terminou).
+    """
+    from src.api.dependencies import _audit_engine, _catalog_engine, _core_engine, _resolve_default_engine
+    default = _resolve_default_engine()
+
+    def probe(label: str, engine):
+        e = engine if engine is not None else default
+        explicit = engine is not None
+        try:
+            with e.connect() as conn:
+                from sqlalchemy import text
+                ver = conn.execute(text("SELECT 1")).scalar()
+            return {"label": label, "explicit": explicit, "ok": True, "ping": ver, "engine_id": id(e)}
+        except Exception as exc:  # noqa: BLE001
+            return {"label": label, "explicit": explicit, "ok": False, "error": str(exc)[:120]}
+
+    return {
+        "engines": [
+            probe("core", _core_engine),
+            probe("catalog", _catalog_engine),
+            probe("audit", _audit_engine),
+            probe("default", default),
+        ],
+    }
 
 
 
