@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -126,6 +126,7 @@ def get_config_key(
 def update_config_key(
     key: str,
     body: UpdateMoonConfigBody,
+    request: Request,
     admin: dict = Depends(require_admin),
     session: Session = Depends(get_core_session),
 ) -> MoonConfigItem:
@@ -138,6 +139,7 @@ def update_config_key(
         )
 
     row = session.query(MoonConfigORM).filter(MoonConfigORM.key == key).first()
+    before_value = row.value if row else defaults[key]
     if row is None:
         row = MoonConfigORM(
             key=key,
@@ -154,6 +156,24 @@ def update_config_key(
     session.refresh(row)
 
     reset_moon_config_cache()
+
+    # Audit trail — só persiste o tamanho antes/depois pra não duplicar
+    # texto integral em audit (já está em moon_config).
+    try:
+        from src.core.audit import log_admin_action
+        log_admin_action(
+            actor_id=admin.get("sub", "?"),
+            actor_email=admin.get("email"),
+            action="moon_config.update",
+            target_type="moon_config",
+            target_id=key,
+            before={"len": len(before_value)},
+            after={"len": len(body.value)},
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+        )
+    except Exception:  # noqa: BLE001
+        pass
     logger.info(
         "moon_config[%s] updated by %s (%d chars)",
         key,

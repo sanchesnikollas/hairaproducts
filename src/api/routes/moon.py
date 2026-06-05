@@ -731,6 +731,21 @@ def chat(
     conv.last_message_at = datetime.now(timezone.utc)
     session.commit()
 
+    # Audit log — fire-and-forget. Falha aqui NÃO impacta a request.
+    try:
+        from src.core.audit import log_kb_retrieval
+        last_user_msg = next((m.content for m in reversed(body.messages) if m.role == "user"), "")
+        log_kb_retrieval(
+            user_id=effective_user_id,
+            conversation_id=conv.conversation_id,
+            query_text=last_user_msg,
+            intent=intent,
+            kb_sources=kb.sources or [],
+            chunk_count=len(kb.sources or []),
+        )
+    except Exception:  # noqa: BLE001
+        pass
+
     return {
         "reply": reply,
         "conversation_id": conv.conversation_id,

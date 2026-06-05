@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime, timezone
 import bcrypt
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from typing import Literal
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -31,19 +31,29 @@ class UpdateUserRequest(BaseModel):
 
 
 @router.post("/login")
-def login(body: LoginRequest, session: Session = Depends(get_core_session)):
+def login(body: LoginRequest, request: Request, session: Session = Depends(get_core_session)):
+    from src.core.audit import log_auth_event
+    ip = request.client.host if request.client else None
+    ua = request.headers.get("user-agent")
+
     user = session.query(UserORM).filter(UserORM.email == body.email, UserORM.is_active.is_(True)).first()
     if not user:
+        log_auth_event(event_type="login_fail", email=body.email, ip_address=ip,
+                       user_agent=ua, detail="unknown email or inactive")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     try:
         password_ok = bcrypt.checkpw(body.password.encode(), user.password_hash.encode())
     except (ValueError, TypeError):
         password_ok = False
     if not password_ok:
+        log_auth_event(event_type="login_fail", email=body.email, user_id=user.user_id,
+                       ip_address=ip, user_agent=ua, detail="bad password")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     user.last_login_at = datetime.now(timezone.utc)
     session.commit()
     token = create_access_token(user_id=user.user_id, role=user.role)
+    log_auth_event(event_type="login_ok", email=user.email, user_id=user.user_id,
+                   ip_address=ip, user_agent=ua)
     return {
         "token": token,
         "user": {"id": user.user_id, "name": user.name, "email": user.email, "role": user.role},
@@ -104,26 +114,35 @@ class ResetAdminRequest(BaseModel):
 
 
 @router.post("/reset-admin")
-def reset_admin_password(body: ResetAdminRequest, session: Session = Depends(get_core_session)):
+def reset_admin_password(body: ResetAdminRequest, request: Request, session: Session = Depends(get_core_session)):
     """Emergency admin password reset. Requires ADMIN_RESET_KEY env var."""
     import os
+    from src.core.audit import log_auth_event
+    ip = request.client.host if request.client else None
     expected_key = os.getenv("ADMIN_RESET_KEY")
     if not expected_key:
         raise HTTPException(status_code=404, detail="Not found")
     if body.reset_key != expected_key:
+        log_auth_event(event_type="admin_reset_fail", email=body.email, ip_address=ip,
+                       detail="bad reset key")
         raise HTTPException(status_code=403, detail="Invalid reset key")
     user = session.query(UserORM).filter(UserORM.email == body.email).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     user.password_hash = bcrypt.hashpw(body.new_password.encode(), bcrypt.gensalt()).decode()
     session.commit()
+    log_auth_event(event_type="admin_reset_ok", email=body.email, user_id=user.user_id,
+                   ip_address=ip)
     return {"status": "ok", "message": f"Password reset for {body.email}"}
 
 
 @router.post("/logout")
-def logout(user: dict = Depends(get_current_user)):
+def logout(request: Request, user: dict = Depends(get_current_user)):
     # JWT is stateless — logout is handled client-side by removing the token.
     # This endpoint exists for API completeness and future token blacklisting.
+    from src.core.audit import log_auth_event
+    ip = request.client.host if request.client else None
+    log_auth_event(event_type="logout", user_id=user.get("sub"), ip_address=ip)
     return {"status": "ok"}
 
 

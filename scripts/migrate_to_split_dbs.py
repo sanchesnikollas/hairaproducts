@@ -175,13 +175,24 @@ def _copy_table(source_conn, dest_conn, table: str, dry_run: bool, batch: int = 
     rows_read = 0
     rows_inserted = 0
 
+    def _adapt(row: tuple) -> tuple:
+        """psycopg2 não sabe adaptar dict/list pra columns JSONB —
+        envelopa em psycopg2.extras.Json."""
+        out = []
+        for val in row:
+            if isinstance(val, (dict, list)):
+                out.append(psycopg2.extras.Json(val))
+            else:
+                out.append(val)
+        return tuple(out)
+
     with source_conn.cursor(name=f"copy_{table}") as src_cur:
         src_cur.itersize = batch
         src_cur.execute(f'SELECT {quoted_cols} FROM "{table}"')
         with dest_conn.cursor() as dst_cur:
             buf: list[tuple] = []
             for row in src_cur:
-                buf.append(row)
+                buf.append(_adapt(row))
                 rows_read += 1
                 if len(buf) >= batch:
                     if not dry_run:
