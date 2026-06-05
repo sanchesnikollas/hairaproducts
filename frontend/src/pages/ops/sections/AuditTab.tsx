@@ -4,7 +4,7 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ShieldCheck, ShieldAlert, MessageCircle, UserCog, RefreshCw, AlertCircle,
+  ShieldCheck, MessageCircle, UserCog, RefreshCw, AlertCircle,
 } from 'lucide-react';
 import {
   getAuditSummary, listAuthEvents, listAdminActions, listKbRetrievals,
