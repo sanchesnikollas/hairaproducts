@@ -227,3 +227,61 @@ export async function uploadKnowledge(file: File): Promise<{ action: 'created' |
 export async function deleteKnowledge(source: string): Promise<{ deleted: string }> {
   return (await authFetch(`${BASE}/admin/knowledge/${encodeURIComponent(source)}`, { method: 'DELETE' })).json();
 }
+
+// Moon personality config (DB-backed, editável via UI) ────────────────────────
+
+export interface MoonConfigItem {
+  key: string;
+  value: string;
+  description: string | null;
+  updated_at: string | null;
+  updated_by: string | null;
+  char_count: number;
+  token_estimate: number;
+}
+
+export interface MoonConfigList {
+  config: MoonConfigItem[];
+  total_keys: number;
+}
+
+export async function listMoonConfig(): Promise<MoonConfigList> {
+  return (await authFetch(`${BASE}/admin/moon/config`)).json();
+}
+
+export async function getMoonConfigKey(key: string): Promise<MoonConfigItem> {
+  return (await authFetch(`${BASE}/admin/moon/config/${encodeURIComponent(key)}`)).json();
+}
+
+export async function updateMoonConfigKey(key: string, value: string): Promise<MoonConfigItem> {
+  return (await authFetch(`${BASE}/admin/moon/config/${encodeURIComponent(key)}`, {
+    method: 'PUT', body: JSON.stringify({ value }),
+  })).json();
+}
+
+export async function resetMoonConfigKey(key: string): Promise<MoonConfigItem> {
+  return (await authFetch(`${BASE}/admin/moon/config/${encodeURIComponent(key)}/reset`, {
+    method: 'POST',
+  })).json();
+}
+
+// Moon metrics (admin) — wraps existing /moon/feedback/summary ─────────────────
+
+export interface MoonFeedbackSummary {
+  total: number;
+  up: number;
+  down: number;
+  useful_pct: number | null;
+  recent_downvotes: Array<{
+    feedback_id: string;
+    user_message: string | null;
+    message_content: string;
+    comment: string | null;
+    profile: Record<string, unknown> | null;
+    created_at: string;
+  }>;
+}
+
+export async function getMoonFeedbackSummary(): Promise<MoonFeedbackSummary> {
+  return (await authFetch(`${BASE}/moon/feedback/summary`)).json();
+}
