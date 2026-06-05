@@ -25,7 +25,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from src.api.auth import require_admin
-from src.api.dependencies import get_ops_session
+from src.api.dependencies import get_catalog_session
 from src.core.models import (
     ProductExtraction, QAResult, QAStatus, Evidence, ExtractionMethod, GenderTarget,
 )
@@ -155,7 +155,7 @@ def status(admin: dict = Depends(require_admin)):
 @router.post("/ingest", response_model=IngestStats)
 def ingest(body: IngestRequest,
            admin: dict = Depends(require_admin),
-           session: Session = Depends(get_ops_session)):
+           session: Session = Depends(get_catalog_session)):
     """Ingest a batch of items directly (mock testing OR future webhook path)."""
     if not body.items:
         raise HTTPException(status_code=400, detail="No items provided")
@@ -165,7 +165,7 @@ def ingest(body: IngestRequest,
 @router.post("/run-and-ingest")
 def run_and_ingest(body: RunAndIngestRequest,
                    admin: dict = Depends(require_admin),
-                   session: Session = Depends(get_ops_session)):
+                   session: Session = Depends(get_catalog_session)):
     """Trigger an Apify actor, wait for completion, fetch dataset, ingest."""
     try:
         run = start_actor_run(body.actor_id, body.run_input)

@@ -6,7 +6,7 @@ from typing import Literal
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from src.api.auth import create_access_token, get_current_user, require_admin
-from src.api.dependencies import get_ops_session
+from src.api.dependencies import get_core_session
 from src.storage.ops_models import UserORM
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -31,7 +31,7 @@ class UpdateUserRequest(BaseModel):
 
 
 @router.post("/login")
-def login(body: LoginRequest, session: Session = Depends(get_ops_session)):
+def login(body: LoginRequest, session: Session = Depends(get_core_session)):
     user = session.query(UserORM).filter(UserORM.email == body.email, UserORM.is_active.is_(True)).first()
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -51,7 +51,7 @@ def login(body: LoginRequest, session: Session = Depends(get_ops_session)):
 
 
 @router.get("/me")
-def me(user: dict = Depends(get_current_user), session: Session = Depends(get_ops_session)):
+def me(user: dict = Depends(get_current_user), session: Session = Depends(get_core_session)):
     db_user = session.query(UserORM).filter(UserORM.user_id == user["sub"]).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -59,7 +59,7 @@ def me(user: dict = Depends(get_current_user), session: Session = Depends(get_op
 
 
 @router.post("/users", status_code=201)
-def create_user(body: CreateUserRequest, admin: dict = Depends(require_admin), session: Session = Depends(get_ops_session)):
+def create_user(body: CreateUserRequest, admin: dict = Depends(require_admin), session: Session = Depends(get_core_session)):
     existing = session.query(UserORM).filter(UserORM.email == body.email).first()
     if existing:
         raise HTTPException(status_code=409, detail="Email already registered")
@@ -72,7 +72,7 @@ def create_user(body: CreateUserRequest, admin: dict = Depends(require_admin), s
 
 
 @router.get("/users")
-def list_users(admin: dict = Depends(require_admin), session: Session = Depends(get_ops_session)):
+def list_users(admin: dict = Depends(require_admin), session: Session = Depends(get_core_session)):
     users = session.query(UserORM).order_by(UserORM.created_at).all()
     return [
         {"id": u.user_id, "name": u.name, "email": u.email, "role": u.role, "is_active": u.is_active}
@@ -86,7 +86,7 @@ class ChangePasswordRequest(BaseModel):
 
 
 @router.post("/change-password")
-def change_password(body: ChangePasswordRequest, user: dict = Depends(get_current_user), session: Session = Depends(get_ops_session)):
+def change_password(body: ChangePasswordRequest, user: dict = Depends(get_current_user), session: Session = Depends(get_core_session)):
     db_user = session.query(UserORM).filter(UserORM.user_id == user["sub"]).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -104,7 +104,7 @@ class ResetAdminRequest(BaseModel):
 
 
 @router.post("/reset-admin")
-def reset_admin_password(body: ResetAdminRequest, session: Session = Depends(get_ops_session)):
+def reset_admin_password(body: ResetAdminRequest, session: Session = Depends(get_core_session)):
     """Emergency admin password reset. Requires ADMIN_RESET_KEY env var."""
     import os
     expected_key = os.getenv("ADMIN_RESET_KEY")
@@ -128,7 +128,7 @@ def logout(user: dict = Depends(get_current_user)):
 
 
 @router.patch("/users/{user_id}")
-def update_user(user_id: str, body: UpdateUserRequest, admin: dict = Depends(require_admin), session: Session = Depends(get_ops_session)):
+def update_user(user_id: str, body: UpdateUserRequest, admin: dict = Depends(require_admin), session: Session = Depends(get_core_session)):
     user = session.query(UserORM).filter(UserORM.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

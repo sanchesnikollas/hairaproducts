@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from src.api.auth import require_admin
-from src.api.dependencies import get_ops_session
+from src.api.dependencies import get_core_session
 from src.core.moon_config import reset_moon_config_cache
 from src.core.moon_personality import CONFIG_DESCRIPTIONS, default_config
 from src.storage.moon_models import MoonConfigORM
@@ -77,7 +77,7 @@ def _serialize(row: MoonConfigORM | None, *, key: str, value: str, description: 
 @router.get("/config", response_model=MoonConfigListResponse)
 def list_config(
     admin: dict = Depends(require_admin),
-    session: Session = Depends(get_ops_session),
+    session: Session = Depends(get_core_session),
 ) -> MoonConfigListResponse:
     """Return every config key — merged DB overrides + defaults fallback."""
     rows = {r.key: r for r in session.query(MoonConfigORM).all()}
@@ -108,7 +108,7 @@ def list_config(
 def get_config_key(
     key: str,
     admin: dict = Depends(require_admin),
-    session: Session = Depends(get_ops_session),
+    session: Session = Depends(get_core_session),
 ) -> MoonConfigItem:
     row = session.query(MoonConfigORM).filter(MoonConfigORM.key == key).first()
     defaults = default_config()
@@ -127,7 +127,7 @@ def update_config_key(
     key: str,
     body: UpdateMoonConfigBody,
     admin: dict = Depends(require_admin),
-    session: Session = Depends(get_ops_session),
+    session: Session = Depends(get_core_session),
 ) -> MoonConfigItem:
     """Upsert. Rejeita chaves desconhecidas (segurança contra typos)."""
     defaults = default_config()
@@ -167,7 +167,7 @@ def update_config_key(
 def reset_config_key(
     key: str,
     admin: dict = Depends(require_admin),
-    session: Session = Depends(get_ops_session),
+    session: Session = Depends(get_core_session),
 ) -> MoonConfigItem:
     """Volta uma chave para o default do código (deleta override do DB)."""
     defaults = default_config()
@@ -196,7 +196,7 @@ def reset_config_key(
 @router.post("/config/reset-all", response_model=MoonConfigListResponse)
 def reset_all_config(
     admin: dict = Depends(require_admin),
-    session: Session = Depends(get_ops_session),
+    session: Session = Depends(get_core_session),
 ) -> MoonConfigListResponse:
     """Apaga todos os overrides — Moon volta a usar 100% defaults do código."""
     session.query(MoonConfigORM).delete()

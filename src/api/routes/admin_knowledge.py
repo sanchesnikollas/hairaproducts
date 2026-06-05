@@ -15,7 +15,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from src.api.auth import require_admin
-from src.api.dependencies import get_ops_session
+from src.api.dependencies import get_core_session
 from src.core.document_extraction import extract_text
 from src.core.kb_crypto import decrypt_content, encrypt_content, is_enabled as kb_crypto_enabled
 from src.core.knowledge_base import reset_kb_cache
@@ -35,7 +35,7 @@ def _chunk_summary(row: KnowledgeChunkORM) -> dict:
 
 @router.get("")
 def list_chunks(admin: dict = Depends(require_admin),
-                session: Session = Depends(get_ops_session)):
+                session: Session = Depends(get_core_session)):
     rows = session.query(KnowledgeChunkORM).order_by(KnowledgeChunkORM.source.asc()).all()
     total_chars = sum(r.char_count or 0 for r in rows)
     return {
@@ -49,7 +49,7 @@ def list_chunks(admin: dict = Depends(require_admin),
 @router.get("/{source}")
 def read_chunk(source: str,
                admin: dict = Depends(require_admin),
-               session: Session = Depends(get_ops_session)):
+               session: Session = Depends(get_core_session)):
     row = session.get(KnowledgeChunkORM, source)
     if not row:
         raise HTTPException(status_code=404, detail="Chunk not found")
@@ -59,7 +59,7 @@ def read_chunk(source: str,
 @router.post("/upload")
 async def upload_chunk(file: UploadFile = File(...),
                        admin: dict = Depends(require_admin),
-                       session: Session = Depends(get_ops_session)):
+                       session: Session = Depends(get_core_session)):
     """Receive a .docx or .pdf, extract + upsert by filename, invalidate cache."""
     if not file.filename:
         raise HTTPException(status_code=400, detail="Missing filename")
@@ -90,7 +90,7 @@ async def upload_chunk(file: UploadFile = File(...),
 @router.delete("/{source}")
 def delete_chunk(source: str,
                  admin: dict = Depends(require_admin),
-                 session: Session = Depends(get_ops_session)):
+                 session: Session = Depends(get_core_session)):
     row = session.get(KnowledgeChunkORM, source)
     if not row:
         raise HTTPException(status_code=404, detail="Chunk not found")
@@ -102,7 +102,7 @@ def delete_chunk(source: str,
 
 @router.post("/reingest")
 def reingest_from_disk(admin: dict = Depends(require_admin),
-                       session: Session = Depends(get_ops_session)):
+                       session: Session = Depends(get_core_session)):
     """Re-read every file in data/knowledge_base/ and upsert. Dev convenience —
     in prod the source folder is empty; use /upload instead."""
     import os

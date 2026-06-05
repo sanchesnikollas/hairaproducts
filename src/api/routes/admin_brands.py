@@ -23,7 +23,7 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
 from src.api.auth import require_admin
-from src.api.dependencies import get_ops_session, get_router, is_multi_db
+from src.api.dependencies import get_catalog_session, get_router, is_multi_db
 from src.storage.central_sync import (
     sync_all_brands,
     sync_all_coverage,
@@ -164,7 +164,7 @@ def _serialize_brand(row: BrandRegistryORM) -> dict:
 @router.get("/registry")
 def list_brand_registry(
     admin: dict = Depends(require_admin),
-    session: Session = Depends(get_ops_session),
+    session: Session = Depends(get_catalog_session),
 ):
     """Lista todas as marcas cadastradas (ordenadas por nome)."""
     rows = session.query(BrandRegistryORM).order_by(BrandRegistryORM.brand_name).all()
@@ -175,7 +175,7 @@ def list_brand_registry(
 def create_brand(
     body: BrandCreate,
     admin: dict = Depends(require_admin),
-    session: Session = Depends(get_ops_session),
+    session: Session = Depends(get_catalog_session),
 ):
     """Cria nova marca. Slug é gerado do nome se omitido."""
     slug = body.brand_slug or _slugify(body.brand_name)
@@ -210,7 +210,7 @@ def update_brand(
     brand_slug: str,
     body: BrandUpdate,
     admin: dict = Depends(require_admin),
-    session: Session = Depends(get_ops_session),
+    session: Session = Depends(get_catalog_session),
 ):
     """Edita campos da marca. Não muda o slug (use POST + DELETE pra renomear)."""
     row = session.query(BrandRegistryORM).filter(BrandRegistryORM.brand_slug == brand_slug).first()
@@ -231,7 +231,7 @@ def update_brand(
 def delete_brand(
     brand_slug: str,
     admin: dict = Depends(require_admin),
-    session: Session = Depends(get_ops_session),
+    session: Session = Depends(get_catalog_session),
 ):
     """Remove marca do registry. Bloqueia se houver produtos associados (anti-órfão)."""
     row = session.query(BrandRegistryORM).filter(BrandRegistryORM.brand_slug == brand_slug).first()

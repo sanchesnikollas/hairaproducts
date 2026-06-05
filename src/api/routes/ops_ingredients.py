@@ -5,7 +5,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from src.api.auth import require_admin
-from src.api.dependencies import get_ops_session
+from src.api.dependencies import get_catalog_session
 from src.storage.orm_models import IngredientORM, IngredientAliasORM, ProductIngredientORM
 from src.core.revision_service import create_revisions
 
@@ -27,7 +27,7 @@ class AliasCreate(BaseModel):
 @router.get("/gaps")
 def get_gaps(
     admin: dict = Depends(require_admin),
-    session: Session = Depends(get_ops_session),
+    session: Session = Depends(get_catalog_session),
 ):
     uncategorized = (
         session.query(IngredientORM)
@@ -67,7 +67,7 @@ def update_ingredient(
     ingredient_id: str,
     body: IngredientUpdate,
     admin: dict = Depends(require_admin),
-    session: Session = Depends(get_ops_session),
+    session: Session = Depends(get_catalog_session),
 ):
     ing = session.query(IngredientORM).filter(IngredientORM.id == ingredient_id).first()
     if not ing:
@@ -86,7 +86,7 @@ def add_alias(
     ingredient_id: str,
     body: AliasCreate,
     admin: dict = Depends(require_admin),
-    session: Session = Depends(get_ops_session),
+    session: Session = Depends(get_catalog_session),
 ):
     ing = session.query(IngredientORM).filter(IngredientORM.id == ingredient_id).first()
     if not ing:
@@ -106,7 +106,7 @@ def delete_alias(
     ingredient_id: str,
     alias_id: str,
     admin: dict = Depends(require_admin),
-    session: Session = Depends(get_ops_session),
+    session: Session = Depends(get_catalog_session),
 ):
     alias = session.query(IngredientAliasORM).filter(
         IngredientAliasORM.id == alias_id,
