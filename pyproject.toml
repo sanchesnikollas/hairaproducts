@@ -24,6 +24,7 @@ dependencies = [
     "curl_cffi>=0.7",
     "PyJWT>=2.8",
     "bcrypt>=4.0",
+    "cryptography>=42.0",  # AES-GCM em src/core/kb_crypto.py
     "python-docx>=1.1",
     "pypdf>=4.0",
 ]

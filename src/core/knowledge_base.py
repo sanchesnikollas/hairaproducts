@@ -53,10 +53,17 @@ def load_knowledge_base() -> KnowledgeBase:
         _CACHED = KnowledgeBase(system_block="", sources=[], char_count=0)
         return _CACHED
 
+    from src.core.kb_crypto import decrypt_content
+
     parts: list[str] = []
     sources: list[str] = []
     for r in rows:
-        text = (r.content or "").strip()
+        raw = r.content or ""
+        try:
+            text = decrypt_content(raw).strip()
+        except Exception as exc:  # noqa: BLE001
+            logger.error("kb decrypt falhou em %s: %s", r.source, exc)
+            continue
         if not text:
             continue
         sources.append(r.source)

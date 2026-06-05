@@ -3,8 +3,19 @@ import type { BrandCoverage, BrandSummary, GlobalStats, IngredientSummary, Pagin
 const BASE_URL = '/api';
 
 async function fetchJSON<T>(url: string, options?: RequestInit): Promise<T> {
+  // Anexa token JWT se presente (mesma chave usada por ops-api.authFetch).
+  // HAIRA-155: /moon/chat agora exige auth; outras rotas aceitam o token
+  // sem prejuízo (apenas enriquecem o request).
+  const token = typeof window !== 'undefined' ? localStorage.getItem('haira_token') : null;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options?.headers as Record<string, string> ?? {}),
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
   const response = await fetch(`${BASE_URL}${url}`, {
     ...options,
+    headers,
   });
   if (!response.ok) {
     throw new Error(`API error: ${response.status} ${response.statusText}`);

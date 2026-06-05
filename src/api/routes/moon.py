@@ -426,6 +426,36 @@ import re
 # over the last user message) — fast, free, deterministic, easy to tweak.
 # Regexes intencionalmente sem `\b` ao final — usamos prefixos que matcham
 # variações ("cronogra" pega cronograma; "suger" pega sugere/sugerir/sugeriu).
+# ----------------------------------------------------------------------------
+# Rate limit per-user em /moon/chat — protege quota Anthropic. O middleware
+# de main.py limita por IP (120/60s) mas isso não barra um user logado que
+# chame em loop a partir da própria sessão. 20 chats/min/user.
+# ----------------------------------------------------------------------------
+import collections
+import os
+import time as _time
+
+_MOON_CHAT_WINDOW_S = 60
+_MOON_CHAT_LIMIT = int(os.environ.get("MOON_CHAT_RATE_LIMIT", "20"))
+_moon_chat_log: dict[str, collections.deque] = {}
+
+
+def _moon_chat_rate_check(user_id: str | None) -> None:
+    """Raise 429 se o user excedeu o limite. Usuário sem id (impossível pós-HAIRA-155)
+    cai no balde 'anon' compartilhado — defensivo se a auth for relaxada futuramente."""
+    key = user_id or "anon"
+    now = _time.time()
+    dq = _moon_chat_log.setdefault(key, collections.deque())
+    while dq and dq[0] < now - _MOON_CHAT_WINDOW_S:
+        dq.popleft()
+    if len(dq) >= _MOON_CHAT_LIMIT:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Limite de {_MOON_CHAT_LIMIT} mensagens por minuto atingido. Aguarde um instante.",
+        )
+    dq.append(now)
+
+
 _SAUDE_KWS = re.compile(
     r"\b(queda|caspa|coceira|coca[nr]|co[cç]a[nr]|descama|vermelh|dor(\s|$)|dor(ido|imento)|"
     r"ferida|alergi|alopec|dermatite|sebor|psor[ií]ase|inflama|infec)",
@@ -525,18 +555,23 @@ MOON_SYSTEM = (
 def chat(
     body: ChatRequest,
     session: Session = Depends(_get_session),
-    auth_user: dict | None = Depends(get_optional_user),
+    auth_user: dict = Depends(get_current_user),
 ):
     """Conversational Moon: grounds an LLM reply in the user's profile, the
     analyzed product (if any) and scored catalog alternatives. Persists the
-    turn so reviewers can resume past conversations."""
+    turn so reviewers can resume past conversations.
+
+    HAIRA-155 fechada: auth obrigatória. Token JWT sempre sobrescreve o
+    user_id do body (anti-spoofing). user_id do body é ignorado.
+    """
     if not body.messages:
         raise HTTPException(status_code=400, detail="messages is required")
 
-    # Se houver token JWT, sobrescreve o user_id do body (anti-spoofing).
-    # Anônimo (sem token) ainda funciona com user_id explícito no payload —
-    # útil pra MoonAnalyzer/SDK externo. HAIRA-155 vai exigir auth de fato.
-    effective_user_id = auth_user.get("sub") if auth_user else body.user_id
+    # Rate limit per-user (em cima do rate limit per-IP global de main.py)
+    # 20 chats/min/user — protege quota Anthropic de abuse de um user logado.
+    _moon_chat_rate_check(auth_user.get("sub"))
+
+    effective_user_id = auth_user.get("sub")
 
     # Resolve or create the conversation.
     conv: MoonConversationORM | None = None

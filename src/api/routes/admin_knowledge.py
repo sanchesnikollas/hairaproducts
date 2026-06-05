@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from src.api.auth import require_admin
 from src.api.dependencies import get_ops_session
 from src.core.document_extraction import extract_text
+from src.core.kb_crypto import decrypt_content, encrypt_content, is_enabled as kb_crypto_enabled
 from src.core.knowledge_base import reset_kb_cache
 from src.storage.knowledge_models import KnowledgeChunkORM
 
@@ -52,7 +53,7 @@ def read_chunk(source: str,
     row = session.get(KnowledgeChunkORM, source)
     if not row:
         raise HTTPException(status_code=404, detail="Chunk not found")
-    return {**_chunk_summary(row), "content": row.content}
+    return {**_chunk_summary(row), "content": decrypt_content(row.content)}
 
 
 @router.post("/upload")
@@ -71,18 +72,19 @@ async def upload_chunk(file: UploadFile = File(...),
     if not text.strip():
         raise HTTPException(status_code=400, detail="Extracted text is empty")
 
+    stored = encrypt_content(text)
     row = session.get(KnowledgeChunkORM, fn)
     if row:
-        row.content = text
-        row.char_count = len(text)
+        row.content = stored
+        row.char_count = len(text)  # plaintext char count, não o ciphertext
         action = "updated"
     else:
-        row = KnowledgeChunkORM(source=fn, content=text, char_count=len(text))
+        row = KnowledgeChunkORM(source=fn, content=stored, char_count=len(text))
         session.add(row)
         action = "created"
     session.commit()
     reset_kb_cache()
-    return {"action": action, **_chunk_summary(row)}
+    return {"action": action, **_chunk_summary(row), "encrypted": kb_crypto_enabled()}
 
 
 @router.delete("/{source}")
@@ -119,13 +121,14 @@ def reingest_from_disk(admin: dict = Depends(require_admin),
         text = extract_text(fn, path=path)
         if not text.strip():
             continue
+        stored = encrypt_content(text)
         row = session.get(KnowledgeChunkORM, fn)
         if row:
-            row.content = text
+            row.content = stored
             row.char_count = len(text)
         else:
-            session.add(KnowledgeChunkORM(source=fn, content=text, char_count=len(text)))
+            session.add(KnowledgeChunkORM(source=fn, content=stored, char_count=len(text)))
         upserted += 1
     session.commit()
     reset_kb_cache()
-    return {"upserted": upserted}
+    return {"upserted": upserted, "encrypted": kb_crypto_enabled()}

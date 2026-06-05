@@ -82,10 +82,17 @@ export default function BrandFormModal({ brand, lockedSlug, onClose, onSaved }: 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-cream-dark">
-          <h2 className="font-display text-xl font-semibold text-ink">
-            {isEdit ? `Editar marca: ${brand!.brand_name}` : 'Nova marca'}
-          </h2>
+        <div className="flex items-start justify-between px-6 py-4 border-b border-cream-dark">
+          <div>
+            <h2 className="font-display text-xl font-semibold text-ink">
+              {isEdit ? `Editar marca: ${brand!.brand_name}` : 'Nova marca'}
+            </h2>
+            {isEdit && brand?.updated_at && (
+              <p className="text-xs text-ink-faint mt-1">
+                Última edição: {new Date(brand.updated_at).toLocaleString('pt-BR')}
+              </p>
+            )}
+          </div>
           <button onClick={onClose} className="text-ink-muted hover:text-ink" aria-label="Fechar">
             <X size={20} />
           </button>
