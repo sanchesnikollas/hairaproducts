@@ -1,15 +1,18 @@
-import { useState, useMemo, useCallback } from 'react';
-import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
+import { Plus, Pencil } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 import QuarantineTab from '@/components/QuarantineTab';
 import CoverageTab from '@/components/CoverageTab';
 import LoadingState, { ErrorState, EmptyState } from '@/components/LoadingState';
+import BrandFormModal from '@/components/BrandFormModal';
 import { useAPI } from '@/hooks/useAPI';
 import { getBrandCoverage, getBrandProducts } from '@/lib/api';
 import type { ProductFilters } from '@/lib/api';
+import { listBrandRegistry, type BrandRegistryItem } from '@/lib/ops-api';
 
 function formatBrandName(slug: string): string {
   return slug
@@ -27,6 +30,7 @@ function getInciColor(rate: number): string {
 const PER_PAGE = 24;
 
 export default function BrandPage() {
+  const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') ?? 'produtos';
@@ -36,6 +40,17 @@ export default function BrandPage() {
   const [category, setCategory] = useState('');
   const [page, setPage] = useState(1);
   const [quarantineCount, setQuarantineCount] = useState<number | null>(null);
+  const [showEditBrand, setShowEditBrand] = useState(false);
+  const [brandRecord, setBrandRecord] = useState<BrandRegistryItem | null>(null);
+
+  // Resolve a marca no registry pra alimentar o modal "Editar marca".
+  // Não bloqueia a página se falhar (a UI de listagem usa /api/brands).
+  useEffect(() => {
+    if (!slug) return;
+    listBrandRegistry()
+      .then((r) => setBrandRecord(r.brands.find((b) => b.brand_slug === slug) ?? null))
+      .catch(() => setBrandRecord(null));
+  }, [slug]);
 
   const filters: Omit<ProductFilters, 'brand'> = useMemo(
     () => ({
@@ -125,13 +140,39 @@ export default function BrandPage() {
             )}
           </div>
         </div>
-        <div className="text-right shrink-0">
-          <p className={`text-4xl font-semibold tabular-nums ${getInciColor(coverage.verified_inci_rate)}`}>
-            {inciPercent}%
-          </p>
-          <p className="text-[11px] text-neutral-400 uppercase tracking-wider mt-1 font-medium">INCI Coverage</p>
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowEditBrand(true)}
+              disabled={!brandRecord}
+              title={brandRecord ? 'Editar dados da marca' : 'Marca ainda não cadastrada no registry'}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-cream-dark px-3 py-1.5 text-sm text-ink-muted hover:text-ink hover:border-ink disabled:opacity-40"
+            >
+              <Pencil size={14} /> Editar marca
+            </button>
+            <button
+              onClick={() => navigate(`/ops/products?brand=${encodeURIComponent(slug!)}&new=1`)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-ink px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
+            >
+              <Plus size={14} /> Novo produto
+            </button>
+          </div>
+          <div className="text-right">
+            <p className={`text-4xl font-semibold tabular-nums ${getInciColor(coverage.verified_inci_rate)}`}>
+              {inciPercent}%
+            </p>
+            <p className="text-[11px] text-neutral-400 uppercase tracking-wider mt-1 font-medium">INCI Coverage</p>
+          </div>
         </div>
       </motion.div>
+
+      {showEditBrand && brandRecord && (
+        <BrandFormModal
+          brand={brandRecord}
+          onClose={() => setShowEditBrand(false)}
+          onSaved={(updated) => { setBrandRecord(updated); setShowEditBrand(false); }}
+        />
+      )}
 
       {/* Tabs */}
       <motion.div

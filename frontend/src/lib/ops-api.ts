@@ -285,3 +285,51 @@ export interface MoonFeedbackSummary {
 export async function getMoonFeedbackSummary(): Promise<MoonFeedbackSummary> {
   return (await authFetch(`${BASE}/moon/feedback/summary`)).json();
 }
+
+// Brand registry CRUD (admin) ─────────────────────────────────────────────────
+
+export interface BrandRegistryItem {
+  brand_slug: string;
+  brand_name: string;
+  official_url_root: string | null;
+  country: string | null;
+  priority: number | null;
+  status: string;
+  platform: string | null;
+  notes: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface BrandCreatePayload {
+  brand_name: string;
+  brand_slug?: string;
+  official_url_root?: string;
+  country?: 'Brasil' | 'Internacional' | 'Outros';
+  priority?: number;
+  status?: 'active' | 'blocked' | 'blocked_maintenance' | 'out_of_scope';
+  platform?: string;
+  notes?: string;
+}
+
+export type BrandUpdatePayload = Partial<BrandCreatePayload>;
+
+export async function listBrandRegistry(): Promise<{ brands: BrandRegistryItem[]; total: number }> {
+  return (await authFetch(`${BASE}/admin/brands/registry`)).json();
+}
+
+export async function createBrand(data: BrandCreatePayload): Promise<BrandRegistryItem> {
+  return (await authFetch(`${BASE}/admin/brands/registry`, {
+    method: 'POST', body: JSON.stringify(data),
+  })).json();
+}
+
+export async function updateBrand(slug: string, data: BrandUpdatePayload): Promise<BrandRegistryItem> {
+  return (await authFetch(`${BASE}/admin/brands/registry/${encodeURIComponent(slug)}`, {
+    method: 'PATCH', body: JSON.stringify(data),
+  })).json();
+}
+
+export async function deleteBrand(slug: string): Promise<void> {
+  await authFetch(`${BASE}/admin/brands/registry/${encodeURIComponent(slug)}`, { method: 'DELETE' });
+}

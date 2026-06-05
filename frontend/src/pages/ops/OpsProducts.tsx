@@ -1,9 +1,14 @@
-import { useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { Plus } from "lucide-react";
 import { useAPI } from "../../hooks/useAPI";
-import { opsListProducts, opsBatchUpdate, opsCreateProduct } from "../../lib/ops-api";
+import {
+  opsListProducts, opsBatchUpdate, opsCreateProduct,
+  listBrandRegistry, type BrandRegistryItem,
+} from "../../lib/ops-api";
 import { useAuth } from "../../lib/auth";
 import CategorySelect from "../../components/ops/CategorySelect";
+import BrandFormModal from "../../components/BrandFormModal";
 
 type DataQuality = { fields: Record<string, boolean>; filled: number; total: number; pct: number };
 
@@ -22,9 +27,15 @@ function QualityBar({ quality }: { quality: DataQuality }) {
   );
 }
 
-function CreateProductModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+function CreateProductModal({
+  onClose, onCreated, defaultBrandSlug,
+}: {
+  onClose: () => void;
+  onCreated: () => void;
+  defaultBrandSlug?: string;
+}) {
   const [form, setForm] = useState({
-    brand_slug: "",
+    brand_slug: defaultBrandSlug ?? "",
     product_name: "",
     description: "",
     product_category: "",
@@ -36,7 +47,31 @@ function CreateProductModal({ onClose, onCreated }: { onClose: () => void; onCre
     composition: "",
     usage_instructions: "",
   });
+  const [brands, setBrands] = useState<BrandRegistryItem[]>([]);
+  const [brandFilter, setBrandFilter] = useState("");
+  const [showNewBrand, setShowNewBrand] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Carrega marcas do registry pra autocomplete. Falha silenciosa: campo
+  // fica como input livre (compat com fluxo antigo).
+  useEffect(() => {
+    listBrandRegistry()
+      .then((r) => setBrands(r.brands))
+      .catch(() => setBrands([]));
+  }, []);
+
+  const filteredBrands = useMemo(() => {
+    if (!brandFilter) return brands.slice(0, 50);
+    const q = brandFilter.toLowerCase();
+    return brands
+      .filter((b) => b.brand_slug.includes(q) || b.brand_name.toLowerCase().includes(q))
+      .slice(0, 50);
+  }, [brandFilter, brands]);
+
+  const selectedBrand = useMemo(
+    () => brands.find((b) => b.brand_slug === form.brand_slug) ?? null,
+    [brands, form.brand_slug],
+  );
 
   // Parse the multiline INCI box into an array (split by comma or newline,
   // trim, drop blanks). Backend stores it as JSON array.
@@ -74,16 +109,70 @@ function CreateProductModal({ onClose, onCreated }: { onClose: () => void; onCre
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
-      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl max-h-[92vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold text-ink mb-4">Novo Produto</h2>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-3">
             <div>
-              <label className="mb-1 block text-xs text-ink-muted">Brand Slug *</label>
-              <input required value={form.brand_slug} onChange={(e) => setForm({ ...form, brand_slug: e.target.value })}
-                placeholder="ex: salon-line"
-                className="w-full rounded-lg border border-cream-dark bg-cream px-3 py-2 text-sm text-ink outline-none focus:border-ink" />
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs text-ink-muted">Marca *</label>
+                <button
+                  type="button"
+                  onClick={() => setShowNewBrand(true)}
+                  className="text-[11px] text-[#ff5900] hover:underline inline-flex items-center gap-0.5"
+                >
+                  <Plus size={11} /> Nova marca
+                </button>
+              </div>
+              {brands.length > 0 ? (
+                <div className="space-y-1">
+                  <input
+                    list="brand-options"
+                    required
+                    value={brandFilter || selectedBrand?.brand_name || ""}
+                    onChange={(e) => {
+                      const txt = e.target.value;
+                      setBrandFilter(txt);
+                      const match = brands.find((b) => b.brand_name === txt || b.brand_slug === txt);
+                      setForm({ ...form, brand_slug: match?.brand_slug ?? "" });
+                    }}
+                    placeholder="Comece a digitar (ex: salon line)"
+                    className="w-full rounded-lg border border-cream-dark bg-cream px-3 py-2 text-sm text-ink outline-none focus:border-ink"
+                  />
+                  <datalist id="brand-options">
+                    {filteredBrands.map((b) => (
+                      <option key={b.brand_slug} value={b.brand_name}>{b.brand_slug}</option>
+                    ))}
+                  </datalist>
+                  {form.brand_slug && (
+                    <p className="text-[11px] text-ink-faint">
+                      Slug: <code>{form.brand_slug}</code>{selectedBrand?.country ? ` · ${selectedBrand.country}` : ''}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <input
+                  required
+                  value={form.brand_slug}
+                  onChange={(e) => setForm({ ...form, brand_slug: e.target.value })}
+                  placeholder="ex: salon-line"
+                  className="w-full rounded-lg border border-cream-dark bg-cream px-3 py-2 text-sm text-ink outline-none focus:border-ink"
+                />
+              )}
             </div>
+          </div>
+          {showNewBrand && (
+            <BrandFormModal
+              onClose={() => setShowNewBrand(false)}
+              onSaved={(b) => {
+                setBrands((prev) => [...prev, b]);
+                setForm((prev) => ({ ...prev, brand_slug: b.brand_slug }));
+                setBrandFilter(b.brand_name);
+                setShowNewBrand(false);
+              }}
+            />
+          )}
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs text-ink-muted">Nome do Produto *</label>
               <input required value={form.product_name} onChange={(e) => setForm({ ...form, product_name: e.target.value })}
@@ -179,7 +268,7 @@ function StatusBadge({ status }: { status: string | null }) {
 
 export default function OpsProducts() {
   const { isAdmin } = useAuth();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [brand, setBrand] = useState(searchParams.get("brand") || "");
   const [statusFilter, setStatusFilter] = useState(searchParams.get("status_editorial") || "");
@@ -190,6 +279,17 @@ export default function OpsProducts() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [batchAction, setBatchAction] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+
+  // Auto-abre o modal quando vindo da BrandPage ("Novo produto" contextual).
+  // `?brand=foo&new=1` → modal pré-preenchido com slug 'foo'.
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setShowCreate(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete("new");
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const fetcher = useCallback(
     () => opsListProducts({
@@ -432,7 +532,13 @@ export default function OpsProducts() {
         </>
       )}
 
-      {showCreate && <CreateProductModal onClose={() => setShowCreate(false)} onCreated={() => refetch()} />}
+      {showCreate && (
+        <CreateProductModal
+          defaultBrandSlug={brand || undefined}
+          onClose={() => setShowCreate(false)}
+          onCreated={() => refetch()}
+        />
+      )}
     </div>
   );
 }
