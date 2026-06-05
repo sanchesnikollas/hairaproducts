@@ -133,6 +133,27 @@ class BrandCoverageORM(Base):
     coverage_report = Column(JSON, nullable=True)
 
 
+class BrandRegistryORM(Base):
+    """Catálogo editável de marcas. Seedado inicialmente do `config/brands.json`,
+    mas a UI admin (`/ops/brands` → "+ Nova Marca") escreve direto aqui pra
+    sobreviver a redeploys do container sem alterar o arquivo.
+
+    `/api/brands` (list) mescla esta tabela com `brand_coverage` (live counts).
+    """
+    __tablename__ = "brand_registry"
+
+    brand_slug = Column(String(255), primary_key=True)
+    brand_name = Column(String(255), nullable=False)
+    official_url_root = Column(String(2000), nullable=True)
+    country = Column(String(80), nullable=True)        # Brasil | Internacional | Outros
+    priority = Column(Integer, nullable=True)          # 1 (alta) | 2 | 3 | null
+    status = Column(String(50), nullable=False, default="active")  # active | blocked | blocked_maintenance | out_of_scope
+    platform = Column(String(50), nullable=True)       # VTEX | Shopify | WooCommerce | Custom | None
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=_utcnow)
+    updated_at = Column(DateTime, nullable=False, default=_utcnow, onupdate=_utcnow)
+
+
 class IngredientORM(Base):
     __tablename__ = "ingredients"
     id = Column(String(36), primary_key=True, default=_uuid)
