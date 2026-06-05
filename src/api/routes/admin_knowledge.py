@@ -11,7 +11,7 @@ next /moon/chat reloads from the DB.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from sqlalchemy.orm import Session
 
 from src.api.auth import require_admin
@@ -57,7 +57,8 @@ def read_chunk(source: str,
 
 
 @router.post("/upload")
-async def upload_chunk(file: UploadFile = File(...),
+async def upload_chunk(request: Request,
+                       file: UploadFile = File(...),
                        admin: dict = Depends(require_admin),
                        session: Session = Depends(get_core_session)):
     """Receive a .docx or .pdf, extract + upsert by filename, invalidate cache."""
@@ -75,28 +76,63 @@ async def upload_chunk(file: UploadFile = File(...),
     stored = encrypt_content(text)
     row = session.get(KnowledgeChunkORM, fn)
     if row:
+        before_chars = row.char_count
         row.content = stored
-        row.char_count = len(text)  # plaintext char count, não o ciphertext
+        row.char_count = len(text)
         action = "updated"
     else:
+        before_chars = 0
         row = KnowledgeChunkORM(source=fn, content=stored, char_count=len(text))
         session.add(row)
         action = "created"
     session.commit()
     reset_kb_cache()
+
+    try:
+        from src.core.audit import log_admin_action
+        log_admin_action(
+            actor_id=admin.get("sub", "?"),
+            actor_email=admin.get("email"),
+            action=f"kb.{action}",
+            target_type="knowledge_chunks",
+            target_id=fn,
+            before={"chars": before_chars},
+            after={"chars": len(text), "encrypted": kb_crypto_enabled()},
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+        )
+    except Exception:
+        pass
+
     return {"action": action, **_chunk_summary(row), "encrypted": kb_crypto_enabled()}
 
 
 @router.delete("/{source}")
 def delete_chunk(source: str,
+                 request: Request,
                  admin: dict = Depends(require_admin),
                  session: Session = Depends(get_core_session)):
     row = session.get(KnowledgeChunkORM, source)
     if not row:
         raise HTTPException(status_code=404, detail="Chunk not found")
+    before_chars = row.char_count
     session.delete(row)
     session.commit()
     reset_kb_cache()
+    try:
+        from src.core.audit import log_admin_action
+        log_admin_action(
+            actor_id=admin.get("sub", "?"),
+            actor_email=admin.get("email"),
+            action="kb.delete",
+            target_type="knowledge_chunks",
+            target_id=source,
+            before={"chars": before_chars},
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+        )
+    except Exception:
+        pass
     return {"deleted": source}
 
 

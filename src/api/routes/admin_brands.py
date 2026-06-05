@@ -18,7 +18,7 @@ import logging
 import re
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
@@ -171,9 +171,30 @@ def list_brand_registry(
     return {"brands": [_serialize_brand(r) for r in rows], "total": len(rows)}
 
 
+def _audit_admin(action: str, *, request: Request, admin: dict, target_id: str | None,
+                  before=None, after=None) -> None:
+    """Helper local. Silencioso se audit falhar."""
+    try:
+        from src.core.audit import log_admin_action
+        log_admin_action(
+            actor_id=admin.get("sub", "?"),
+            actor_email=admin.get("email"),
+            action=action,
+            target_type="brand_registry",
+            target_id=target_id,
+            before=before,
+            after=after,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+        )
+    except Exception:
+        pass
+
+
 @router.post("/registry", status_code=201)
 def create_brand(
     body: BrandCreate,
+    request: Request,
     admin: dict = Depends(require_admin),
     session: Session = Depends(get_catalog_session),
 ):
@@ -202,6 +223,8 @@ def create_brand(
     session.commit()
     session.refresh(row)
     logger.info("brand_registry created %s by %s", slug, admin.get("email", admin.get("sub", "?")))
+    _audit_admin("brand.create", request=request, admin=admin, target_id=slug,
+                  after=_serialize_brand(row))
     return _serialize_brand(row)
 
 
@@ -209,6 +232,7 @@ def create_brand(
 def update_brand(
     brand_slug: str,
     body: BrandUpdate,
+    request: Request,
     admin: dict = Depends(require_admin),
     session: Session = Depends(get_catalog_session),
 ):
@@ -217,6 +241,7 @@ def update_brand(
     if not row:
         raise HTTPException(status_code=404, detail=f"marca '{brand_slug}' não cadastrada")
 
+    before = _serialize_brand(row)
     updates = body.model_dump(exclude_unset=True)
     for key, value in updates.items():
         setattr(row, key, value)
@@ -224,12 +249,15 @@ def update_brand(
     session.commit()
     session.refresh(row)
     logger.info("brand_registry updated %s by %s: %s", brand_slug, admin.get("email", "?"), list(updates.keys()))
+    _audit_admin("brand.update", request=request, admin=admin, target_id=brand_slug,
+                  before=before, after=_serialize_brand(row))
     return _serialize_brand(row)
 
 
 @router.delete("/registry/{brand_slug}", status_code=204)
 def delete_brand(
     brand_slug: str,
+    request: Request,
     admin: dict = Depends(require_admin),
     session: Session = Depends(get_catalog_session),
 ):
@@ -243,6 +271,8 @@ def delete_brand(
             status_code=409,
             detail=f"marca '{brand_slug}' tem {product_count} produtos; remova-os antes",
         )
+    before = _serialize_brand(row)
     session.delete(row)
     session.commit()
     logger.info("brand_registry deleted %s by %s", brand_slug, admin.get("email", "?"))
+    _audit_admin("brand.delete", request=request, admin=admin, target_id=brand_slug, before=before)

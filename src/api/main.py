@@ -23,6 +23,7 @@ from src.api.routes.ops_ingredients import router as ops_ingredients_router
 from src.api.routes.admin_migrate import router as admin_migrate_router
 from src.api.routes.admin_knowledge import router as admin_knowledge_router
 from src.api.routes.admin_apify import router as admin_apify_router
+from src.api.routes.admin_audit import router as admin_audit_router
 from src.api.routes.admin_brands import router as admin_brands_router
 from src.api.routes.admin_moon import router as admin_moon_router
 from src.api.routes.admin_scrape import router as admin_scrape_router
@@ -122,6 +123,7 @@ app.include_router(admin_knowledge_router, prefix="/api")
 app.include_router(admin_apify_router, prefix="/api")
 app.include_router(admin_brands_router, prefix="/api")  # central counter sync
 app.include_router(admin_moon_router, prefix="/api")    # Moon personality editor
+app.include_router(admin_audit_router, prefix="/api")   # Audit log viewer
 app.include_router(admin_scrape_router, prefix="/api")  # remote scrape trigger
 app.include_router(moon_router, prefix="/api")  # Moon AI ingredient analysis
 
