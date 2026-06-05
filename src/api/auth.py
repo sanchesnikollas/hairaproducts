@@ -55,3 +55,17 @@ def require_admin(user: dict = Depends(get_current_user)) -> dict:
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
+
+
+def get_optional_user(request: Request) -> dict[str, Any] | None:
+    """FastAPI dependency: returns the JWT payload if present, else None.
+
+    Use em endpoints que querem enriquecer com user_id sem bloquear chamada
+    anônima (ex.: /moon/chat hoje aceita anônimo + perfil inline). NÃO valida
+    contra a tabela `users` — não custa hit no DB.
+    """
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return None
+    token = auth_header[7:]
+    return verify_token(token)

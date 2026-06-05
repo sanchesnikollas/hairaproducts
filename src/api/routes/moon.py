@@ -21,6 +21,7 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from src.api.auth import get_current_user, get_optional_user, require_admin
 from src.api.dependencies import is_multi_db, get_router
 from src.storage.database import get_engine
 from sqlalchemy.orm import Session as SASession
@@ -521,25 +522,36 @@ MOON_SYSTEM = (
 
 
 @router.post("/chat")
-def chat(body: ChatRequest, session: Session = Depends(_get_session)):
+def chat(
+    body: ChatRequest,
+    session: Session = Depends(_get_session),
+    auth_user: dict | None = Depends(get_optional_user),
+):
     """Conversational Moon: grounds an LLM reply in the user's profile, the
     analyzed product (if any) and scored catalog alternatives. Persists the
     turn so reviewers can resume past conversations."""
     if not body.messages:
         raise HTTPException(status_code=400, detail="messages is required")
 
-    # Resolve or create the conversation. Auth on /moon/profile is HAIRA-155;
-    # until then user_id is best-effort.
+    # Se houver token JWT, sobrescreve o user_id do body (anti-spoofing).
+    # Anônimo (sem token) ainda funciona com user_id explícito no payload —
+    # útil pra MoonAnalyzer/SDK externo. HAIRA-155 vai exigir auth de fato.
+    effective_user_id = auth_user.get("sub") if auth_user else body.user_id
+
+    # Resolve or create the conversation.
     conv: MoonConversationORM | None = None
     if body.conversation_id:
         conv = session.get(MoonConversationORM, body.conversation_id)
         if not conv:
             raise HTTPException(status_code=404, detail="conversation_id not found")
+        # Anti-IDOR: usuário logado só acessa as próprias conversas.
+        if auth_user and conv.user_id and conv.user_id != effective_user_id:
+            raise HTTPException(status_code=403, detail="conversation_id belongs to another user")
     else:
         # Auto-title from the first user message (truncated)
         first_user = next((m.content for m in body.messages if m.role == "user"), "")
         title = (first_user.strip()[:80] or "Conversa com a Moon")
-        conv = MoonConversationORM(user_id=body.user_id, title=title)
+        conv = MoonConversationORM(user_id=effective_user_id, title=title)
         session.add(conv)
         session.flush()  # ensure conv.conversation_id
 
@@ -559,8 +571,8 @@ def chat(body: ChatRequest, session: Session = Depends(_get_session)):
 
     # Resolve profile (inline or persisted)
     profile = body.profile
-    if profile is None and body.user_id:
-        row = HairProfileRepository(session).get_by_user(body.user_id)
+    if profile is None and effective_user_id:
+        row = HairProfileRepository(session).get_by_user(effective_user_id)
         if row:
             profile = HairProfileInput(
                 curl_type=row.curl_type, curl_subtype=row.curl_subtype,
@@ -644,10 +656,16 @@ def chat(body: ChatRequest, session: Session = Depends(_get_session)):
 
     # Intent-specific system addendum — anchors the LLM to the right behavior
     # for the type of question, without rewriting the whole MOON_SYSTEM.
-    system_prompt = MOON_SYSTEM
-    addendum = _INTENT_ADDENDUMS.get(intent)
+    #
+    # System prompt + addendums vêm da tabela `moon_config` (editável via UI em
+    # /ops/knowledge). Falham elegante pros constants em código quando a DB
+    # ainda não migrou ou está vazia.
+    from src.core.moon_config import load_moon_config
+    cfg = load_moon_config()
+    system_prompt = cfg.get("system_prompt", MOON_SYSTEM)
+    addendum = cfg.get(f"intent.{intent}") or _INTENT_ADDENDUMS.get(intent)
     if addendum:
-        system_prompt = MOON_SYSTEM + "\n\n[INTENÇÃO DETECTADA]\n" + addendum
+        system_prompt = system_prompt + "\n\n[INTENÇÃO DETECTADA]\n" + addendum
 
     # Doutoras knowledge base — cached at the Anthropic prompt cache (5min TTL)
     # so the per-turn cost stays trivial despite ~45k tokens always present.
@@ -719,8 +737,15 @@ def submit_feedback(body: FeedbackRequest, session: Session = Depends(_get_sessi
 
 
 @router.get("/feedback/summary")
-def feedback_summary(session: Session = Depends(_get_session)):
-    """North-star metric: % of Moon replies rated useful, plus recent down-votes."""
+def feedback_summary(
+    session: Session = Depends(_get_session),
+    admin: dict = Depends(require_admin),
+):
+    """North-star metric: % of Moon replies rated useful, plus recent down-votes.
+
+    Admin-only — recent_downvotes inclui mensagens com PII de usuários, então
+    expor publicamente seria vazamento.
+    """
     up = session.query(MoonFeedbackORM).filter(MoonFeedbackORM.rating == "up").count()
     down = session.query(MoonFeedbackORM).filter(MoonFeedbackORM.rating == "down").count()
     total = up + down
@@ -746,13 +771,25 @@ def feedback_summary(session: Session = Depends(_get_session)):
 # Conversations — persisted Moon chat threads (sidebar list + retomar)
 # ----------------------------------------------------------------------------
 @router.get("/conversations")
-def list_conversations(user_id: str | None = None,
-                       limit: int = 30,
-                       session: Session = Depends(_get_session)):
-    """List most recent conversations, optionally filtered by user_id."""
+def list_conversations(
+    user_id: str | None = None,
+    limit: int = 30,
+    session: Session = Depends(_get_session),
+    auth_user: dict = Depends(get_current_user),
+):
+    """List most recent conversations, optionally filtered by user_id.
+
+    Auth obrigatória. Non-admin só vê suas próprias conversas (anti-IDOR);
+    admin pode filtrar por qualquer user_id.
+    """
+    is_admin = auth_user.get("role") == "admin"
     q = session.query(MoonConversationORM)
-    if user_id:
-        q = q.filter(MoonConversationORM.user_id == user_id)
+    if is_admin:
+        if user_id:
+            q = q.filter(MoonConversationORM.user_id == user_id)
+    else:
+        # Reviewer vê SEMPRE só as suas, independente do query param.
+        q = q.filter(MoonConversationORM.user_id == auth_user.get("sub"))
     rows = q.order_by(MoonConversationORM.last_message_at.desc()).limit(limit).all()
     out = []
     for c in rows:
@@ -773,11 +810,17 @@ def list_conversations(user_id: str | None = None,
 
 
 @router.get("/conversations/{conversation_id}")
-def get_conversation(conversation_id: str,
-                     session: Session = Depends(_get_session)):
+def get_conversation(
+    conversation_id: str,
+    session: Session = Depends(_get_session),
+    auth_user: dict = Depends(get_current_user),
+):
     conv = session.get(MoonConversationORM, conversation_id)
     if not conv:
         raise HTTPException(status_code=404, detail="Not found")
+    # Non-admin só acessa as próprias conversas.
+    if auth_user.get("role") != "admin" and conv.user_id and conv.user_id != auth_user.get("sub"):
+        raise HTTPException(status_code=403, detail="Conversa de outro usuário")
     msgs = (
         session.query(MoonMessageORM)
         .filter(MoonMessageORM.conversation_id == conversation_id)
@@ -801,9 +844,14 @@ def get_conversation(conversation_id: str,
 
 
 @router.delete("/conversations/{conversation_id}", status_code=204)
-def delete_conversation(conversation_id: str,
-                        session: Session = Depends(_get_session)):
+def delete_conversation(
+    conversation_id: str,
+    session: Session = Depends(_get_session),
+    auth_user: dict = Depends(get_current_user),
+):
     conv = session.get(MoonConversationORM, conversation_id)
+    if conv and auth_user.get("role") != "admin" and conv.user_id and conv.user_id != auth_user.get("sub"):
+        raise HTTPException(status_code=403, detail="Conversa de outro usuário")
     if not conv:
         raise HTTPException(status_code=404, detail="Not found")
     # Cascade messages then convo

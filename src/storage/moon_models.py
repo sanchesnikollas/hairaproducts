@@ -56,3 +56,26 @@ class MoonMessageORM(Base):
     kb_sources = Column(JSON, nullable=True)
     analysis = Column(JSON, nullable=True)
     alternatives = Column(JSON, nullable=True)
+
+
+class MoonConfigORM(Base):
+    """Configurable bits of Moon's personality — system prompt + intent
+    addendums. Lives in DB (not env) so admins can iterate on tone via
+    `/ops/knowledge` without redeploying. Falls back to code defaults when a
+    row is missing.
+
+    Keys used today:
+      - system_prompt          (main MOON_SYSTEM)
+      - intent.saude_couro
+      - intent.analise_produto
+      - intent.recomendacao
+      - intent.rotina_cuidado
+      - intent.geral
+    """
+    __tablename__ = "moon_config"
+
+    key = Column(String(64), primary_key=True)
+    value = Column(Text, nullable=False)
+    description = Column(String(255), nullable=True)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow)
+    updated_by = Column(String(36), ForeignKey("users.user_id"), nullable=True)
