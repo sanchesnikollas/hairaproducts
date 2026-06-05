@@ -8,12 +8,13 @@
  */
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { BookOpen, MessageCircleHeart, FolderOpen, Workflow, BarChart3 } from 'lucide-react';
+import { BookOpen, MessageCircleHeart, FolderOpen, Workflow, BarChart3, ShieldCheck } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import IdentityTab from './sections/IdentityTab';
 import MaterialTab from './sections/MaterialTab';
 import WorkflowTab from './sections/WorkflowTab';
 import MetricsTab from './sections/MetricsTab';
+import AuditTab from './sections/AuditTab';
 
 export default function OpsKnowledge() {
   const [tab, setTab] = useState<string>('identity');
@@ -31,7 +32,7 @@ export default function OpsKnowledge() {
       </motion.div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid grid-cols-4 max-w-2xl">
+        <TabsList className="grid grid-cols-5 max-w-3xl">
           <TabsTrigger value="identity" className="gap-2">
             <MessageCircleHeart size={14} /> Identidade & Tom
           </TabsTrigger>
@@ -43,6 +44,9 @@ export default function OpsKnowledge() {
           </TabsTrigger>
           <TabsTrigger value="metrics" className="gap-2">
             <BarChart3 size={14} /> Métricas
+          </TabsTrigger>
+          <TabsTrigger value="audit" className="gap-2">
+            <ShieldCheck size={14} /> Auditoria
           </TabsTrigger>
         </TabsList>
 
@@ -57,6 +61,9 @@ export default function OpsKnowledge() {
         </TabsContent>
         <TabsContent value="metrics" className="mt-6">
           <MetricsTab />
+        </TabsContent>
+        <TabsContent value="audit" className="mt-6">
+          <AuditTab />
         </TabsContent>
       </Tabs>
     </div>

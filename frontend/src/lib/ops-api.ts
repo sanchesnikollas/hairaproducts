@@ -286,6 +286,68 @@ export async function getMoonFeedbackSummary(): Promise<MoonFeedbackSummary> {
   return (await authFetch(`${BASE}/moon/feedback/summary`)).json();
 }
 
+// Audit log viewer (admin) — wraps /api/admin/audit/* ─────────────────────────
+
+export interface AuditSummary {
+  auth: { total: number; login_ok: number; login_fail: number; fail_rate_pct: number | null };
+  admin_actions: { total: number; top: Array<{ action: string; count: number }> };
+  kb_retrievals: { total: number; by_intent: Record<string, number> };
+}
+
+export interface AuthEvent {
+  event_id: string;
+  event_type: string;
+  email: string | null;
+  user_id: string | null;
+  ip_address: string | null;
+  user_agent: string;
+  detail: string | null;
+  created_at: string | null;
+}
+
+export interface AdminActionEvent {
+  action_id: string;
+  actor_id: string;
+  actor_email: string | null;
+  action: string;
+  target_type: string | null;
+  target_id: string | null;
+  before: unknown;
+  after: unknown;
+  ip_address: string | null;
+  created_at: string | null;
+}
+
+export interface KbRetrievalEvent {
+  log_id: string;
+  user_id: string | null;
+  conversation_id: string | null;
+  query_hash: string;
+  intent: string | null;
+  kb_sources: string[];
+  chunk_count: string | null;
+  anthropic_tokens_in: string | null;
+  anthropic_tokens_out: string | null;
+  latency_ms: string | null;
+  created_at: string | null;
+}
+
+export async function getAuditSummary(): Promise<AuditSummary> {
+  return (await authFetch(`${BASE}/admin/audit/summary`)).json();
+}
+
+export async function listAuthEvents(limit = 100): Promise<{ events: AuthEvent[]; count: number }> {
+  return (await authFetch(`${BASE}/admin/audit/auth-events?limit=${limit}`)).json();
+}
+
+export async function listAdminActions(limit = 100): Promise<{ actions: AdminActionEvent[]; count: number }> {
+  return (await authFetch(`${BASE}/admin/audit/admin-actions?limit=${limit}`)).json();
+}
+
+export async function listKbRetrievals(limit = 100): Promise<{ retrievals: KbRetrievalEvent[]; count: number }> {
+  return (await authFetch(`${BASE}/admin/audit/kb-retrievals?limit=${limit}`)).json();
+}
+
 // Brand registry CRUD (admin) ─────────────────────────────────────────────────
 
 export interface BrandRegistryItem {
