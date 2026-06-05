@@ -1,12 +1,14 @@
 /**
  * Aba "Como Moon decide" — visualização do fluxo de resposta.
- * Sem chamada de API; é puramente educativa para que as Doutoras e a
- * Clarisse entendam visualmente como Moon constrói cada resposta.
+ * Mostra os 8 passos do raciocínio + lista dinâmica das fontes da KB que
+ * são consultadas em cada chat (busca /api/admin/knowledge).
  */
+import { useEffect, useState } from 'react';
 import {
   MessageSquare, Tag, User, BookOpen, FlaskConical, Boxes, Sparkles, Save,
   ChevronDown,
 } from 'lucide-react';
+import { listKnowledge, type KnowledgeChunkSummary } from '@/lib/ops-api';
 
 interface Step {
   icon: typeof MessageSquare;
@@ -42,8 +44,8 @@ const STEPS: Step[] = [
   {
     icon: BookOpen,
     number: 4,
-    title: 'Carregar material proprietário',
-    description: 'Compêndio + Rotinas + Regras + Dica do Dia + Scan. Esse bloco fica em cache na Anthropic (5min) pra reduzir custo.',
+    title: 'Carregar material proprietário (base científica)',
+    description: 'É aqui que entra o Compêndio Haira + os outros documentos das Doutoras. Tudo vira contexto pra Moon antes dela formular a resposta. Esse bloco fica em cache na Anthropic (5min) pra reduzir custo.',
     color: 'text-amber-600',
   },
   {
@@ -79,6 +81,13 @@ const STEPS: Step[] = [
 ];
 
 export default function WorkflowTab() {
+  const [sources, setSources] = useState<KnowledgeChunkSummary[] | null>(null);
+  useEffect(() => {
+    listKnowledge()
+      .then((r) => setSources(r.chunks))
+      .catch(() => setSources([]));
+  }, []);
+
   return (
     <div className="space-y-6">
       <div>
@@ -111,6 +120,47 @@ export default function WorkflowTab() {
                     )}
                   </div>
                   <p className="text-sm text-ink-muted mt-1 leading-relaxed">{step.description}</p>
+
+                  {/* Lista dinâmica das fontes no passo 4 (carregar material) */}
+                  {step.number === 4 && sources != null && (
+                    <div className="mt-3 rounded-lg bg-cream/40 border border-cream-dark px-3 py-2.5">
+                      <div className="text-[11px] uppercase tracking-wide text-ink-faint mb-1.5">
+                        Materiais carregados nesse passo hoje:
+                      </div>
+                      {sources.length === 0 ? (
+                        <p className="text-xs text-ink-muted italic">
+                          Nenhum documento ainda — suba arquivos na aba <strong>Material</strong>.
+                        </p>
+                      ) : (
+                        <ul className="space-y-0.5">
+                          {sources.map((s) => {
+                            const isCompendio = /comp[eê]ndio/i.test(s.source);
+                            return (
+                              <li key={s.source} className="flex items-baseline gap-2 text-xs">
+                                <span className={isCompendio ? 'text-[#ff5900] font-medium' : 'text-ink'}>
+                                  {isCompendio && '✦ '}
+                                  {s.source}
+                                </span>
+                                <span className="text-ink-faint font-mono">
+                                  ~{s.token_estimate.toLocaleString('pt-BR')} tokens
+                                </span>
+                                {isCompendio && (
+                                  <span className="text-[10px] uppercase tracking-wide text-[#ff5900]/70">
+                                    base científica
+                                  </span>
+                                )}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                      <div className="mt-2 text-[11px] text-ink-faint">
+                        Total: <strong className="text-ink">
+                          {sources.reduce((a, b) => a + b.token_estimate, 0).toLocaleString('pt-BR')} tokens
+                        </strong> · janela Claude Sonnet 4.5: 200.000
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               {!last && (
@@ -123,10 +173,19 @@ export default function WorkflowTab() {
         })}
       </ol>
 
-      <div className="rounded-2xl border border-cream-dark bg-cream/40 p-4 text-sm text-ink-muted">
-        <strong className="text-ink">Por que isso importa pra vocês:</strong> a Moon não inventa.
-        Cada resposta sai apoiada em (1) o material que vocês mandaram e (2) o catálogo real de
-        produtos da Haira. Se faltar contexto, ela diz que não tem material — não improvisa.
+      <div className="rounded-2xl border border-cream-dark bg-cream/40 p-4 text-sm text-ink-muted space-y-2">
+        <p>
+          <strong className="text-ink">Onde o Compêndio entra:</strong> no passo 4 — junto com os
+          outros documentos das Doutoras. Ele é a base científica que a Moon consulta antes de
+          formular qualquer resposta. Se a pergunta cair em saúde do couro, Moon ainda redireciona
+          a um(a) dermatologista (passo 2 com intent <code className="text-ink">saude_couro</code>).
+        </p>
+        <p>
+          <strong className="text-ink">Por que isso importa:</strong> a Moon não inventa. Cada
+          resposta sai apoiada em (1) o material proprietário que vocês mandaram e (2) o catálogo
+          real de produtos da Haira. Se faltar contexto, ela diz que não tem material — não
+          improvisa.
+        </p>
       </div>
     </div>
   );
