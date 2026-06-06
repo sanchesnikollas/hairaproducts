@@ -139,14 +139,18 @@ export default function WorkflowTab() {
             <div className="mt-4 flex flex-wrap items-center gap-3 text-xs">
               {compendio ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#ff5900]/30 px-3 py-1 font-medium text-ink">
-                  <span className="text-[#ff5900]">✦</span>
+                  <span className="text-[#ff5900]" aria-hidden>✦</span>
                   {compendio.source}
                   <span className="text-ink-faint font-mono ml-1">
                     ~{compendio.token_estimate.toLocaleString('pt-BR')} tk
                   </span>
                 </span>
               ) : sources === null ? (
-                <span className="text-ink-faint">carregando…</span>
+                <span
+                  aria-busy="true"
+                  aria-label="Carregando fontes da Moon"
+                  className="inline-flex h-6 w-48 animate-pulse rounded-full bg-white/60 border border-[#ff5900]/15"
+                />
               ) : (
                 <span className="rounded-full bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1">
                   Compêndio ainda não foi subido — faça upload em <strong>Material</strong>.
