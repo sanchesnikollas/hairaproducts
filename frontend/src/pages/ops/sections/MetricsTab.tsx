@@ -67,8 +67,14 @@ export default function MetricsTab() {
           <div className="text-3xl font-display font-semibold text-ink mt-1">
             {data ? (data.useful_pct == null ? '—' : `${data.useful_pct}%`) : '—'}
           </div>
-          <div className="text-[11px] text-ink-faint mt-1">
-            {data ? `${data.up} 👍 / ${data.down} 👎` : ''}
+          <div className="text-[11px] text-ink-faint mt-1 inline-flex items-center gap-1.5">
+            {data && (
+              <>
+                <ThumbsUp size={11} className="text-emerald-600" /> {data.up}
+                <span className="text-ink-faint/60">/</span>
+                <ThumbsDown size={11} className="text-rose-600" /> {data.down}
+              </>
+            )}
           </div>
         </div>
         <div className="rounded-xl border border-cream-dark bg-white p-4">
@@ -88,7 +94,7 @@ export default function MetricsTab() {
         </div>
         {data && data.recent_downvotes.length === 0 && (
           <div className="px-4 py-10 text-center text-sm text-ink-faint">
-            Nenhum downvote registrado ainda. 🌙
+            Nenhum downvote registrado. Quando reviewers marcarem uma resposta como pouco útil, a pergunta e o trecho aparecem aqui.
           </div>
         )}
         {data && data.recent_downvotes.length > 0 && (
