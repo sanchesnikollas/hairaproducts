@@ -86,7 +86,18 @@ export default function AuditTab() {
         </div>
       )}
 
-      {/* KPI cards */}
+      {/* KPI cards — skeleton while first load resolves */}
+      {!summary && loading && (
+        <div className="grid grid-cols-3 gap-3" aria-busy="true" aria-label="Carregando resumo de auditoria">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="rounded-xl border border-cream-dark bg-white p-4">
+              <div className="h-3 w-20 rounded bg-cream animate-pulse" />
+              <div className="h-8 w-16 rounded bg-cream animate-pulse mt-2" />
+              <div className="h-3 w-28 rounded bg-cream animate-pulse mt-2" />
+            </div>
+          ))}
+        </div>
+      )}
       {summary && (
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-xl border border-cream-dark bg-white p-4">
