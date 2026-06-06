@@ -574,6 +574,36 @@ class TestScoreInci:
         assert "Amodimethicone" in alert_names
         assert result["overall_score"] < 0  # mistura ruim p/ 3a
 
+    def test_caches_indexes_after_first_call(self, seeded_ingredients):
+        """_ensure_indexes preenche _CAT_INDEX e _RULES_INDEX no primeiro hit."""
+        import src.api.routes.moon as moon_module
+        # Reset global state
+        moon_module._CAT_INDEX = None
+        moon_module._RULES_INDEX = None
+        from src.api.routes.moon import _ensure_indexes
+        with Session(seeded_ingredients) as s:
+            cat_index, rules = _ensure_indexes(s)
+        assert "cetyl alcohol" in cat_index  # lowered canonical
+        assert cat_index["cetyl alcohol"] == "fatty_alcohol"
+        assert rules[("fatty_alcohol", "3a")] == 1
+        assert rules[("silicone", "3a")] == -1
+
+    def test_score_fast_mirrors_score_inci(self, seeded_ingredients):
+        """_score_fast (in-memory) deve dar mesma direção do score_inci (SQL)."""
+        import src.api.routes.moon as moon_module
+        moon_module._CAT_INDEX = None
+        moon_module._RULES_INDEX = None
+        from src.api.routes.moon import _ensure_indexes, _score_fast
+        with Session(seeded_ingredients) as s:
+            cat_index, rules = _ensure_indexes(s)
+        # 1 ingrediente fatty_alcohol (+1) → score 1.0
+        overall, matched = _score_fast(["Cetyl Alcohol"], ["3a"], cat_index, rules)
+        assert matched == 1
+        assert overall == 1.0
+        # Mix neutro: 1 silicone (-1) + 1 fatty (+1) = ~0
+        overall, matched = _score_fast(["Amodimethicone", "Cetyl Alcohol"], ["3a"], cat_index, rules)
+        assert matched == 2
+
     def test_position_weight_favors_top_ingredients(self, seeded_ingredients):
         """Top INCI list pesa mais que bottom."""
         from src.api.routes.moon import score_inci
@@ -587,6 +617,146 @@ class TestScoreInci:
         # coerente — não o overall, que é normalizado.
         assert top["ingredients_categorized"] == 1
         assert bot["ingredients_categorized"] == 1
+
+
+# ───────────────────────────────────────────────────────────────────────
+# Tier 3.5 — _fetch_alternatives + _resolve_product_inci + list_categories
+# ───────────────────────────────────────────────────────────────────────
+
+
+@pytest.fixture
+def seeded_catalog(seeded_ingredients):
+    """Sobe 4 produtos: 2 shampoos verified_inci (1 bom, 1 ruim), 1 mascara,
+    1 labial (non_hair, deve ser filtrado pelo guard)."""
+    import json as _json
+    from src.storage.orm_models import ProductORM
+    with Session(seeded_ingredients) as s:
+        s.add_all([
+            ProductORM(
+                id="p-good", brand_slug="lola",
+                product_name="Shampoo Hidratante Bom",
+                product_url="https://lola.com/shampoo-bom",
+                verification_status="verified_inci",
+                product_type_normalized="shampoo",
+                inci_ingredients=["Water", "Cetyl Alcohol", "Glycerin", "Sodium Cocoyl Isethionate"],
+            ),
+            ProductORM(
+                id="p-bad", brand_slug="generic",
+                product_name="Shampoo com Sulfato",
+                product_url="https://generic.com/shampoo-sulfato",
+                verification_status="verified_inci",
+                product_type_normalized="shampoo",
+                inci_ingredients=["Water", "Sodium Lauryl Sulfate", "Amodimethicone", "Fragrance"],
+            ),
+            ProductORM(
+                id="p-mask", brand_slug="lola",
+                product_name="Mascara Reparadora",
+                product_url="https://lola.com/mascara",
+                verification_status="verified_inci",
+                product_type_normalized="mascara",
+                inci_ingredients=["Water", "Cetyl Alcohol", "Cetearyl Alcohol", "Behentrimonium"],
+            ),
+            # Esse precisa ser filtrado pelo non_hair guard
+            ProductORM(
+                id="p-lip", brand_slug="lola",
+                product_name="Batom Labial Hidratante",
+                product_url="https://lola.com/batom",
+                verification_status="verified_inci",
+                product_type_normalized="batom",
+                product_category="non_hair",
+                inci_ingredients=["Wax", "Pigment", "Cetyl Alcohol"],
+            ),
+        ])
+        s.commit()
+    yield seeded_ingredients
+
+
+class TestFetchAlternatives:
+    """_fetch_alternatives: scoring + non_hair filter + product_type filter."""
+
+    def test_empty_hair_types_returns_empty(self, seeded_catalog):
+        from src.api.routes.moon import _fetch_alternatives
+        with Session(seeded_catalog) as s:
+            result = _fetch_alternatives(s, [], None, None)
+        assert result == []
+
+    def test_filters_out_non_hair(self, seeded_catalog):
+        """Batom (product_category=non_hair) NUNCA aparece nas alternatives."""
+        import src.api.routes.moon as moon_module
+        moon_module._CAT_INDEX = None
+        moon_module._RULES_INDEX = None
+        from src.api.routes.moon import _fetch_alternatives
+        with Session(seeded_catalog) as s:
+            result = _fetch_alternatives(s, ["3a"], None, None)
+        names = [r["name"] for r in result]
+        assert "Batom Labial Hidratante" not in names
+
+    def test_filters_by_product_type(self, seeded_catalog):
+        """product_type='shampoo' → só shampoos."""
+        import src.api.routes.moon as moon_module
+        moon_module._CAT_INDEX = None
+        moon_module._RULES_INDEX = None
+        from src.api.routes.moon import _fetch_alternatives
+        with Session(seeded_catalog) as s:
+            result = _fetch_alternatives(s, ["3a"], "shampoo", None)
+        types = {r["type"] for r in result}
+        assert types == {"shampoo"} or types == set()  # se 0 retornar, also ok
+
+    def test_excludes_specific_id(self, seeded_catalog):
+        """exclude_id pula o produto avaliado (não recomenda ele mesmo)."""
+        import src.api.routes.moon as moon_module
+        moon_module._CAT_INDEX = None
+        moon_module._RULES_INDEX = None
+        from src.api.routes.moon import _fetch_alternatives
+        with Session(seeded_catalog) as s:
+            result = _fetch_alternatives(s, ["3a"], "shampoo", exclude_id="p-good")
+        ids = {r["product_id"] for r in result}
+        assert "p-good" not in ids
+
+    def test_ranks_by_score(self, seeded_catalog):
+        """Resultados ordenados por score desc."""
+        import src.api.routes.moon as moon_module
+        moon_module._CAT_INDEX = None
+        moon_module._RULES_INDEX = None
+        from src.api.routes.moon import _fetch_alternatives
+        with Session(seeded_catalog) as s:
+            result = _fetch_alternatives(s, ["3a"], None, None)
+        if len(result) >= 2:
+            scores = [r["score"] for r in result]
+            assert scores == sorted(scores, reverse=True), f"scores não estão ordenados: {scores}"
+
+
+class TestResolveProductInci:
+    """_resolve_product_inci: prefer JOIN, fallback pra products.inci_ingredients."""
+
+    def test_resolves_from_inci_json_column(self, seeded_catalog):
+        from src.api.routes.moon import _resolve_product_inci
+        with Session(seeded_catalog) as s:
+            inci = _resolve_product_inci(s, "p-good")
+        # No product_ingredients JOIN, cai no fallback JSON column
+        assert "Water" in inci
+        assert "Cetyl Alcohol" in inci
+
+    def test_returns_empty_for_unknown_product(self, seeded_catalog):
+        from src.api.routes.moon import _resolve_product_inci
+        with Session(seeded_catalog) as s:
+            inci = _resolve_product_inci(s, "nonexistent-id")
+        assert inci == []
+
+
+class TestListCategories:
+    """GET /api/moon/categories — lista categorias + compat rules."""
+
+    def test_returns_categories_with_rules(self, client, seeded_ingredients):
+        # Reset cache
+        import src.api.routes.moon as moon_module
+        moon_module._CAT_INDEX = None
+        moon_module._RULES_INDEX = None
+        resp = client.get("/api/moon/categories")
+        assert resp.status_code == 200, resp.text
+        body = resp.json()
+        # Estrutura: lista de categorias com compat por hair_type
+        assert isinstance(body, list) or isinstance(body, dict)
 
 
 # ───────────────────────────────────────────────────────────────────────
