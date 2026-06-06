@@ -159,8 +159,13 @@ export default function AuditTab() {
               </tr>
             </thead>
             <tbody>
+              {authEvents === null && loading && (
+                <tr><td colSpan={5} className="px-4 py-8 text-center text-ink-faint">Carregando eventos…</td></tr>
+              )}
               {authEvents?.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-ink-faint">Sem eventos.</td></tr>
+                <tr><td colSpan={5} className="px-4 py-8 text-center text-ink-faint">
+                  Sem eventos de autenticação no período. Logins, falhas e logouts aparecem aqui assim que ocorrem.
+                </td></tr>
               )}
               {authEvents?.map((e) => (
                 <tr key={e.event_id} className="border-t border-cream-dark">
@@ -186,6 +191,9 @@ export default function AuditTab() {
               </tr>
             </thead>
             <tbody>
+              {adminActions === null && loading && (
+                <tr><td colSpan={4} className="px-4 py-8 text-center text-ink-faint">Carregando ações admin…</td></tr>
+              )}
               {adminActions?.length === 0 && (
                 <tr><td colSpan={4} className="px-4 py-8 text-center text-ink-faint">
                   Nenhuma ação ainda. Edita uma marca ou personalidade da Moon e volta aqui.
@@ -218,8 +226,13 @@ export default function AuditTab() {
               </tr>
             </thead>
             <tbody>
+              {kbRetrievals === null && loading && (
+                <tr><td colSpan={5} className="px-4 py-8 text-center text-ink-faint">Carregando consultas…</td></tr>
+              )}
               {kbRetrievals?.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-ink-faint">Nenhuma consulta ainda.</td></tr>
+                <tr><td colSpan={5} className="px-4 py-8 text-center text-ink-faint">
+                  Nenhuma consulta à Moon ainda. Cada pergunta no chat vira uma linha aqui (com hash, não o texto cru).
+                </td></tr>
               )}
               {kbRetrievals?.map((r) => (
                 <tr key={r.log_id} className="border-t border-cream-dark">
