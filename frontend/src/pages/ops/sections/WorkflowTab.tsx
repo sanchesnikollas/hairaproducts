@@ -8,12 +8,47 @@
  *
  * Layout: hero do cérebro → 4 órgãos em órbita → fluxo curto de pergunta.
  */
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Brain, MessageCircleHeart, UserCircle2, Boxes, FlaskConical,
-  ArrowDown, Sparkles, Save, MessageSquare, Tag,
+  ArrowDown, Sparkles, Save, MessageSquare, Tag, AlertCircle, RefreshCw,
 } from 'lucide-react';
 import { listKnowledge, type KnowledgeChunkSummary } from '@/lib/ops-api';
+
+/**
+ * Estado tagged union: distingue 3 cenários que estavam todos colapsados
+ * em `sources === []` antes:
+ *  - loading  → primeira carga, mostra skeleton
+ *  - loaded   → fetch OK (chunks pode ser vazio = sem Compêndio subido)
+ *  - error    → 4xx/5xx/network — banner vermelho + botão retry
+ *
+ * O bug anterior era `.catch(() => setSources([]))` que silenciava erros
+ * e exibia "Compêndio não foi subido" mesmo quando era 500 do backend.
+ */
+type SourcesState =
+  | { kind: 'loading' }
+  | { kind: 'loaded'; chunks: KnowledgeChunkSummary[] }
+  | { kind: 'error'; message: string };
+
+function sanitizeError(e: unknown): string {
+  if (e instanceof Error) {
+    const m = e.message.toLowerCase();
+    if (m.includes('401') || m.includes('unauthorized')) {
+      return 'Sessão expirada. Faça login novamente.';
+    }
+    if (m.includes('403') || m.includes('forbidden')) {
+      return 'Você não tem permissão pra ler o material da Moon.';
+    }
+    if (m.includes('500') || m.includes('502') || m.includes('503')) {
+      return 'Backend da Moon temporariamente indisponível.';
+    }
+    if (m.includes('network') || m.includes('fetch')) {
+      return 'Sem conexão com o backend.';
+    }
+    return e.message.slice(0, 120);
+  }
+  return 'Erro inesperado ao carregar o Compêndio.';
+}
 
 interface Organ {
   icon: typeof MessageCircleHeart;
@@ -81,16 +116,24 @@ const FLOW: FlowStep[] = [
 ];
 
 export default function WorkflowTab() {
-  const [sources, setSources] = useState<KnowledgeChunkSummary[] | null>(null);
-  useEffect(() => {
-    listKnowledge()
-      .then((r) => setSources(r.chunks))
-      .catch(() => setSources([]));
+  const [state, setState] = useState<SourcesState>({ kind: 'loading' });
+
+  const loadSources = useCallback(async () => {
+    setState({ kind: 'loading' });
+    try {
+      const r = await listKnowledge();
+      setState({ kind: 'loaded', chunks: r.chunks });
+    } catch (e) {
+      setState({ kind: 'error', message: sanitizeError(e) });
+    }
   }, []);
 
-  const compendio = sources?.find((s) => /comp[eê]ndio/i.test(s.source));
-  const outrasFontes = (sources ?? []).filter((s) => !/comp[eê]ndio/i.test(s.source));
-  const totalTokens = (sources ?? []).reduce((a, b) => a + b.token_estimate, 0);
+  useEffect(() => { void loadSources(); }, [loadSources]);
+
+  const chunks = state.kind === 'loaded' ? state.chunks : [];
+  const compendio = chunks.find((s) => /comp[eê]ndio/i.test(s.source));
+  const outrasFontes = chunks.filter((s) => !/comp[eê]ndio/i.test(s.source));
+  const totalTokens = chunks.reduce((a, b) => a + b.token_estimate, 0);
 
   return (
     <div className="space-y-8">
@@ -102,6 +145,28 @@ export default function WorkflowTab() {
           Moon é só um Claude genérico.
         </p>
       </div>
+
+      {state.kind === 'error' && (
+        <div
+          role="alert"
+          className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 flex items-start gap-3"
+        >
+          <AlertCircle size={18} aria-hidden className="shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <div className="font-medium">Não consegui carregar o material da Moon</div>
+            <div className="text-xs text-red-600 mt-1">{state.message}</div>
+            <div className="text-xs text-red-500 mt-2">
+              Isso é diferente de &quot;Compêndio vazio&quot;. Pode ser API down, token expirado ou bug.
+            </div>
+          </div>
+          <button
+            onClick={() => void loadSources()}
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 hover:border-red-300 focus:outline-none focus:ring-2 focus:ring-red-300"
+          >
+            <RefreshCw size={12} aria-hidden /> Tentar de novo
+          </button>
+        </div>
+      )}
 
       {/* ─── CÉREBRO (hero) ─── */}
       <section
@@ -145,12 +210,22 @@ export default function WorkflowTab() {
                     ~{compendio.token_estimate.toLocaleString('pt-BR')} tk
                   </span>
                 </span>
-              ) : sources === null ? (
+              ) : state.kind === 'loading' ? (
                 <span
                   aria-busy="true"
                   aria-label="Carregando fontes da Moon"
                   className="inline-flex h-6 w-48 animate-pulse rounded-full bg-white/60 border border-[#ff5900]/15"
                 />
+              ) : state.kind === 'error' ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 border border-red-200 text-red-700 px-3 py-1">
+                  <AlertCircle size={12} aria-hidden /> Falha ao ler o Compêndio
+                  <button
+                    onClick={() => void loadSources()}
+                    className="ml-1 inline-flex items-center gap-1 underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-red-300 rounded"
+                  >
+                    <RefreshCw size={10} aria-hidden /> tentar de novo
+                  </button>
+                </span>
               ) : (
                 <span className="rounded-full bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1">
                   Compêndio ainda não foi subido — faça upload em <strong>Material</strong>.
