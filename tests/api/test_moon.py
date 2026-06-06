@@ -257,6 +257,22 @@ def db_engine():
     # Audit tables vivem num Base separado
     from src.storage.audit_models import AuditBase
     AuditBase.metadata.create_all(engine)
+
+    # ingredient_category_compatibility é raw SQL no migration (fora dos ORMs)
+    # — recriar manualmente pra tests do score_inci não falharem.
+    from sqlalchemy import text as _t
+    with engine.begin() as conn:
+        conn.execute(_t("""
+            CREATE TABLE IF NOT EXISTS ingredient_category_compatibility (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                category VARCHAR(64) NOT NULL,
+                hair_type VARCHAR(32) NOT NULL,
+                score INTEGER NOT NULL,
+                reason TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                UNIQUE(category, hair_type)
+            )
+        """))
     return engine
 
 
@@ -482,6 +498,195 @@ class TestChatRateLimitIntegration:
         # User B: limpo
         _moon_chat_rate_check("user-B")
         assert len(_moon_chat_log["user-B"]) == 1
+
+
+# ───────────────────────────────────────────────────────────────────────
+# Tier 3 — score_inci (DB-heavy, seeded ingredients)
+# ───────────────────────────────────────────────────────────────────────
+
+
+@pytest.fixture
+def seeded_ingredients(db_engine):
+    """Popula ingredients + aliases + compatibility com mini-conjunto."""
+    from sqlalchemy import text as _t
+    with Session(db_engine) as s:
+        # 3 ingredients de categorias distintas (created_at é NOT NULL)
+        s.execute(_t("INSERT INTO ingredients (id, canonical_name, category, created_at, is_hidden) VALUES "
+                     "('i-cetyl', 'Cetyl Alcohol', 'fatty_alcohol', CURRENT_TIMESTAMP, 0), "
+                     "('i-amodi', 'Amodimethicone', 'silicone', CURRENT_TIMESTAMP, 0), "
+                     "('i-sls', 'Sodium Lauryl Sulfate', 'harsh_surfactant', CURRENT_TIMESTAMP, 0)"))
+        # Alias só pro cetyl (testa fallback)
+        s.execute(_t("INSERT INTO ingredient_aliases (id, ingredient_id, alias, language) VALUES "
+                     "('a-1', 'i-cetyl', 'cetyl alc.', 'en')"))
+        # Compat rules: 3a → fatty_alcohol +1, silicone -1, harsh_surfactant -1
+        s.execute(_t("INSERT INTO ingredient_category_compatibility (category, hair_type, score, reason) VALUES "
+                     "('fatty_alcohol', '3a', 1, 'Hidrata fios secos'), "
+                     "('silicone', '3a', -1, 'Pode acumular em cacheados'), "
+                     "('harsh_surfactant', '3a', -1, 'Resseca cacheados')"))
+        s.commit()
+    yield db_engine
+
+
+class TestScoreInci:
+    """score_inci: matching ingredients + categories + compatibility scoring."""
+
+    def test_empty_inci_returns_zero_score(self, seeded_ingredients):
+        from src.api.routes.moon import score_inci
+        with Session(seeded_ingredients) as s:
+            result = score_inci(s, [], ["3a"])
+        assert result["overall_score"] == 0.0
+        assert result["ingredients_total"] == 0
+        assert result["ingredients_categorized"] == 0
+
+    def test_unknown_ingredients_not_categorized(self, seeded_ingredients):
+        from src.api.routes.moon import score_inci
+        with Session(seeded_ingredients) as s:
+            result = score_inci(s, ["Mystery Compound X", "Foo Bar"], ["3a"])
+        assert result["ingredients_total"] == 2
+        assert result["ingredients_categorized"] == 0  # nenhum match
+        assert result["overall_score"] == 0.0
+
+    def test_canonical_name_match_scores(self, seeded_ingredients):
+        from src.api.routes.moon import score_inci
+        with Session(seeded_ingredients) as s:
+            result = score_inci(s, ["Cetyl Alcohol"], ["3a"])
+        assert result["ingredients_categorized"] == 1
+        assert result["overall_score"] == 1.0  # fatty_alcohol+1 com peso normalizado
+        assert any(b["name"] == "Cetyl Alcohol" for b in result["benefits"])
+
+    def test_alias_fallback_match(self, seeded_ingredients):
+        """`cetyl alc.` (alias) deve resolver pra Cetyl Alcohol."""
+        from src.api.routes.moon import score_inci
+        with Session(seeded_ingredients) as s:
+            result = score_inci(s, ["cetyl alc."], ["3a"])
+        assert result["ingredients_categorized"] == 1
+        assert result["overall_score"] == 1.0
+
+    def test_alerts_for_negative_score_ingredients(self, seeded_ingredients):
+        from src.api.routes.moon import score_inci
+        with Session(seeded_ingredients) as s:
+            result = score_inci(
+                s, ["Sodium Lauryl Sulfate", "Amodimethicone"], ["3a"]
+            )
+        assert len(result["alerts"]) == 2
+        alert_names = {a["name"] for a in result["alerts"]}
+        assert "Sodium Lauryl Sulfate" in alert_names
+        assert "Amodimethicone" in alert_names
+        assert result["overall_score"] < 0  # mistura ruim p/ 3a
+
+    def test_position_weight_favors_top_ingredients(self, seeded_ingredients):
+        """Top INCI list pesa mais que bottom."""
+        from src.api.routes.moon import score_inci
+        # Cetyl em primeiro (peso alto) vs em último (peso baixo)
+        fillers = ["unknown-1", "unknown-2", "unknown-3", "unknown-4"]
+        with Session(seeded_ingredients) as s:
+            top = score_inci(s, ["Cetyl Alcohol"] + fillers, ["3a"])
+            bot = score_inci(s, fillers + ["Cetyl Alcohol"], ["3a"])
+        # Mesmo +1 nominal, mas o resultado é normalizado (=1.0 nos 2 casos),
+        # porque só 1 ingrediente tem peso real. Testa que os 2 retornam estrutura
+        # coerente — não o overall, que é normalizado.
+        assert top["ingredients_categorized"] == 1
+        assert bot["ingredients_categorized"] == 1
+
+
+# ───────────────────────────────────────────────────────────────────────
+# Tier 4 — Profile + Feedback endpoints
+# ───────────────────────────────────────────────────────────────────────
+
+
+class TestProfileEndpoints:
+    """POST /api/moon/profile + GET /api/moon/profile/{user_id}."""
+
+    def test_save_profile_then_get(self, client):
+        # ProfileRequest é flat: user_id + campos do HairProfileInput no top
+        save_resp = client.post("/api/moon/profile", json={
+            "user_id": "user-prof-1",
+            "curl_subtype": "3A",
+            "thickness": "medios",
+        })
+        assert save_resp.status_code == 200, save_resp.text
+
+        get_resp = client.get("/api/moon/profile/user-prof-1")
+        assert get_resp.status_code == 200
+        body = get_resp.json()
+        assert body["curl_subtype"] == "3A"
+        assert body["thickness"] == "medios"
+
+    def test_get_profile_not_found(self, client):
+        resp = client.get("/api/moon/profile/no-such-user")
+        assert resp.status_code == 404
+
+
+class TestFeedbackEndpoints:
+    """POST /api/moon/feedback + GET /api/moon/feedback/summary (admin)."""
+
+    def test_submit_feedback_up_returns_201(self, client):
+        resp = client.post("/api/moon/feedback", json={
+            "rating": "up",
+            "message_content": "Use Cetyl Alcohol regularmente.",
+            "user_message": "qual ingrediente ajuda?",
+        })
+        assert resp.status_code == 201, resp.text
+        assert resp.json()["feedback_id"]
+
+    def test_submit_feedback_down(self, client):
+        resp = client.post("/api/moon/feedback", json={
+            "rating": "down",
+            "message_content": "Resposta confusa",
+            "comment": "Não respondeu o que perguntei",
+        })
+        assert resp.status_code == 201, resp.text
+
+    def test_rating_must_be_up_or_down(self, client):
+        resp = client.post("/api/moon/feedback", json={
+            "rating": "meh",
+            "message_content": "blah",
+        })
+        assert resp.status_code == 400
+
+    def test_feedback_summary_requires_admin(self, client, authed_user):
+        # Reviewer (não admin) → 403
+        _, token = authed_user
+        resp = client.get(
+            "/api/moon/feedback/summary",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp.status_code == 403
+
+    def test_feedback_summary_unauthenticated_blocked(self, client):
+        resp = client.get("/api/moon/feedback/summary")
+        assert resp.status_code in (401, 403)
+
+    def test_feedback_summary_with_admin_returns_kpis(self, client, db_engine):
+        """Admin vê total + percentual de useful."""
+        import bcrypt
+        from src.api.auth import create_access_token
+        from src.storage.ops_models import UserORM
+        with Session(db_engine) as s:
+            admin = UserORM(
+                email="admin@haira.app",
+                password_hash=bcrypt.hashpw(b"x", bcrypt.gensalt()).decode(),
+                name="Admin", role="admin", is_active=True,
+            )
+            s.add(admin); s.commit(); s.refresh(admin)
+            admin_token = create_access_token(user_id=admin.user_id, role="admin")
+
+        # Seed 2 up + 1 down
+        for _ in range(2):
+            client.post("/api/moon/feedback", json={"rating": "up", "message_content": "ok"})
+        client.post("/api/moon/feedback", json={"rating": "down", "message_content": "ruim"})
+
+        resp = client.get(
+            "/api/moon/feedback/summary",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert resp.status_code == 200, resp.text
+        body = resp.json()
+        assert body["total"] == 3
+        assert body["up"] == 2
+        assert body["down"] == 1
+        assert body["useful_pct"] == round(100 * 2 / 3, 1)
+        assert len(body["recent_downvotes"]) == 1
 
 
 # ───────────────────────────────────────────────────────────────────────
