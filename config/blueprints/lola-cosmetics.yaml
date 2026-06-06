@@ -9,9 +9,11 @@ entrypoints:
 - https://www.lolacosmetics.com.br/
 discovery:
   strategy: sitemap_first
+  # 2026-06-06: sitemap.xml retorna 405 com UA python-httpx.
+  # Com UA Safari (agora default no sitemap.py) o root index funciona e
+  # expande pra /sitemap/products/1, /2, /3. Cada um lista até 100 URLs.
   sitemap_urls:
-  - https://www.lolacosmetics.com.br/sitemap.xml
-  - https://www.lolacosmetics.com.br/sitemap/product-0.xml
+  - https://www.lolacosmetics.com.br/sitemap/index
   product_url_pattern: ^https://www\.lolacosmetics\.com\.br/[\w%-]+-p\d+$
   max_pages: 500
   pagination:

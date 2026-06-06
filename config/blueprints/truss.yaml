@@ -31,8 +31,13 @@ entrypoints:
 - https://www.trussprofessional.com.br/truss/therapy/
 - https://www.trussprofessional.com.br/truss/bem-estar-e-saude/
 discovery:
-  strategy: entrypoint_crawl
-  sitemap_urls: []
+  # 2026-06-06: Akamai bot manager bloqueia httpx default. Com curl_cffi
+  # impersonate=chrome (fallback automático no SitemapAdapter), o sitemap
+  # publicado em /sitemap-index.xml expande pra produto.xml externo
+  # (hospedado pela Beleza na Web — TRUSS terceiriza infra).
+  strategy: sitemap_first
+  sitemap_urls:
+  - https://www.trussprofessional.com.br/sitemap-index.xml
   product_url_pattern: 'trussprofessional\.com\.br/[a-z0-9][a-z0-9\-]*\d+[a-z0-9\-]*/?$'
   max_pages: 500
   pagination:

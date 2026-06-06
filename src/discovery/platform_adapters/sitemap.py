@@ -15,6 +15,18 @@ logger = logging.getLogger(__name__)
 
 SITEMAP_NS = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
 
+# Default headers — alguns WAFs (Akamai, Cloudflare) bloqueiam o UA
+# padrão `python-httpx/X.X.X`. Safari macOS funciona em 95% dos sites
+# brasileiros (Chrome às vezes é bloqueado, Bot-detection nos sitemaps).
+_DEFAULT_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_2) "
+        "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15"
+    ),
+    "Accept": "application/xml,text/xml,*/*;q=0.9",
+    "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
+}
+
 
 class SitemapAdapter(BaseAdapter):
     name = "sitemap"
@@ -25,21 +37,52 @@ class SitemapAdapter(BaseAdapter):
         self._use_curl_cffi = use_curl_cffi
         self._curl_session = None
 
-    def _fetch_sitemap(self, url: str) -> str | None:
+    def _fetch_via_curl_cffi(self, url: str) -> str | None:
+        """Fallback escudado por WAFs (Akamai, Cloudflare) que fazem TLS
+        fingerprinting (JA3). curl_cffi com `impersonate='chrome'` emula
+        o handshake real do Chrome — passa onde httpx falha."""
         try:
-            if self._use_curl_cffi:
-                if self._curl_session is None:
-                    from curl_cffi.requests import Session
-                    self._curl_session = Session(impersonate="chrome", verify=self._ssl_verify)
-                resp = self._curl_session.get(url, timeout=self._timeout)
-                if resp.status_code == 200 and resp.text.strip():
-                    return resp.text
-            else:
-                resp = httpx.get(url, timeout=self._timeout, follow_redirects=True, verify=self._ssl_verify)
-                if resp.status_code == 200 and resp.text.strip():
-                    return resp.text
+            if self._curl_session is None:
+                from curl_cffi.requests import Session
+                self._curl_session = Session(impersonate="chrome", verify=self._ssl_verify)
+            resp = self._curl_session.get(url, timeout=self._timeout)
+            if resp.status_code == 200 and resp.text.strip():
+                return resp.text
+            logger.debug(f"curl_cffi {resp.status_code} for {url}")
         except Exception as e:
-            logger.debug(f"Failed to fetch sitemap {url}: {e}")
+            logger.debug(f"curl_cffi failed for {url}: {e}")
+        return None
+
+    def _fetch_sitemap(self, url: str) -> str | None:
+        """Tenta httpx com UA Safari primeiro (rápido, dep leve). Se WAF
+        bloquear (403/405/429), automaticamente cai pra curl_cffi com
+        Chrome impersonation (passa Akamai/Cloudflare na maioria das vezes).
+
+        `use_curl_cffi=True` força o fallback direto (skip httpx).
+        """
+        if self._use_curl_cffi:
+            return self._fetch_via_curl_cffi(url)
+
+        try:
+            resp = httpx.get(
+                url,
+                timeout=self._timeout,
+                follow_redirects=True,
+                verify=self._ssl_verify,
+                headers=_DEFAULT_HEADERS,
+            )
+            if resp.status_code == 200 and resp.text.strip():
+                return resp.text
+            # WAF típico: 403 (bot detected), 405 (method blocked), 429 (rate)
+            # → tenta curl_cffi como fallback antes de desistir
+            if resp.status_code in (403, 405, 429):
+                logger.debug(
+                    f"httpx got {resp.status_code} for {url}, falling back to curl_cffi"
+                )
+                return self._fetch_via_curl_cffi(url)
+        except Exception as e:
+            logger.debug(f"httpx failed for {url}: {e}, trying curl_cffi")
+            return self._fetch_via_curl_cffi(url)
         return None
 
     def _parse_urls(self, xml_text: str) -> list[str]:
