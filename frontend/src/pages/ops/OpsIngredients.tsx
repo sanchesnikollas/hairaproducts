@@ -4,6 +4,7 @@ import { fetchIngredients } from "../../lib/api";
 import { getIngredientGaps, opsUpdateIngredient } from "../../lib/ops-api";
 import type { IngredientSummary } from "../../types/api";
 import type { IngredientGaps } from "../../types/ops";
+import { InlineLoading } from "@/components/LoadingState";
 
 type Tab = "browse" | "gaps";
 
@@ -67,7 +68,7 @@ export default function OpsIngredients() {
             className="w-64 rounded-lg border border-cream-dark bg-white px-3 py-2 text-sm text-ink outline-none focus:border-ink"
           />
 
-          {loadingIng && <p className="text-ink-muted">Carregando...</p>}
+          {loadingIng && <InlineLoading width="10rem" label="Carregando ingredientes" />}
 
           {ingredients && (
             <div className="overflow-x-auto rounded-xl border border-cream-dark bg-white">
@@ -125,7 +126,7 @@ export default function OpsIngredients() {
 
       {activeTab === "gaps" && (
         <div className="space-y-6">
-          {loadingGaps && <p className="text-ink-muted">Carregando gaps...</p>}
+          {loadingGaps && <InlineLoading width="10rem" label="Carregando gaps de cobertura" />}
 
           {gaps && (
             <>

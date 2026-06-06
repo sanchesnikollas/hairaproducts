@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAPI } from "../../hooks/useAPI";
+import { InlineLoading } from "@/components/LoadingState";
 
 interface DualValidationItem {
   id: string;
@@ -103,7 +104,7 @@ export default function OpsDualValidation() {
         )}
       </div>
 
-      {loading && <p className="text-ink-muted">Carregando...</p>}
+      {loading && <InlineLoading width="10rem" label="Carregando validações" />}
       {error && <p className="text-coral">Erro: {error}</p>}
 
       {data && data.length === 0 && (

@@ -4,6 +4,7 @@ import { useAPI } from "../../hooks/useAPI";
 import { createUser, getUsers } from "../../lib/ops-api";
 import { useAuth } from "../../lib/auth";
 import type { OpsUser } from "../../types/ops";
+import { InlineLoading } from "@/components/LoadingState";
 
 export default function OpsSettings() {
   const { isAdmin } = useAuth();
@@ -102,7 +103,9 @@ export default function OpsSettings() {
           <h2 className="text-sm font-semibold text-ink">Usuários</h2>
         </div>
         {loading ? (
-          <p className="p-5 text-ink-muted">Carregando...</p>
+          <div className="p-5">
+            <InlineLoading width="12rem" label="Carregando usuários" />
+          </div>
         ) : (
           <table className="w-full text-sm">
             <thead>

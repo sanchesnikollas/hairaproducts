@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useAPI } from "../../hooks/useAPI";
 import { opsGetInciSummary, opsListProducts, opsUpdateProduct } from "../../lib/ops-api";
 import type { InciSummaryBrand } from "../../lib/ops-api";
+import { InlineLoading } from "@/components/LoadingState";
 
 const PER_PAGE = 20;
 
@@ -95,7 +96,7 @@ export default function OpsInciEntry() {
       </div>
 
       {/* Loading / Error */}
-      {summaryLoading && <p className="text-ink-muted">Carregando marcas...</p>}
+      {summaryLoading && <InlineLoading width="11rem" label="Carregando lista de marcas" />}
       {summaryError && <p className="text-coral">Erro: {summaryError}</p>}
 
       {/* Brand selector grid */}
@@ -148,7 +149,7 @@ export default function OpsInciEntry() {
             )}
           </h2>
 
-          {productsLoading && <p className="text-ink-muted text-sm">Carregando produtos...</p>}
+          {productsLoading && <InlineLoading width="11rem" label="Carregando produtos da marca" />}
 
           {products && products.items.length === 0 && !productsLoading && (
             <div className="rounded-xl border border-cream-dark bg-white p-6 text-center">

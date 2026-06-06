@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAPI } from "../../hooks/useAPI";
+import { InlineLoading } from "@/components/LoadingState";
 
 const SEAL_LABELS: Record<string, { label: string; emoji: string; description: string }> = {
   sulfate_free: { label: "Sem Sulfato", emoji: "🧴", description: "Não contém sulfatos agressivos" },
@@ -57,11 +58,15 @@ export default function OpsSeals() {
       <div>
         <h1 className="text-xl font-semibold text-ink">Selos de Qualidade</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          {data ? `${data.total_products_with_seals.toLocaleString()} produtos com selos detectados` : "Carregando..."}
+          {data ? (
+            `${data.total_products_with_seals.toLocaleString()} produtos com selos detectados`
+          ) : (
+            <InlineLoading width="14rem" label="Carregando total de selos" />
+          )}
         </p>
       </div>
 
-      {loading && <p className="text-ink-muted">Carregando selos...</p>}
+      {loading && <InlineLoading width="10rem" label="Carregando selos" />}
       {error && <p className="text-coral">Erro: {error}</p>}
 
       {/* Seal Grid */}
@@ -114,7 +119,11 @@ export default function OpsSeals() {
             </button>
           </div>
 
-          {productsLoading && <p className="p-5 text-ink-muted text-sm">Carregando produtos...</p>}
+          {productsLoading && (
+            <div className="p-5">
+              <InlineLoading width="12rem" label="Carregando produtos" />
+            </div>
+          )}
 
           {productsData && productsData.items.length > 0 && (
             <>

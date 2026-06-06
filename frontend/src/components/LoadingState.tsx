@@ -3,6 +3,50 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
+/**
+ * Inline loading — substituto pro `<p>Carregando…</p>` adhoc nos painéis Ops.
+ *
+ * Usa Skeleton dimensionada (não tem layout shift quando data chega),
+ * inclui `aria-busy` pra leitor de tela.
+ *
+ * Variantes:
+ * - `pulse` (default): retangulo cinza pulsante, dimensionado por `width`
+ * - `dots`: 3 dots animados (mais discreto, bom em headers)
+ */
+export function InlineLoading({
+  width = '8rem',
+  variant = 'pulse',
+  label = 'Carregando',
+}: {
+  width?: string;
+  variant?: 'pulse' | 'dots';
+  label?: string;
+}) {
+  if (variant === 'dots') {
+    return (
+      <span
+        role="status"
+        aria-busy="true"
+        aria-label={label}
+        className="inline-flex items-center gap-1 text-ink-faint"
+      >
+        <span className="inline-block w-1 h-1 rounded-full bg-current animate-pulse" style={{ animationDelay: '0ms' }} />
+        <span className="inline-block w-1 h-1 rounded-full bg-current animate-pulse" style={{ animationDelay: '200ms' }} />
+        <span className="inline-block w-1 h-1 rounded-full bg-current animate-pulse" style={{ animationDelay: '400ms' }} />
+      </span>
+    );
+  }
+  return (
+    <Skeleton
+      role="status"
+      aria-busy="true"
+      aria-label={label}
+      className="inline-block h-4 align-middle rounded"
+      style={{ width }}
+    />
+  );
+}
+
 export default function LoadingState({ message = 'Loading...' }: { message?: string }) {
   return (
     <div className="space-y-6 py-8">

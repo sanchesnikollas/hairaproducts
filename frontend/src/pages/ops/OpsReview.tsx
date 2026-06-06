@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAPI } from "../../hooks/useAPI";
 import { getReviewQueue, startReview, resolveReview } from "../../lib/ops-api";
 import type { ReviewQueueResponse, ReviewQueueItem as QueueItem } from "../../types/ops";
+import { InlineLoading } from "@/components/LoadingState";
 
 export default function OpsReview() {
   const [brand, setBrand] = useState("");
@@ -61,7 +62,7 @@ export default function OpsReview() {
         )}
       </div>
 
-      {loading && <p className="text-ink-muted">Carregando...</p>}
+      {loading && <InlineLoading width="10rem" label="Carregando fila de revisão" />}
       {error && <p className="text-coral">Erro: {error}</p>}
 
       {/* Active review panel */}

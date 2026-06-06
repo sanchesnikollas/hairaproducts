@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useAPI } from "../../hooks/useAPI";
 import { opsListProducts, opsUpdateProduct } from "../../lib/ops-api";
 import CategorySelect from "../../components/ops/CategorySelect";
+import { InlineLoading } from "@/components/LoadingState";
 
 export default function OpsQuickFill() {
   const [page, setPage] = useState(1);
@@ -59,7 +60,7 @@ export default function OpsQuickFill() {
         </span>
       </div>
 
-      {loading && <p className="text-ink-muted">Carregando...</p>}
+      {loading && <InlineLoading width="10rem" label="Carregando produtos" />}
 
       {!loading && !product && (
         <div className="rounded-xl border border-cream-dark bg-white p-8 text-center">

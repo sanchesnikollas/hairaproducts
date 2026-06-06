@@ -9,6 +9,7 @@ import {
 import { useAuth } from "../../lib/auth";
 import CategorySelect from "../../components/ops/CategorySelect";
 import BrandFormModal from "../../components/BrandFormModal";
+import { InlineLoading } from "@/components/LoadingState";
 
 type DataQuality = { fields: Record<string, boolean>; filled: number; total: number; pct: number };
 
@@ -440,7 +441,7 @@ export default function OpsProducts() {
         </div>
       )}
 
-      {loading && <p className="text-ink-muted">Carregando...</p>}
+      {loading && <InlineLoading width="10rem" label="Carregando produtos" />}
       {error && <p className="text-coral">Erro: {error}</p>}
 
       {/* Table */}
