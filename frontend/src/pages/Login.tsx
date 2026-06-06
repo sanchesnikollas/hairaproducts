@@ -2,10 +2,15 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 
+// Common TLD typos: .om (instead of .com), .con, .cm, .ne, .ogr.
+// Catches mistakes like "admin@haira.om" that pass HTML5 type="email".
+const SUSPICIOUS_TLD = /\.(om|con|cm|ne|ogr|orgg|coom)$/i;
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [emailWarning, setEmailWarning] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { login, user, loading } = useAuth();
   const navigate = useNavigate();
@@ -37,10 +42,24 @@ export default function Login() {
           <div>
             <label className="mb-1 block text-sm text-ink-muted">Email</label>
             <input
-              type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+              type="email" value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (emailWarning) setEmailWarning("");
+              }}
+              onBlur={(e) => {
+                const v = e.target.value.trim();
+                if (v && SUSPICIOUS_TLD.test(v)) {
+                  setEmailWarning("Confere o final do email — parece ter erro de digitação (ex.: .om em vez de .com).");
+                }
+              }}
               className="w-full rounded-lg border border-cream-dark bg-cream px-3 py-2 text-sm text-ink outline-none focus:border-ink"
+              autoComplete="email"
               required
             />
+            {emailWarning && (
+              <p className="mt-1 text-xs text-amber-700">{emailWarning}</p>
+            )}
           </div>
           <div>
             <label className="mb-1 block text-sm text-ink-muted">Senha</label>
