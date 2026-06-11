@@ -57,6 +57,10 @@ EXCLUDE_KEYWORDS: list[str] = [
     "sabonete líquido", "sabonete corporal",
     "hidratante corporal", "body lotion", "body cream",
     "batom", "lipstick", "rímel", "mascara para cílios",
+    "água para roupas", "agua para roupas", "roupa", "roupas",
+    "difusor", "vela", "sachê", "sache",
+    "home spray", "aromatizador", "ambiente",
+    "cheirinho", "perfume de ambiente",
 ]
 
 KIT_PATTERNS: list[str] = [

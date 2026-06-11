@@ -21,9 +21,8 @@ discovery:
     type: none
     max_pages: 1
 extraction:
-  requires_js: false
-  http_client: curl_cffi
-  curl_cffi_impersonate: chrome
+  requires_js: true
+  headless: true
   delay_seconds: 3
   inci_selectors:
   - .ingredients-table
@@ -35,9 +34,11 @@ extraction:
   - '[id="topHeaderTextBig"]'
   - '[id="topHeaderTextBig"] p'
   image_selectors:
-  - img[src*="ctfassets.net"]
-  - img[src*="images.ctfassets.net"]
-  - .product-image img
+  - 'img[src*="ctfassets.net"][alt*="ackshot" i]'
+  - 'img[src*="ctfassets.net"][src*="ackshot" i]'
+  - 'meta[property="og:image"]'
+  - '.product-image img'
+  - 'img[src*="images.ctfassets.net"]:not([alt*="logo" i]):not([alt*="Logo" i])'
   price_selectors:
   - '[class*="price"]'
   - '[class*="Price"]'
@@ -47,10 +48,16 @@ extraction:
       - "descri\xE7\xE3o"
       - detalhes
       - sobre o produto
+      - sobre
+      - "conhe\xE7a"
+      - "conhe\xE7a o produto"
+      - "apresenta\xE7\xE3o"
     care_usage:
       labels:
       - como usar
       - modo de uso
+      - como aplicar
+      - "instru\xE7\xF5es de uso"
     composition:
       labels:
       - "composi\xE7\xE3o"
@@ -68,6 +75,9 @@ extraction:
       labels:
       - "benef\xEDcios"
       - resultado
+      - resultados
+      - principais benef\xEDcios
+      - o que faz
   wait_for_selector: h1
   use_llm_fallback: true
 notes:

@@ -38,23 +38,46 @@ extraction:
     description:
       labels:
       - descricao
+      - descricao do produto
       - sobre o produto
       - detalhes do produto
       - o produto
+      - caracteristicas
+      - caracteristicas do produto
+      - principais caracteristicas
+      - destaques
+      - destaques do produto
     care_usage:
       labels:
       - modo de uso
       - como usar
+      - como usar?
+      - como usar:
+      - como usar o produto
       - modo de aplicacao
+      - modo de aplicacao:
+      - aplicacao
+      - passo a passo
+      - dicas de uso
+      - recomendacao de uso
+      - sugestao de uso
       - instrucoes de uso
       - como aplicar
     composition:
       labels:
       - principios ativos
+      - principio ativo
+      - principio ativo:
+      - ativo principal
       - ativos
+      - ativos do produto
+      - ativos principais
       - formula
+      - formula exclusiva
+      - tecnologia exclusiva
       - tecnologia
       - composicao do produto
+      - composicao
     ingredients_inci:
       labels:
       - ingredientes

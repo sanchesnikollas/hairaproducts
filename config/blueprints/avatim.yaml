@@ -10,7 +10,17 @@ discovery:
   strategy: sitemap_first
   sitemap_urls:
   - https://www.avatim.com.br/sitemap.xml
-  product_url_pattern: ^https://www\.avatim\.com\.br/produto/[\w%-]+-\d+$
+  product_url_pattern: ^https://www\.avatim\.com\.br/produto/(?:[\w%-]*(?:xampu|shampoo|condicionador|mascara|m%C3%A1scara|leave-in|oleo-capilar|%C3%B3leo-capilar|tonico-capilar|t%C3%B4nico-capilar|creme-de-pentear|creme-para-pentear|cabelo|capilar)[\w%-]*)-\d+$
+  url_blocklist:
+  - agua-para-roupas
+  - "%C3%A1gua-para-roupas"
+  - difusor
+  - vela
+  - sache
+  - "sach%C3%AA"
+  - home-spray
+  - aromatizador
+  - ambiente
   max_pages: 100
   pagination:
     type: none
@@ -24,8 +34,21 @@ extraction:
   - h1
   - .product-name
   image_selectors:
-  - img[src*="cdn.vnda.com.br"]
-  - .product-images img
+  - 'meta[property="og:image"]'
+  - 'link[rel="image_src"]'
+  - '.product-images img[data-src]'
+  - '.product-images img[src*="cdn.vnda.com.br"]'
+  - '.product-images source[srcset]'
+  - '.product-image img[data-src]'
+  - '.product-image img[src]'
+  - 'picture source[srcset*="cdn.vnda.com.br"]'
+  - 'img[data-src*="cdn.vnda.com.br"]'
+  - 'img[src*="cdn.vnda.com.br"]'
+  description_selectors:
+  - '.product-description'
+  - '.product__description'
+  - 'div[itemprop="description"]'
+  - 'meta[name="description"]'
   price_selectors:
   - '[data-price]'
   - .product-price
@@ -39,6 +62,17 @@ extraction:
       labels:
       - como usar
       - modo de uso
+      - modo de aplicacao
+      - "modo de aplica\xE7\xE3o"
+      - como aplicar
+      - aplicacao
+      - "aplica\xE7\xE3o"
+      - instrucoes de uso
+      - "instru\xE7\xF5es de uso"
+      - sugestao de uso
+      - "sugest\xE3o de uso"
+      - utilizacao
+      - "utiliza\xE7\xE3o"
     composition:
       labels:
       - "composi\xE7\xE3o"

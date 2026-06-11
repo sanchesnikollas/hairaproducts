@@ -27,7 +27,20 @@ class SectionExtractionResult:
     care_usage: str | None = None
     composition: str | None = None
     ingredients_inci_raw: str | None = None
+    benefits: str | None = None
     sections: list[PageSection] = field(default_factory=list)
+
+
+# Tie-breaker when two label entries normalize to the same length.
+# Lower number = higher priority. Keeps description from losing to
+# composition when DOM is ambiguous (Avatim "sobre o produto" vs "composição").
+FIELD_PRIORITY = {
+    "description": 0,
+    "care_usage": 1,
+    "ingredients_inci": 2,
+    "composition": 3,
+    "benefits": 4,
+}
 
 
 # Marketing verbs that indicate promotional text, not INCI
@@ -213,8 +226,8 @@ def extract_sections_from_html(
             normalized = _normalize_label(label)
             label_lookup.append((normalized, taxonomy_field, label, validators))
 
-    # Sort by label length descending so more specific labels match first
-    label_lookup.sort(key=lambda x: len(x[0]), reverse=True)
+    # Sort by label length descending (specific labels first); on tie use FIELD_PRIORITY
+    label_lookup.sort(key=lambda x: (-len(x[0]), FIELD_PRIORITY.get(x[1], 99)))
 
     # Find heading-like elements
     for el in soup.find_all(HEADING_TAGS):
@@ -284,6 +297,8 @@ def extract_sections_from_html(
                 result.composition = content
             elif actual_field == "ingredients_inci" and result.ingredients_inci_raw is None:
                 result.ingredients_inci_raw = content
+            elif actual_field == "benefits" and result.benefits is None:
+                result.benefits = content
 
             break  # Only match the first (most specific) label per heading
 
@@ -341,6 +356,8 @@ def extract_sections_from_html(
                 result.composition = content
             elif actual_field == "ingredients_inci" and result.ingredients_inci_raw is None:
                 result.ingredients_inci_raw = content
+            elif actual_field == "benefits" and result.benefits is None:
+                result.benefits = content
 
             break
 
@@ -395,6 +412,8 @@ def extract_sections_from_html(
                 result.composition = content
             elif actual_field == "ingredients_inci" and result.ingredients_inci_raw is None:
                 result.ingredients_inci_raw = content
+            elif actual_field == "benefits" and result.benefits is None:
+                result.benefits = content
 
             break
 
@@ -544,6 +563,8 @@ def extract_sections_from_html(
                 result.composition = content
             elif actual_field == "ingredients_inci" and result.ingredients_inci_raw is None:
                 result.ingredients_inci_raw = content
+            elif actual_field == "benefits" and result.benefits is None:
+                result.benefits = content
 
             break
 

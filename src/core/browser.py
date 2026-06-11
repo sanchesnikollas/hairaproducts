@@ -151,8 +151,12 @@ class BrowserClient:
                 ".accordion-pdp-header",
                 "[class*='accordion'] [class*='header']",
                 "[class*='collapse'] [class*='trigger']",
+                "[class*='Accordion'] button",
+                "[class*='Tab'] button",
                 "button[aria-expanded='false']",
                 "button[data-state='closed']",
+                "[role='tab'][aria-selected='false']",
+                "[role='tab']",
                 "details:not([open]) > summary",
             ]
             clicked_any = False
@@ -167,7 +171,7 @@ class BrowserClient:
                         except Exception:
                             pass
             if clicked_any:
-                self._page.wait_for_timeout(500)
+                self._page.wait_for_timeout(800)
         except Exception as e:
             logger.debug(f"Accordion expansion failed: {e}")
 

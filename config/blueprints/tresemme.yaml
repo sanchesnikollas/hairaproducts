@@ -44,8 +44,9 @@ extraction:
   - .product-title
   - meta[property="og:title"]
   image_selectors:
-  - img[src*="unileversolutions.com"]
-  - img[src*="assets.unileversolutions"]
+  - .productmediagallery-root-item.active .cmp-image img
+  - .cmp-productmediagallery .cmp-image img
+  - .cmp-productmediagallery img
   - meta[property="og:image"]
   price_selectors: []
   section_label_map:

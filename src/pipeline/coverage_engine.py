@@ -20,6 +20,21 @@ logger = logging.getLogger(__name__)
 STOP_THE_LINE_THRESHOLD = 0.50
 
 
+def _benefits_to_list(raw: str | None) -> list[str] | None:
+    """Convert a benefits text blob (from section_classifier) into a list of bullets.
+
+    Splits on bullets, line breaks, semicolons, and commas-as-list (with min length).
+    Returns None when no usable content remains.
+    """
+    if not raw:
+        return None
+    import re as _re
+    parts = _re.split(r"[\n\r●•·;]+|(?<=\w),(?=\s+[A-ZÁÉÍÓÚÂÊÔÃÕÇa-z])", raw)
+    bullets = [p.strip(" -–•\t") for p in parts if p and p.strip()]
+    bullets = [b for b in bullets if len(b) >= 8 and len(b) <= 300]
+    return bullets or ([raw.strip()] if raw.strip() else None)
+
+
 class CoverageEngine:
     def __init__(self, session: Session, browser=None, llm_client=None):
         self._session = session
@@ -263,6 +278,7 @@ Product: {product_name}
             description=description,
             composition=det_result.get("composition"),
             care_usage=det_result.get("care_usage"),
+            benefits_claims=_benefits_to_list(det_result.get("benefits")),
             price=det_result.get("price"),
             currency=det_result.get("currency"),
             confidence=confidence,

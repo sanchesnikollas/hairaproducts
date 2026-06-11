@@ -455,6 +455,7 @@ def extract_product_deterministic(
         "description": None,
         "care_usage": None,
         "composition": None,
+        "benefits": None,
         "price": None,
         "currency": None,
         "evidence": evidence_list,
@@ -576,6 +577,8 @@ def extract_product_deterministic(
             result["inci_source"] = "section_classifier"
         if section_result.description and not result["description"]:
             result["description"] = section_result.description
+        if section_result.benefits and not result["benefits"]:
+            result["benefits"] = section_result.benefits
         # Create evidence entries for section-extracted fields
         for section in section_result.sections:
             evidence_list.append(create_evidence(

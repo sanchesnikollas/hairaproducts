@@ -53,6 +53,15 @@ class ProductDiscoverer:
             except Exception as e:
                 logger.warning(f"Adapter {adapter.name} failed: {e}")
 
+        url_blocklist = [t.lower() for t in discovery_config.get("url_blocklist", []) if t]
+        if url_blocklist:
+            before = len(all_discovered)
+            all_discovered = {
+                url: item for url, item in all_discovered.items()
+                if not any(token in url.lower() for token in url_blocklist)
+            }
+            logger.info(f"url_blocklist removed {before - len(all_discovered)} URLs")
+
         discovered = list(all_discovered.values())
         logger.info(
             f"Total discovered: {len(discovered)} URLs "
