@@ -302,7 +302,14 @@ def ops_get_product(
 ):
     product = session.query(ProductORM).filter(ProductORM.id == product_id).first()
     if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "PRODUCT_NOT_FOUND",
+                "message": "Product not found or removed by cleanup",
+                "product_id": product_id,
+            },
+        )
     fields_quality = {
         "nome": bool(product.product_name),
         "descricao": bool(product.description),

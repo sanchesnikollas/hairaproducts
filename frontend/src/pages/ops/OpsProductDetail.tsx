@@ -125,7 +125,24 @@ export default function OpsProductDetail() {
   };
 
   if (loading) return <p className="text-ink-muted">Carregando produto...</p>;
-  if (error) return <p className="text-coral">Erro: {error}</p>;
+  if (error) {
+    const notFound = /not found|404|product_removed/i.test(error);
+    if (notFound) {
+      return (
+        <div className="rounded-xl border border-cream-dark bg-white p-8 text-center">
+          <h2 className="text-lg font-semibold text-ink mb-2">Produto não encontrado</h2>
+          <p className="text-sm text-ink-muted mb-4">
+            Este produto foi removido (limpeza de catálogo non_hair/quarantined) ou o link está desatualizado.
+          </p>
+          <p className="text-xs text-ink-muted mb-6">ID: <code>{id}</code></p>
+          <Link to="/ops/products" className="inline-block rounded-lg bg-ink px-4 py-2 text-sm text-cream hover:bg-ink/90 transition-colors">
+            Voltar ao catálogo
+          </Link>
+        </div>
+      );
+    }
+    return <p className="text-coral">Erro: {error}</p>;
+  }
   if (!product) return null;
 
   const p = product as ProductData;
