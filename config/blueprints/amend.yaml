@@ -52,10 +52,10 @@ extraction:
       - modo de uso
       - como usar
       - como usar?
-      - como usar:
+      - "como usar:"
       - como usar o produto
       - modo de aplicacao
-      - modo de aplicacao:
+      - "modo de aplicacao:"
       - aplicacao
       - passo a passo
       - dicas de uso
@@ -67,7 +67,7 @@ extraction:
       labels:
       - principios ativos
       - principio ativo
-      - principio ativo:
+      - "principio ativo:"
       - ativo principal
       - ativos
       - ativos do produto

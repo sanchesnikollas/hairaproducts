@@ -219,10 +219,13 @@ def extract_sections_from_html(
     result = SectionExtractionResult()
 
     # Build a flat lookup: normalized_label -> (taxonomy_field, original_label, validators)
+    # Defensive: skip non-string labels (YAML "- foo:" syntax parses as dict, not string)
     label_lookup: list[tuple[str, str, str, list[str]]] = []
     for taxonomy_field, config in section_label_map.items():
         validators = config.get("validators", [])
         for label in config.get("labels", []):
+            if not isinstance(label, str):
+                continue
             normalized = _normalize_label(label)
             label_lookup.append((normalized, taxonomy_field, label, validators))
 
