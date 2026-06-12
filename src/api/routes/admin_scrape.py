@@ -74,7 +74,12 @@ def _run_scrape(job_id: str, brand: str, run_labels: bool) -> None:
         elif not extraction_config.get("requires_js", True):
             browser = BrowserClient(use_httpx=True, ssl_verify=ssl_verify)
         else:
-            browser = BrowserClient(use_httpx=True, ssl_verify=ssl_verify)
+            # requires_js: true → usar Playwright (sem use_httpx) para
+            # marcas com SPA/Next.js (Pantene, Granado deco.cx).
+            browser = BrowserClient(
+                headless=extraction_config.get("headless", True),
+                ssl_verify=ssl_verify,
+            )
 
         # Discover URLs
         discoverer = ProductDiscoverer(browser=browser)
