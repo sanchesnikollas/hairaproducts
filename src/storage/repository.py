@@ -43,24 +43,44 @@ class ProductRepository:
                     len(existing.inci_ingredients) if isinstance(existing.inci_ingredients, list) else 0,
                 )
 
-            existing.product_name = extraction.product_name
-            existing.image_url_main = extraction.image_url_main
-            existing.image_urls_gallery = extraction.image_urls_gallery or None
-            existing.product_type_raw = extraction.product_type_raw
-            existing.product_type_normalized = extraction.product_type_normalized
-            existing.product_category = extraction.product_category
+            # Never-downgrade for content fields: don't overwrite existing
+            # non-empty value with an empty or junk new value (section labels
+            # like "Como usar", "Mais informações" that leak from tab buttons).
+            _JUNK_VALUES = {
+                "como usar", "modo de uso", "ingredientes", "ingredients",
+                "composição", "composicao", "benefícios", "beneficios",
+                "mais informações", "mais informacoes", "detalhes",
+                "sobre o produto", "descrição", "descricao",
+            }
+
+            def _better(existing_val, new_val):
+                """Return value to keep: new if better, existing otherwise."""
+                if not new_val:
+                    return existing_val
+                if isinstance(new_val, str):
+                    norm = new_val.strip().lower()
+                    if norm in _JUNK_VALUES or len(norm) < 10:
+                        return existing_val
+                return new_val if new_val else existing_val
+
+            existing.product_name = extraction.product_name or existing.product_name
+            existing.image_url_main = extraction.image_url_main or existing.image_url_main
+            existing.image_urls_gallery = extraction.image_urls_gallery or existing.image_urls_gallery
+            existing.product_type_raw = extraction.product_type_raw or existing.product_type_raw
+            existing.product_type_normalized = extraction.product_type_normalized or existing.product_type_normalized
+            existing.product_category = extraction.product_category or existing.product_category
             existing.gender_target = extraction.gender_target.value
-            existing.hair_relevance_reason = extraction.hair_relevance_reason
-            existing.description = extraction.description
-            existing.usage_instructions = extraction.usage_instructions
-            existing.composition = extraction.composition
-            existing.care_usage = extraction.care_usage
-            existing.benefits_claims = extraction.benefits_claims
-            existing.size_volume = extraction.size_volume
-            existing.price = extraction.price
-            existing.currency = extraction.currency
-            existing.line_collection = extraction.line_collection
-            existing.variants = extraction.variants
+            existing.hair_relevance_reason = extraction.hair_relevance_reason or existing.hair_relevance_reason
+            existing.description = _better(existing.description, extraction.description)
+            existing.usage_instructions = _better(existing.usage_instructions, extraction.usage_instructions)
+            existing.composition = _better(existing.composition, extraction.composition)
+            existing.care_usage = _better(existing.care_usage, extraction.care_usage)
+            existing.benefits_claims = extraction.benefits_claims or existing.benefits_claims
+            existing.size_volume = extraction.size_volume or existing.size_volume
+            existing.price = extraction.price if extraction.price is not None else existing.price
+            existing.currency = extraction.currency or existing.currency
+            existing.line_collection = extraction.line_collection or existing.line_collection
+            existing.variants = extraction.variants or existing.variants
             existing.extracted_at = extraction.extracted_at
             existing.updated_at = datetime.now(timezone.utc)
 
