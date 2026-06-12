@@ -16,6 +16,20 @@ discovery:
   sitemap_urls:
   - https://www.granado.com.br/sitemap.xml
   product_url_pattern: ^https://www\.granado\.com\.br/granado/[\w%-]+-\d+ml$
+  url_blocklist:
+  - phebo
+  - difusor
+  - vela
+  - sache
+  - "sach%C3%AA"
+  - home-spray
+  - aromatizador
+  - unhas
+  - esmalte
+  - pet-
+  - pet/
+  - barbearia
+  - barba-
   max_pages: 100
   pagination:
     type: none
