@@ -68,6 +68,27 @@ USAGE_VERBS_EN = [
 
 ALL_REJECTION_VERBS = MARKETING_VERBS_PT + USAGE_VERBS_PT + MARKETING_VERBS_EN + USAGE_VERBS_EN
 
+# Common section/tab labels — when content STARTS with one of these (or is
+# composed entirely of these joined), it's almost certainly the tab nav text
+# accidentally captured as content (e.g., deco.cx Radix tab containers).
+TAB_LABEL_NOISE = [
+    "como usar", "modo de uso", "ingredientes", "ingredients",
+    "composicao", "composição", "beneficios", "benefícios",
+    "mais informacoes", "mais informações", "detalhes",
+    "sobre o produto", "descricao", "descrição",
+    "como aplicar", "aplicacao", "aplicação",
+]
+
+
+def _is_tab_nav_noise(content: str) -> bool:
+    """True when the content is composed mostly of section tab labels (no real text)."""
+    if not content:
+        return False
+    normalized = _normalize_label(content)
+    # If 2+ tab labels appear in the first 80 chars, it's the tab nav header
+    matches = sum(1 for label in TAB_LABEL_NOISE if label in normalized[:80])
+    return matches >= 2
+
 # Anchor INCI ingredients: near-universal in hair products, unambiguously signal real INCI content
 INCI_ANCHOR_INGREDIENTS = {
     "aqua", "water", "sodium", "glycerin", "cetearyl", "dimethicone",
@@ -253,6 +274,12 @@ def extract_sections_from_html(
             # sibling text is just another tab label or short noise.
             # Real section content is always > 30 chars, so reject short matches.
             if el.name in ("button", "label") and len(content) < 30:
+                break
+
+            # Reject content that's the tab nav text leaked (multiple section
+            # labels joined). Common in deco.cx/Radix when parent_text fallback
+            # captures the entire tab strip "Detalhes Como usar Composição...".
+            if _is_tab_nav_noise(content):
                 break
 
             actual_field = taxonomy_field
