@@ -54,7 +54,18 @@ class ProductRepository:
             }
 
             def _better(existing_val, new_val):
-                """Return value to keep: new if better, existing otherwise."""
+                """Return value to keep: new if better, existing otherwise.
+
+                Special case: if existing is itself junk (tab label noise from
+                a previous bad scrape), let the new value win even if empty —
+                clears the bad data so it can be re-filled or shown blank.
+                """
+                existing_is_junk = (
+                    isinstance(existing_val, str)
+                    and existing_val.strip().lower() in _JUNK_VALUES
+                )
+                if existing_is_junk:
+                    return new_val  # may be None or real; either way better than junk
                 if not new_val:
                     return existing_val
                 if isinstance(new_val, str):
