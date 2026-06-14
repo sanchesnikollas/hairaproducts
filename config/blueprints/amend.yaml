@@ -10,7 +10,13 @@ discovery:
   strategy: sitemap_first
   sitemap_urls:
   - https://www.amend.com.br/sitemap.xml
-  product_url_pattern: ^https://www\.amend\.com\.br/.+/[\w%-]+\.html$
+  product_url_pattern: ^https://www\.amend\.com\.br/[\w%-]+/[\w%-]+-\d+(-\d+)?\.html$
+  url_blocklist:
+  - /busca/
+  - /p/kit-
+  - /search
+  - /institucional
+  - "?cgid="
   max_pages: 1000
   pagination:
     type: scroll

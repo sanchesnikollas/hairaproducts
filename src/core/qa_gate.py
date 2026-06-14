@@ -21,6 +21,8 @@ GARBAGE_NAMES: list[str] = [
     "página não encontrada", "page not found",
     "produto indisponível", "product unavailable",
     "error", "erro",
+    "desculpe", "desculpe!",  # Amend serve "Desculpe!" como title em 404
+    "ops, ocorreu um erro",
 ]
 
 
