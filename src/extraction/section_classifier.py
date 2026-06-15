@@ -81,11 +81,19 @@ TAB_LABEL_NOISE = [
 
 
 def _is_tab_nav_noise(content: str) -> bool:
-    """True when the content is composed mostly of section tab labels (no real text)."""
+    """True when the content is just tab label text (no real section content).
+
+    Two patterns:
+    1. Content is EXACTLY a known tab label (Avatim/Vnda: care_usage = "MAIS INFORMAÇÕES")
+    2. Content has 2+ tab labels in first 80 chars (Granado/deco.cx: "Detalhes Como usar Composição...")
+    """
     if not content:
         return False
     normalized = _normalize_label(content)
-    # If 2+ tab labels appear in the first 80 chars, it's the tab nav header
+    # Exact single-label match (whole content is just a tab name)
+    if normalized in TAB_LABEL_NOISE:
+        return True
+    # Multi-label leak (tab strip joined)
     matches = sum(1 for label in TAB_LABEL_NOISE if label in normalized[:80])
     return matches >= 2
 
