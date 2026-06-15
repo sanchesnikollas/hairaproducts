@@ -26,7 +26,15 @@ async function authFetch(url: string, options: RequestInit = {}): Promise<Respon
   }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail || `Request failed: ${res.status}`);
+    // body.detail pode ser string (FastAPI clássico) ou objeto estruturado
+    // (HTTPException com detail dict — ex.: 404 com code/message/product_id).
+    let msg = `Request failed: ${res.status}`;
+    if (typeof body.detail === "string") {
+      msg = body.detail;
+    } else if (body.detail && typeof body.detail === "object") {
+      msg = body.detail.message || body.detail.code || JSON.stringify(body.detail);
+    }
+    throw new Error(msg);
   }
   return res;
 }
