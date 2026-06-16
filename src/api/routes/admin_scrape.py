@@ -257,6 +257,96 @@ def scrape_status(req: JobStatus):
     return {"jobs": {k: v for k, v in _jobs.items()}}
 
 
+class CleanupRequest(BaseModel):
+    secret: str
+    dry_run: bool = False  # when True, retorna preview sem aplicar UPDATE
+
+
+@router.post("/cleanup/junk-products")
+def cleanup_junk_products(req: CleanupRequest):
+    """Quarentena retroativa de produtos com nomes lixo (artigos, hashtags,
+    erros HTTP, acessórios, embalagens).
+
+    Reflete os filtros do qa_gate.GARBAGE_NAMES + GARBAGE_PATTERNS +
+    taxonomy.EXCLUDE_KEYWORDS aplicados aos produtos já existentes em
+    banco que entraram antes do filtro ser deployado.
+    """
+    if not MIGRATION_SECRET or req.secret != MIGRATION_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+
+    from sqlalchemy import text
+    from sqlalchemy.orm import Session as SASession
+    from src.storage.database import get_engine
+
+    where_clause = """
+      verification_status <> 'quarantined'
+      AND (
+           product_name LIKE '#%'
+        OR product_name ~* '\\m\\d+\\s+dicas?\\M'
+        OR product_name ~* '^\\s*como\\s+(tratar|fazer|cuidar|usar|hidratar|escolher|aplicar)'
+        OR product_name ~* '^\\s*(vai|posso|devo|deve|pode|quem|qual)\\M.*\\?\\s*$'
+        OR LOWER(product_name) LIKE '%bad gateway%'
+        OR LOWER(product_name) LIKE '%error code%'
+        OR LOWER(product_name) LIKE '% 502%'
+        OR LOWER(product_name) LIKE '% 503%'
+        OR LOWER(product_name) LIKE '% 504%'
+        OR LOWER(product_name) = 'recargas'
+        OR LOWER(product_name) LIKE '%tiara%'
+        OR LOWER(product_name) LIKE '%touca%'
+        OR LOWER(product_name) LIKE '%bandana%'
+        OR LOWER(product_name) LIKE '%presilha%'
+        OR LOWER(product_name) LIKE '%pente %'
+        OR LOWER(product_name) LIKE '%escova %'
+        OR LOWER(product_name) LIKE '%secador%'
+        OR LOWER(product_name) LIKE '%babyliss%'
+        OR LOWER(product_name) LIKE '%chapinha%'
+        OR LOWER(product_name) LIKE '%prancha%'
+        OR LOWER(product_name) LIKE '%nécessaire%'
+        OR LOWER(product_name) LIKE '%necessaire%'
+        OR LOWER(product_name) LIKE '%bolsa%'
+        OR LOWER(product_name) LIKE '%estojo%'
+      )
+    """
+    engine = get_engine()
+    with SASession(engine) as session:
+        count = session.execute(
+            text(f"SELECT COUNT(*) FROM products WHERE {where_clause}")
+        ).scalar()
+        sample_rows = session.execute(
+            text(f"SELECT brand_slug, product_name FROM products WHERE {where_clause} LIMIT 30")
+        ).fetchall()
+        sample = [{"brand_slug": r[0], "product_name": r[1]} for r in sample_rows]
+
+        if req.dry_run:
+            return {
+                "dry_run": True,
+                "to_quarantine": count,
+                "sample": sample,
+            }
+
+        result = session.execute(
+            text(
+                f"UPDATE products SET verification_status='quarantined', "
+                f"quarantine_reason='bad_name_pattern_or_accessory' "
+                f"WHERE {where_clause}"
+            )
+        )
+        session.commit()
+
+        # Status counts after
+        rows = session.execute(
+            text("SELECT verification_status, COUNT(*) FROM products GROUP BY 1 ORDER BY 2 DESC")
+        ).fetchall()
+        status_counts = {r[0]: r[1] for r in rows}
+
+        return {
+            "dry_run": False,
+            "quarantined": result.rowcount,
+            "sample_before": sample,
+            "status_counts_after": status_counts,
+        }
+
+
 class MigrateRequest(BaseModel):
     secret: str
     products: list[dict]
