@@ -69,6 +69,18 @@ EXCLUDE_KEYWORDS: list[str] = [
     # Embalagens / bolsas / kits-presente sem produto químico
     "nécessaire", "necessaire", "necessaires", "bolsa",
     "estojo", "pochete", "neceser",
+    # Outros itens não-capilares que estavam vazando
+    "lenço", "lenco", "lencos", "lenços",
+    "tesoura", "navalhete", "navalha", "alicate",
+    "unha", "unhas", "palito", "esmalte",
+    "cílio", "cilio", "cílios", "cilios",
+    "roupão", "roupao",
+    "frasqueira", "mochila", "porta", "porta-escova",
+    "perfume", "fragrance", "fragrância", "fragrancia",
+    "deo colônia", "deo colonia", "deo-colonia",
+    "malbec",  # linha de perfume O Boticário
+    "glam by camila", "by camila queiroz",
+    "talco", "antitranspirante",
 ]
 
 KIT_PATTERNS: list[str] = [

@@ -290,6 +290,36 @@ def cleanup_junk_products(req: CleanupRequest):
         OR product_name ~* '^\\s*(brinde|amostra|sample|teste)\\M'
         OR product_name ~* 'venda\\s+proibida'
         OR product_name ~* '^\\s*pr[ée]-?venda\\s*$'
+        -- Não-capilares (faciais, unhas, acessórios, perfumes)
+        OR LOWER(product_name) LIKE '%lenço%' OR LOWER(product_name) LIKE '%lenco %'
+        OR LOWER(product_name) LIKE '%tesoura%' OR LOWER(product_name) LIKE '%navalhete%'
+        OR LOWER(product_name) LIKE '%navalha%' OR LOWER(product_name) LIKE '%alicate%'
+        OR LOWER(product_name) LIKE '% unha%' OR LOWER(product_name) LIKE '%unhas%'
+        OR LOWER(product_name) LIKE '%esmalte%' OR LOWER(product_name) LIKE '%cílio%'
+        OR LOWER(product_name) LIKE '%cilio%' OR LOWER(product_name) LIKE '%roupão%'
+        OR LOWER(product_name) LIKE '%roupao%' OR LOWER(product_name) LIKE '%frasqueira%'
+        OR LOWER(product_name) LIKE '%mochila%' OR LOWER(product_name) LIKE '%malbec%'
+        OR LOWER(product_name) LIKE '%glam by camila%' OR LOWER(product_name) LIKE '%by camila queiroz%'
+        OR LOWER(product_name) LIKE '%talco%' OR LOWER(product_name) LIKE '%antitranspirante%'
+        OR LOWER(product_name) LIKE '%deo col%'
+        OR LOWER(product_name) LIKE '%palito%'
+        OR LOWER(product_name) LIKE '%sobrancelha%' OR LOWER(product_name) LIKE '%maquiagem%'
+        OR LOWER(product_name) LIKE '%batom%' OR LOWER(product_name) LIKE '%rimel%'
+        OR LOWER(product_name) LIKE '%rímel%' OR LOWER(product_name) LIKE '%blush%'
+        OR LOWER(product_name) LIKE '%sombra %'
+        -- Categorias genéricas (só uma palavra ou começa com termo coletivo)
+        OR LOWER(product_name) = 'tratamentos'
+        OR LOWER(product_name) = 'tratamento'
+        OR LOWER(product_name) ~ '^cuidado(s)?\\s+para\\s+(os?\\s+)?cabelos?$'
+        OR LOWER(product_name) ~ '^(festivais?|festas?|verão|inverno|primavera|outono)\\s+(e|com|para)\\s+cabelos?$'
+        OR LOWER(product_name) ~ '^(blonde|loiro)\\s+hair$'
+        OR product_name ~* '^[A-Z\\s]{3,}\\s*$' AND LENGTH(TRIM(product_name)) < 25
+            AND product_name !~* '\\d+\\s*(ml|g|kg)\\b'  -- maiúsculas curtas sem volume
+        -- Nome é apenas o nome da marca
+        OR LOWER(product_name) = LOWER(brand_slug)
+        OR LOWER(product_name) = REPLACE(LOWER(brand_slug), '-', ' ')
+        OR LOWER(product_name) = 'o boticario'
+        OR LOWER(product_name) = 'o boticário'
         OR LOWER(product_name) LIKE '%bad gateway%'
         OR LOWER(product_name) LIKE '%error code%'
         OR LOWER(product_name) LIKE '% 502%'
