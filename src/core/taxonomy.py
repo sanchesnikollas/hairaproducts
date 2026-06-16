@@ -81,6 +81,20 @@ EXCLUDE_KEYWORDS: list[str] = [
     "malbec",  # linha de perfume O Boticário
     "glam by camila", "by camila queiroz",
     "talco", "antitranspirante",
+    # Loja de acessórios (Belliz, Vertix, Ricca)
+    "capa de corte", "capa para corte",
+    "pincel ", "pinceis",  # makeup brushes
+    "lip oil", "magic lip", "labial", "lip ",  # lábios
+    "difusor de cachos",  # accessory diffuser
+    "chapa de cabelo", "chapa profissional",
+    "lixa", "grampo", "piranha", "lamina", "lâmina",
+    "bruma corporal", "ice mist", "spray corporal",
+    "creme desodorante", "creme para mãos", "creme para maos",
+    "creme hidratante", "creme das mãos", "hand cream",
+    "elastico ", "elasticos", "elástico ", "elásticos",
+    "cuba flexivel", "cuba flexível", "cuba ",  # acessório de salão
+    "esc ", "esc.",  # "Esc Belliz" abreviado de Escova
+    "rede de cabelo",
 ]
 
 KIT_PATTERNS: list[str] = [
