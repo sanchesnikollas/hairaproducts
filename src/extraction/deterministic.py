@@ -565,7 +565,9 @@ def extract_product_deterministic(
                         if img.startswith("//"):
                             img = "https:" + img
                         # Rejeita asset genérico "thumbnail.png" do Contentful
-                        if "thumbnail" not in img.lower():
+                        # Rejeita assets genéricos do Contentful (thumbnail, icon, placeholder)
+                        lower = img.lower()
+                        if not any(token in lower for token in ("thumbnail", "_icon.", "/icon.", "placeholder", "default.svg")):
                             result["image_url_main"] = img
             # Path 2: Direct product in pageProps
             product2 = page_props.get("content", {}).get("product", {})
@@ -592,7 +594,9 @@ def extract_product_deterministic(
                     if isinstance(img, str) and img:
                         if img.startswith("//"):
                             img = "https:" + img
-                        if "thumbnail" not in img.lower():
+                        # Rejeita assets genéricos do Contentful (thumbnail, icon, placeholder)
+                        lower = img.lower()
+                        if not any(token in lower for token in ("thumbnail", "_icon.", "/icon.", "placeholder", "default.svg")):
                             result["image_url_main"] = img
         except (json.JSONDecodeError, KeyError, TypeError):
             pass
