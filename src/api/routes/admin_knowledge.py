@@ -33,6 +33,76 @@ def _chunk_summary(row: KnowledgeChunkORM) -> dict:
     }
 
 
+@router.post("/replace-all")
+def replace_all_from_iamoon(admin: dict = Depends(require_admin),
+                            session: Session = Depends(get_core_session)):
+    """Substitui TODO o knowledge base pelo conteúdo da pasta `iamoon/`.
+
+    Definido ANTES de `/{source}` pra evitar conflito de roteamento — caso
+    contrário FastAPI matcha `replace-all` em `/{source}` (com GET) e retorna 405.
+
+    Limpa knowledge_chunks e ingere os documentos canônicos do iamoon/:
+    - COMPÊNDIO HAIRA (Layer 0)
+    - Inteligência Haira by Fernanda Torres (Layer 0.5)
+    - Perguntas e Respostas - Daniel (Layer 2)
+    - Rotinas e Produtos para Moon (Layer 2)
+    - Dica do Dia (Layer 3)
+    - Você Sabia (Layer 3)
+
+    Skipa: HAIRA - FAQ (vai pra docs/), Personalidade Moon (em código), duplicatas (1).
+    """
+    import os
+    from pathlib import Path as _P
+    folder = _P("iamoon")
+    if not folder.exists():
+        raise HTTPException(status_code=400, detail="iamoon/ not found on this instance")
+
+    SKIP_PREFIXES = ("HAIRA - FAQ", "Personalidade da Moon")
+    SKIP_DUPLICATES = ("(1)",)
+
+    deleted = session.query(KnowledgeChunkORM).delete()
+    session.flush()
+
+    upserted = 0
+    skipped = []
+    files_processed = []
+    for fn in sorted(os.listdir(folder)):
+        path = folder / fn
+        if not path.is_file():
+            continue
+        if any(fn.startswith(p) for p in SKIP_PREFIXES):
+            skipped.append(fn)
+            continue
+        if any(d in fn for d in SKIP_DUPLICATES):
+            skipped.append(fn)
+            continue
+        if not (fn.endswith(".md") or fn.endswith(".docx") or fn.endswith(".pdf")):
+            continue
+        try:
+            text = extract_text(fn, path=path)
+        except Exception as e:
+            skipped.append(f"{fn} (extract error: {e})")
+            continue
+        if not text.strip():
+            skipped.append(f"{fn} (empty)")
+            continue
+        stored = encrypt_content(text)
+        session.add(KnowledgeChunkORM(source=fn, content=stored, char_count=len(text)))
+        upserted += 1
+        files_processed.append({"file": fn, "chars": len(text)})
+
+    session.commit()
+    reset_kb_cache()
+
+    return {
+        "deleted_old": deleted,
+        "upserted": upserted,
+        "files_processed": files_processed,
+        "skipped": skipped,
+        "encrypted": kb_crypto_enabled(),
+    }
+
+
 @router.get("")
 def list_chunks(admin: dict = Depends(require_admin),
                 session: Session = Depends(get_core_session)):
@@ -134,77 +204,6 @@ def delete_chunk(source: str,
     except Exception:
         pass
     return {"deleted": source}
-
-
-@router.post("/replace-all")
-def replace_all_from_iamoon(admin: dict = Depends(require_admin),
-                            session: Session = Depends(get_core_session)):
-    """Substitui TODO o knowledge base pelo conteúdo da pasta `iamoon/`.
-
-    Limpa knowledge_chunks e ingere os documentos canônicos:
-    - COMPÊNDIO HAIRA (Layer 0 — fundação)
-    - Inteligência Haira by Fernanda Torres (Layer 0.5 — premissas)
-    - Perguntas e Respostas - Daniel (Layer 2 — Q&A)
-    - Rotinas e Produtos para Moon (Layer 2 — recomendação)
-    - Dica do Dia (Layer 3 — engagement)
-    - Você Sabia (Layer 3 — educação)
-
-    Skipa:
-    - HAIRA - FAQ.md (vai pra docs/app-faq.md, não pra Moon)
-    - Personalidade da Moon Jun_26 (já está em moon_personality.py)
-    - Duplicatas com (1) no nome
-    """
-    import os
-    from pathlib import Path as _P
-    folder = _P("iamoon")
-    if not folder.exists():
-        raise HTTPException(status_code=400, detail="iamoon/ not found on this instance")
-
-    SKIP_PREFIXES = ("HAIRA - FAQ", "Personalidade da Moon")
-    SKIP_DUPLICATES = ("(1)",)
-
-    # Limpa knowledge_chunks
-    deleted = session.query(KnowledgeChunkORM).delete()
-    session.flush()
-
-    upserted = 0
-    skipped = []
-    files_processed = []
-    for fn in sorted(os.listdir(folder)):
-        path = folder / fn
-        if not path.is_file():
-            continue
-        if any(fn.startswith(p) for p in SKIP_PREFIXES):
-            skipped.append(fn)
-            continue
-        if any(d in fn for d in SKIP_DUPLICATES):
-            skipped.append(fn)
-            continue
-        if not (fn.endswith(".md") or fn.endswith(".docx") or fn.endswith(".pdf")):
-            continue
-        try:
-            text = extract_text(fn, path=path)
-        except Exception as e:
-            skipped.append(f"{fn} (extract error: {e})")
-            continue
-        if not text.strip():
-            skipped.append(f"{fn} (empty)")
-            continue
-        stored = encrypt_content(text)
-        session.add(KnowledgeChunkORM(source=fn, content=stored, char_count=len(text)))
-        upserted += 1
-        files_processed.append({"file": fn, "chars": len(text)})
-
-    session.commit()
-    reset_kb_cache()
-
-    return {
-        "deleted_old": deleted,
-        "upserted": upserted,
-        "files_processed": files_processed,
-        "skipped": skipped,
-        "encrypted": kb_crypto_enabled(),
-    }
 
 
 @router.post("/reingest")
