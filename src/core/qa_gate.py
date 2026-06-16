@@ -1,6 +1,7 @@
 # src/core/qa_gate.py
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
@@ -23,6 +24,23 @@ GARBAGE_NAMES: list[str] = [
     "error", "erro",
     "desculpe", "desculpe!",  # Amend serve "Desculpe!" como title em 404
     "ops, ocorreu um erro",
+    # HTTP gateway/server errors capturados como produto
+    "bad gateway", "gateway error", "service unavailable",
+    "internal server error", "502", "503", "504",
+    # Páginas de "recargas", categorias genéricas vazias
+    "recargas",
+]
+
+
+# Padrões de NOMES que NÃO são produtos (artigos, perguntas, hashtags)
+# Aplicados em qa_gate como rejeição automática.
+GARBAGE_PATTERNS = [
+    re.compile(r"^\s*#"),                                      # "#Antiqueda"
+    re.compile(r"\b\d+\s+dicas?\b", re.IGNORECASE),            # "6 dicas para..."
+    re.compile(r"^\s*como\s+(tratar|fazer|cuidar|usar|escolher|aplicar|hidratar)", re.IGNORECASE),
+    re.compile(r"^\s*(vai|posso|devo|deve|pode|quem)\b.*\?", re.IGNORECASE),  # perguntas
+    re.compile(r"^\s*qual\b.*\?", re.IGNORECASE),              # "Qual a importância..."
+    re.compile(r"\berror\s*code\b", re.IGNORECASE),
 ]
 
 
@@ -45,9 +63,12 @@ def run_product_qa(
     failed: list[str] = []
 
     # Minimal checks (catalog_only)
-    name_lower = product.product_name.strip().lower()
+    name_raw = product.product_name.strip()
+    name_lower = name_raw.lower()
     if any(g in name_lower for g in GARBAGE_NAMES):
         failed.append("name_garbage")
+    elif any(p.search(name_raw) for p in GARBAGE_PATTERNS):
+        failed.append("name_editorial_or_invalid")
     else:
         passed.append("name_valid")
 

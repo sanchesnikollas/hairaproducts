@@ -61,6 +61,11 @@ EXCLUDE_KEYWORDS: list[str] = [
     "difusor", "vela", "sachê", "sache",
     "home spray", "aromatizador", "ambiente",
     "cheirinho", "perfume de ambiente",
+    # Acessórios capilares (não são produtos químicos)
+    "tiara", "touca", "bandana", "presilha", "elástico", "elastico",
+    "pente", "escova", "secador", "babyliss", "chapinha",
+    "prancha", "rolinho", "rolo", "bigudini", "bobby pin",
+    "cetim",  # toalhas/toucas de cetim
 ]
 
 KIT_PATTERNS: list[str] = [
