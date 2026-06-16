@@ -210,8 +210,10 @@ def get_audit_session() -> Generator[Session, None, None]:
 def get_ops_session() -> Generator[Session, None, None]:
     """DEPRECATED: use get_core_session() ou get_catalog_session() explicitamente.
 
-    Mantido durante a transição pra não quebrar rotas existentes. Cai em
-    fallback de core engine (sensibilidade alta), que durante Fase A→D é
-    o mesmo engine de tudo via DATABASE_URL.
+    Mantido durante a transição pra não quebrar rotas existentes. Agora
+    aponta pro catalog porque a maioria das rotas OPS lê/escreve ProductORM
+    (produtos vivem no CATALOG_DATABASE_URL ou DATABASE_URL via fallback).
+    Rotas que precisam de tabelas core (users, revisões) devem usar
+    get_core_session() explicitamente.
     """
-    yield from get_core_session()
+    yield from get_catalog_session()
