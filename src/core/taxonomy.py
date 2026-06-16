@@ -47,6 +47,13 @@ HAIR_KEYWORDS: list[str] = [
     "ampola", "sérum capilar", "serum capilar", "creme para pentear",
     "creme de pentear", "alisamento", "progressiva", "reconstrução",
     "hidratação capilar", "nutrição capilar", "reparação",
+    # Termos comuns de cuidado capilar
+    "cachos", "crespos", "ondulados", "lisos", "antifrizz", "anti-frizz",
+    "gelatina capilar", "gelatina para cabelos",
+    "umectação", "umectacao", "umectante capilar",
+    "co-wash", "cowash", "low-poo", "low poo", "no-poo", "no poo",
+    "permanente", "transição capilar", "transicao capilar",
+    "matizador", "tonalizador",
 ]
 
 EXCLUDE_KEYWORDS: list[str] = [
@@ -236,6 +243,20 @@ def detect_gender_target(product_name: str, url: str) -> str:
     return "unknown"
 
 
+def _kw_matches(text: str, keyword: str) -> bool:
+    """Match com word boundary se keyword for curto (< 6 chars) e for uma palavra única.
+
+    Resolve falsos positivos como "pente" pegando "pentear" ou "corpo" pegando
+    "corporal". Para keywords compostos (com espaço ou hífen) ou longos, usa
+    substring direto.
+    """
+    kw = keyword.lower()
+    if " " in kw or "-" in kw or len(kw) >= 6:
+        return kw in text
+    # Single short word — usa word boundary
+    return re.search(rf"\b{re.escape(kw)}\b", text) is not None
+
+
 def is_hair_relevant_by_keywords(
     product_name: str, url: str, description: str = ""
 ) -> tuple[bool, str]:
@@ -244,18 +265,14 @@ def is_hair_relevant_by_keywords(
     Regra:
     1. Se algum EXCLUDE_KEYWORD bate no nome+desc+url → NÃO é cabelo (False).
        EXCLUDE_KEYWORDS são categorias fortes (maquiagem, perfume, facial,
-       unha, corpo, ambiente). Mesmo se tem "shampoo" no nome, "Paleta de
-       Sombras" tem "sombras" e sai.
+       unha, corpo, ambiente). Match usa word boundary para keywords curtos
+       (< 6 chars, palavra única) para evitar falsos positivos tipo "pente"
+       em "pentear" ou "corpo" em "corporal".
     2. Se algum HAIR_KEYWORD bate (cabelo, capilar, shampoo, etc.) → É cabelo (True).
-    3. Se algum HAIR_PRODUCT_TYPES bate no nome (shampoo, mask, leave_in...) → é cabelo.
-    4. Caso contrário → NÃO é cabelo (False, "no_hair_keyword").
-       Default conservador: produto sem indicador algum vira quarentena.
+    3. Se algum HAIR_PRODUCT_TYPES bate no nome → é cabelo.
+    4. Caso contrário → NÃO é cabelo, conservador.
 
-    Retorna (is_hair, reason) onde reason explica a decisão:
-    - "non_hair:<keyword>" — EXCLUDE bateu
-    - "hair_keyword:<keyword>" — HAIR_KEYWORD bateu
-    - "hair_type:<type>" — HAIR_PRODUCT_TYPE bateu
-    - "no_hair_keyword" — nenhum bateu, conservador
+    Retorna (is_hair, reason) onde reason explica a decisão.
     """
     name_lower = (product_name or "").lower()
     desc_lower = (description or "").lower()
@@ -264,17 +281,17 @@ def is_hair_relevant_by_keywords(
 
     # 1. EXCLUDE_KEYWORDS sempre tem precedência (categorias fortes)
     for ekw in EXCLUDE_KEYWORDS:
-        if ekw in combined:
+        if _kw_matches(combined, ekw):
             return False, f"non_hair:{ekw}"
 
     # 2. HAIR_KEYWORDS no combined
     for hkw in HAIR_KEYWORDS:
-        if hkw in combined:
+        if _kw_matches(combined, hkw):
             return True, f"hair_keyword:{hkw}"
 
-    # 3. HAIR_PRODUCT_TYPES no nome (cobre tipos canônicos como shampoo, mask, leave_in)
+    # 3. HAIR_PRODUCT_TYPES no nome
     for ptype in HAIR_PRODUCT_TYPES:
-        if ptype in name_lower:
+        if _kw_matches(name_lower, ptype):
             return True, f"hair_type:{ptype}"
 
     # 4. Nada bateu — conservador
