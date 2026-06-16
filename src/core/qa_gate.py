@@ -53,6 +53,12 @@ GARBAGE_PATTERNS = [
     re.compile(r"venda\s+proibida", re.IGNORECASE),
     re.compile(r"^\s*pr[ée]-?venda\s*$", re.IGNORECASE),
     re.compile(r"^\s*(in)?dispon[íi]vel\s*$", re.IGNORECASE),
+    # Banners / texto editorial cadastrado como produto
+    re.compile(r"^\s*a\s+marca\b", re.IGNORECASE),         # "A marca profissional nº1..."
+    re.compile(r"^\s*atenda\s+(às|as|aos|ao)\b", re.IGNORECASE),  # "Atenda às Suas Necessidades..."
+    re.compile(r"^\s*cadastre-?se\b", re.IGNORECASE),      # "Cadastre-se e receba..."
+    re.compile(r"^\s*aproveite\s+(os|as|a|o)\b", re.IGNORECASE),
+    re.compile(r"^\s*receba\s+ofertas?\b", re.IGNORECASE),
 ]
 
 

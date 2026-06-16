@@ -54,6 +54,8 @@ HAIR_KEYWORDS: list[str] = [
     "co-wash", "cowash", "low-poo", "low poo", "no-poo", "no poo",
     "permanente", "transição capilar", "transicao capilar",
     "matizador", "tonalizador",
+    # Nota: "bb cream" foi removido — colide com "BB Cream Make B." (maquiagem facial).
+    # Casos hair-specific tipo "BB Cream Capilar" são raros e batem em "capilar".
 ]
 
 EXCLUDE_KEYWORDS: list[str] = [
@@ -88,6 +90,41 @@ EXCLUDE_KEYWORDS: list[str] = [
     "malbec",  # linha de perfume O Boticário
     "glam by camila", "by camila queiroz",
     "talco", "antitranspirante",
+    # Maquiagem (linhas inteiras + componentes)
+    "make b.", "make b ",  # O Boticário makeup line
+    "quem disse, berenice", "quem disse berenice", "qdb ", "qdb,", "berenice?",
+    "niina secrets", "niina-secrets",
+    "base líquida", "base liquida",
+    "bb cream", "cc cream",  # makeup BB/CC creams
+    "primer",  # makeup primer
+    "pó solto", "po solto", "pó compacto", "po compacto",
+    "delineador", "lápis de olho", "lapis de olho",
+    "instamatte", "matte cream",  # QDB lines
+    "blush", "iluminador", "contorno stick", "corretivo",
+    "gloss", "lipstick", "lip cream",
+    "paleta de sombras",
+    # Perfumaria
+    "eau de toilette", "eau de parfum", "eau de cologne",
+    "edt ", "edp ", " edt", " edp",
+    "colônia", "colonia",
+    "rouge eau", "l'eau de", "leau de",
+    # Pós-Barba / Pré-Barba / Barbear (faciais)
+    "pós barba", "pos barba", "pós-barba", "pos-barba",
+    "after shave", "aftershave",
+    "creme de barbear", "creme para barbear",
+    "shaving", "barbear",
+    "espuma de barbear", "espuma para barbear", "espuma para barba",
+    # Eletrodomésticos (Mondial)
+    "cafeteira", "máquina de café", "maquina de cafe",
+    "filtro de café", "filtro de cafe", "filtro permanente",
+    "espresso", "café espresso",
+    "liquidificador", "batedeira", "torradeira", "fritadeira",
+    # Cuidados corporais/médicos
+    "dermopes", "dermo pés", "dermo pes",
+    "renovilc",
+    "pomada descongestionante", "descongestionante",
+    "arnica",
+    "anti-séptico", "antisseptico",
     # Loja de acessórios (Belliz, Vertix, Ricca)
     "capa de corte", "capa para corte",
     "pincel ", "pinceis",  # makeup brushes
