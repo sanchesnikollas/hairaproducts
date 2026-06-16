@@ -219,10 +219,11 @@ Product: {product_name}
         gender = detect_gender_target(product_name, url)
         product_type = normalize_product_type(product_name)
 
-        # Hair relevance
-        relevant, reason = is_hair_relevant_by_keywords(product_name, url)
-        if not relevant:
-            reason = f"url_classified_as_product"
+        # Hair relevance — preserva o motivo real, mesmo quando NÃO é cabelo.
+        # qa_gate detecta o prefixo "non_hair:" e seta verification_status='quarantined'
+        # com quarantine_reason apropriado. Não-cabelo entra como quarentena, não como
+        # ativo, pra reviewer poder auditar na aba Quarentena.
+        relevant, reason = is_hair_relevant_by_keywords(product_name, url, description=det_result.get("description") or "")
 
         # INCI processing
         inci_raw = det_result.get("inci_raw")

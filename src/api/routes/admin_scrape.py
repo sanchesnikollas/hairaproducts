@@ -429,6 +429,82 @@ def cleanup_junk_products(req: CleanupRequest):
         }
 
 
+class NonHairCleanupRequest(BaseModel):
+    secret: str
+    dry_run: bool = False
+
+
+@router.post("/cleanup/non-hair-products")
+def cleanup_non_hair_products(req: NonHairCleanupRequest):
+    """Varre o banco e quarentena produtos que falham em is_hair_relevant_by_keywords.
+
+    Usa a mesma régua que o scrape agora aplica em tempo real (coverage_engine).
+    Útil pra limpar o backlog de produtos que entraram quando a régua era mais
+    frouxa.
+    """
+    if not MIGRATION_SECRET or req.secret != MIGRATION_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+
+    from sqlalchemy.orm import Session as SASession
+    from src.storage.database import get_engine
+    from src.storage.orm_models import ProductORM, QuarantineDetailORM
+    from src.core.taxonomy import is_hair_relevant_by_keywords
+
+    engine = get_engine()
+    with SASession(engine) as session:
+        actives = (
+            session.query(ProductORM)
+            .filter(ProductORM.verification_status != "quarantined")
+            .all()
+        )
+        to_quarantine = []
+        for p in actives:
+            relevant, reason = is_hair_relevant_by_keywords(
+                p.product_name or "", p.product_url or "", p.description or ""
+            )
+            if not relevant:
+                to_quarantine.append((p, reason))
+
+        sample = [
+            {"brand_slug": p.brand_slug, "product_name": p.product_name, "reason": r}
+            for p, r in to_quarantine[:30]
+        ]
+        if req.dry_run:
+            return {
+                "dry_run": True,
+                "scanned": len(actives),
+                "to_quarantine": len(to_quarantine),
+                "sample": sample,
+            }
+
+        for p, reason in to_quarantine:
+            p.verification_status = "quarantined"
+            existing = session.query(QuarantineDetailORM).filter_by(product_id=p.id).first()
+            if existing:
+                existing.rejection_reason = reason
+                existing.rejection_code = reason.split(":", 1)[0] if ":" in reason else reason
+            else:
+                detail = QuarantineDetailORM(
+                    product_id=p.id,
+                    rejection_reason=reason,
+                    rejection_code=reason.split(":", 1)[0] if ":" in reason else reason,
+                    review_status="pending",
+                )
+                session.add(detail)
+        session.commit()
+
+        rows = session.execute(
+            text("SELECT verification_status, COUNT(*) FROM products GROUP BY 1 ORDER BY 2 DESC")
+        ).fetchall()
+        return {
+            "dry_run": False,
+            "scanned": len(actives),
+            "quarantined": len(to_quarantine),
+            "sample_before": sample,
+            "status_counts_after": {r[0]: r[1] for r in rows},
+        }
+
+
 class SyncCoverageRequest(BaseModel):
     secret: str
 

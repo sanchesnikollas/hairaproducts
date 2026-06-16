@@ -100,7 +100,14 @@ def run_product_qa(
     else:
         failed.append("no_image")
 
-    if product.hair_relevance_reason:
+    if product.hair_relevance_reason and product.hair_relevance_reason.startswith("non_hair:"):
+        # Produto explicitamente classificado como não-cabelo por keyword.
+        # Vai pra quarentena com motivo específico pra aba Quarentena auditar.
+        failed.append(product.hair_relevance_reason)
+    elif product.hair_relevance_reason and product.hair_relevance_reason == "no_hair_keyword":
+        # Nenhum sinal de cabelo encontrado — conservador, quarentena também.
+        failed.append("no_hair_keyword")
+    elif product.hair_relevance_reason:
         passed.append("hair_relevant")
     else:
         failed.append("no_hair_relevance")

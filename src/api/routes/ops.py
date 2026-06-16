@@ -495,6 +495,97 @@ class ResolveRequest(BaseModel):
     corrections: dict | None = None
 
 
+@router.get("/quarantine")
+def ops_list_quarantine(
+    brand: str | None = None,
+    rejection_code: str | None = None,
+    search: str | None = None,
+    page: int = 1,
+    per_page: int = 30,
+    user: dict = Depends(get_current_user),
+    session: Session = Depends(get_ops_session),
+):
+    """Lista produtos quarentenados com detalhes de rejeição para a aba Quarentena."""
+    from src.storage.orm_models import QuarantineDetailORM
+    q = (
+        session.query(ProductORM, QuarantineDetailORM)
+        .outerjoin(QuarantineDetailORM, QuarantineDetailORM.product_id == ProductORM.id)
+        .filter(ProductORM.verification_status == "quarantined")
+    )
+    if brand:
+        q = q.filter(ProductORM.brand_slug == brand)
+    if rejection_code:
+        q = q.filter(QuarantineDetailORM.rejection_code == rejection_code)
+    if search:
+        q = q.filter(ProductORM.product_name.ilike(f"%{search}%"))
+    total = q.count()
+    rows = q.order_by(ProductORM.updated_at.desc().nullslast()).offset((page - 1) * per_page).limit(per_page).all()
+
+    # Agrega motivos pra filtro
+    reason_counts_q = (
+        session.query(QuarantineDetailORM.rejection_code, func.count(QuarantineDetailORM.id))
+        .join(ProductORM, ProductORM.id == QuarantineDetailORM.product_id)
+        .filter(ProductORM.verification_status == "quarantined")
+        .group_by(QuarantineDetailORM.rejection_code)
+        .all()
+    )
+    reason_counts = {r[0] or "unknown": r[1] for r in reason_counts_q}
+
+    return {
+        "items": [
+            {
+                "id": p.id,
+                "product_name": p.product_name,
+                "brand_slug": p.brand_slug,
+                "product_url": p.product_url,
+                "image_url_main": p.image_url_main,
+                "rejection_reason": (d.rejection_reason if d else None),
+                "rejection_code": (d.rejection_code if d else None),
+                "reviewer_notes": (d.reviewer_notes if d else None),
+                "reviewed_at": (d.reviewed_at.isoformat() if d and d.reviewed_at else None),
+                "updated_at": p.updated_at.isoformat() if p.updated_at else None,
+            }
+            for p, d in rows
+        ],
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "reason_counts": reason_counts,
+    }
+
+
+class PromoteBatchRequest(BaseModel):
+    product_ids: list[str]
+    target_status: str = "catalog_only"  # ou "verified_inci" se reviewer já validou
+
+
+@router.post("/quarantine/promote")
+def ops_quarantine_promote(
+    body: PromoteBatchRequest,
+    user: dict = Depends(get_current_user),
+    session: Session = Depends(get_ops_session),
+):
+    """Promove em batch produtos quarentenados de volta pra lista ativa."""
+    from src.storage.orm_models import QuarantineDetailORM
+    if not body.product_ids:
+        raise HTTPException(status_code=400, detail="product_ids required")
+    if body.target_status not in ("catalog_only", "verified_inci"):
+        raise HTTPException(status_code=400, detail="invalid target_status")
+
+    products = session.query(ProductORM).filter(ProductORM.id.in_(body.product_ids)).all()
+    updated = 0
+    for p in products:
+        if p.verification_status == "quarantined":
+            p.verification_status = body.target_status
+            existing = session.query(QuarantineDetailORM).filter_by(product_id=p.id).first()
+            if existing:
+                existing.review_status = "promoted"
+                existing.reviewer_notes = f"Promoted to {body.target_status} by {user.get('email','ops')}"
+            updated += 1
+    session.commit()
+    return {"promoted": updated, "requested": len(body.product_ids)}
+
+
 @router.get("/inci-summary")
 def ops_inci_summary(
     user: dict = Depends(get_current_user),

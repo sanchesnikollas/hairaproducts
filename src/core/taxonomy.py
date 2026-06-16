@@ -239,14 +239,46 @@ def detect_gender_target(product_name: str, url: str) -> str:
 def is_hair_relevant_by_keywords(
     product_name: str, url: str, description: str = ""
 ) -> tuple[bool, str]:
-    combined = f"{product_name} {url} {description}".lower()
+    """Decide se um produto é capilar baseado em keywords.
+
+    Regra:
+    1. Se algum EXCLUDE_KEYWORD bate no nome+desc+url → NÃO é cabelo (False).
+       EXCLUDE_KEYWORDS são categorias fortes (maquiagem, perfume, facial,
+       unha, corpo, ambiente). Mesmo se tem "shampoo" no nome, "Paleta de
+       Sombras" tem "sombras" e sai.
+    2. Se algum HAIR_KEYWORD bate (cabelo, capilar, shampoo, etc.) → É cabelo (True).
+    3. Se algum HAIR_PRODUCT_TYPES bate no nome (shampoo, mask, leave_in...) → é cabelo.
+    4. Caso contrário → NÃO é cabelo (False, "no_hair_keyword").
+       Default conservador: produto sem indicador algum vira quarentena.
+
+    Retorna (is_hair, reason) onde reason explica a decisão:
+    - "non_hair:<keyword>" — EXCLUDE bateu
+    - "hair_keyword:<keyword>" — HAIR_KEYWORD bateu
+    - "hair_type:<type>" — HAIR_PRODUCT_TYPE bateu
+    - "no_hair_keyword" — nenhum bateu, conservador
+    """
+    name_lower = (product_name or "").lower()
+    desc_lower = (description or "").lower()
+    url_lower = (url or "").lower()
+    combined = f"{name_lower} {desc_lower} {url_lower}"
+
+    # 1. EXCLUDE_KEYWORDS sempre tem precedência (categorias fortes)
     for ekw in EXCLUDE_KEYWORDS:
         if ekw in combined:
-            return False, ""
+            return False, f"non_hair:{ekw}"
+
+    # 2. HAIR_KEYWORDS no combined
     for hkw in HAIR_KEYWORDS:
         if hkw in combined:
-            return True, f"keyword '{hkw}' found"
-    return False, ""
+            return True, f"hair_keyword:{hkw}"
+
+    # 3. HAIR_PRODUCT_TYPES no nome (cobre tipos canônicos como shampoo, mask, leave_in)
+    for ptype in HAIR_PRODUCT_TYPES:
+        if ptype in name_lower:
+            return True, f"hair_type:{ptype}"
+
+    # 4. Nada bateu — conservador
+    return False, "no_hair_keyword"
 
 
 def is_kit_url(url: str) -> bool:
