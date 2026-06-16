@@ -457,10 +457,14 @@ def cleanup_non_hair_products(req: NonHairCleanupRequest):
             .filter(ProductORM.verification_status != "quarantined")
             .all()
         )
+        # Para cleanup retroativo, NÃO usar description — marketing copy bagunça
+        # (ex.: gelatina capilar que menciona "uso corporal opcional" cai em non_hair:corpo).
+        # No scrape em tempo real description é útil pra desambiguar, mas no backlog
+        # confia no nome + URL apenas.
         to_quarantine = []
         for p in actives:
             relevant, reason = is_hair_relevant_by_keywords(
-                p.product_name or "", p.product_url or "", p.description or ""
+                p.product_name or "", p.product_url or "", ""  # sem description
             )
             if not relevant:
                 to_quarantine.append((p, reason))
