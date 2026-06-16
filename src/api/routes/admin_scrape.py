@@ -326,8 +326,7 @@ def cleanup_junk_products(req: CleanupRequest):
 
         result = session.execute(
             text(
-                f"UPDATE products SET verification_status='quarantined', "
-                f"quarantine_reason='bad_name_pattern_or_accessory' "
+                f"UPDATE products SET verification_status='quarantined' "
                 f"WHERE {where_clause}"
             )
         )
