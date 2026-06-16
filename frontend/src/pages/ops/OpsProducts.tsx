@@ -12,6 +12,7 @@ import BrandFormModal from "../../components/BrandFormModal";
 import { InlineLoading } from "@/components/LoadingState";
 
 type DataQuality = { fields: Record<string, boolean>; filled: number; total: number; pct: number };
+type NameQuality = { score: number; is_valid: boolean; issues: string[]; signals: string[] };
 
 function QualityBar({ quality }: { quality: DataQuality }) {
   const color = quality.pct >= 80 ? "bg-emerald-500" : quality.pct >= 50 ? "bg-amber-400" : "bg-red-400";
@@ -25,6 +26,20 @@ function QualityBar({ quality }: { quality: DataQuality }) {
         {quality.filled}/{quality.total}
       </span>
     </div>
+  );
+}
+
+function NameQualityBadge({ nq }: { nq?: NameQuality }) {
+  if (!nq) return <span className="text-[10px] text-ink-muted">—</span>;
+  const color =
+    nq.score >= 80 ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+    : nq.score >= 50 ? "bg-amber-100 text-amber-700 border-amber-200"
+    : "bg-red-100 text-red-700 border-red-200";
+  const title = nq.issues.length > 0 ? `Problemas: ${nq.issues.join(", ")}` : `Sinais: ${nq.signals.join(", ")}`;
+  return (
+    <span title={title} className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] tabular-nums font-medium ${color}`}>
+      {nq.score}
+    </span>
   );
 }
 
@@ -277,6 +292,7 @@ export default function OpsProducts() {
   const [gapFilter, setGapFilter] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [showIncomplete, setShowIncomplete] = useState(searchParams.get("show_incomplete") === "1");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [batchAction, setBatchAction] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -299,12 +315,13 @@ export default function OpsProducts() {
       verification_status: verificationFilter || undefined,
       gap: gapFilter || undefined,
       search: search || undefined,
+      quality_min: showIncomplete ? 0 : 50,
       page,
     }),
-    [brand, statusFilter, verificationFilter, gapFilter, search, page],
+    [brand, statusFilter, verificationFilter, gapFilter, search, page, showIncomplete],
   );
 
-  const { data, loading, error, refetch } = useAPI(fetcher, [brand, statusFilter, verificationFilter, gapFilter, search, page]);
+  const { data, loading, error, refetch } = useAPI(fetcher, [brand, statusFilter, verificationFilter, gapFilter, search, page, showIncomplete]);
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
@@ -423,6 +440,15 @@ export default function OpsProducts() {
             Limpar filtros
           </button>
         )}
+        <label className="ml-auto flex items-center gap-2 text-xs text-ink-muted cursor-pointer" title="Quando ativo, exibe também produtos com nome de baixa qualidade ou dados incompletos">
+          <input
+            type="checkbox"
+            checked={showIncomplete}
+            onChange={(e) => { setShowIncomplete(e.target.checked); setPage(1); }}
+            className="rounded"
+          />
+          Mostrar incompletos
+        </label>
       </div>
 
       {/* Batch actions */}
@@ -458,6 +484,7 @@ export default function OpsProducts() {
                   <th className="px-3 py-3 w-20">Status</th>
                   <th className="px-3 py-3 w-20">INCI</th>
                   <th className="px-3 py-3 w-20">Confiança</th>
+                  <th className="px-3 py-3 w-16" title="Score do nome (regra positiva: tipo+volume, kit+descrição etc). Vermelho = nome incoerente (emoji, lowercase, CTA, categoria).">Nome</th>
                   <th className="px-3 py-3 w-20" title="Campos preenchidos de 8: nome, descrição, INCI, composição, modo de uso, categoria, imagem, preço">Qualidade</th>
                 </tr>
               </thead>
@@ -466,6 +493,7 @@ export default function OpsProducts() {
                   id: string; product_name: string; brand_slug: string;
                   verification_status: string; status_editorial: string | null;
                   confidence: number; data_quality?: DataQuality;
+                  name_quality?: NameQuality;
                   image_url_main?: string; product_category?: string;
                   inci_count?: number;
                 }) => (
@@ -507,6 +535,9 @@ export default function OpsProducts() {
                       }`}>
                         {p.confidence ?? 0}%
                       </span>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <NameQualityBadge nq={p.name_quality} />
                     </td>
                     <td className="px-3 py-2.5">
                       {p.data_quality ? <QualityBar quality={p.data_quality} /> : <span className="text-xs text-ink-muted">—</span>}

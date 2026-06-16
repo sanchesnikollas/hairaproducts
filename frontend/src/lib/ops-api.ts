@@ -87,17 +87,18 @@ export async function opsGetInciSummary(): Promise<{
   return res.json();
 }
 
-export async function opsListProducts(params?: { brand?: string; status_editorial?: string; search?: string; page?: number; verification_status?: string; per_page?: number; gap?: string }): Promise<{
+export async function opsListProducts(params?: { brand?: string; status_editorial?: string; search?: string; page?: number; verification_status?: string; per_page?: number; gap?: string; quality_min?: number }): Promise<{
   items: {
     id: string; product_name: string; brand_slug: string;
     verification_status: string; status_operacional: string | null;
     status_editorial: string | null; status_publicacao: string | null;
     confidence: number; assigned_to: string | null;
     data_quality?: DataQuality;
+    name_quality?: { score: number; is_valid: boolean; issues: string[]; signals: string[] };
     image_url_main?: string;
     product_category?: string;
   }[];
-  total: number; page: number; per_page: number;
+  total: number; filtered_out?: number; page: number; per_page: number;
 }> {
   const qs = new URLSearchParams();
   if (params?.brand) qs.set("brand", params.brand);
@@ -107,6 +108,7 @@ export async function opsListProducts(params?: { brand?: string; status_editoria
   if (params?.verification_status) qs.set("verification_status", params.verification_status);
   if (params?.per_page) qs.set("per_page", String(params.per_page));
   if (params?.gap) qs.set("gap", params.gap);
+  if (params?.quality_min !== undefined) qs.set("quality_min", String(params.quality_min));
   const res = await authFetch(`${BASE}/ops/products?${qs}`);
   return res.json();
 }

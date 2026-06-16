@@ -165,12 +165,16 @@ def ops_list_products(
     verification_status: str | None = None,
     search: str | None = None,
     gap: str | None = None,
+    quality_min: int = 50,  # 0 = mostra tudo; 50 = só nomes válidos (default)
     page: int = 1,
     per_page: int = 30,
     user: dict = Depends(get_current_user),
     session: Session = Depends(get_ops_session),
 ):
+    # Default behavior: esconde quarentena exceto se reviewer pedir
     q = session.query(ProductORM)
+    if not verification_status:
+        q = q.filter(ProductORM.verification_status != "quarantined")
     if brand:
         q = q.filter(ProductORM.brand_slug == brand)
     if status_editorial:
@@ -214,19 +218,35 @@ def ops_list_products(
         filled = sum(1 for v in fields.values() if v)
         return {"fields": fields, "filled": filled, "total": len(fields), "pct": round(filled / len(fields) * 100)}
 
+    def _name_quality(p: ProductORM) -> dict:
+        """Quality score do nome (positiva — emoji/CTA/lower etc fica vermelho)."""
+        from src.core.field_validator import validate_product_name_quality
+        return validate_product_name_quality(p.product_name).to_dict()
+
+    serialized = []
+    for p in items:
+        dq = _data_quality(p)
+        nq = _name_quality(p)
+        # Filtro de qualidade: se reviewer pediu quality_min, esconde os abaixo.
+        # Considera pior de (data_quality.pct, name_quality.score) pra critério único.
+        worst = min(dq["pct"], nq["score"])
+        if worst < quality_min:
+            continue
+        serialized.append({
+            "id": p.id, "product_name": p.product_name, "brand_slug": p.brand_slug,
+            "verification_status": p.verification_status,
+            "status_operacional": p.status_operacional, "status_editorial": p.status_editorial,
+            "status_publicacao": p.status_publicacao, "confidence": p.confidence,
+            "assigned_to": p.assigned_to,
+            "data_quality": dq,
+            "name_quality": nq,
+        })
+
     return {
-        "items": [
-            {
-                "id": p.id, "product_name": p.product_name, "brand_slug": p.brand_slug,
-                "verification_status": p.verification_status,
-                "status_operacional": p.status_operacional, "status_editorial": p.status_editorial,
-                "status_publicacao": p.status_publicacao, "confidence": p.confidence,
-                "assigned_to": p.assigned_to,
-                "data_quality": _data_quality(p),
-            }
-            for p in items
-        ],
-        "total": total, "page": page, "per_page": per_page,
+        "items": serialized,
+        "total": total,
+        "filtered_out": len(items) - len(serialized),
+        "page": page, "per_page": per_page,
     }
 
 
