@@ -426,18 +426,11 @@ def sync_brand_coverage_endpoint(req: SyncCoverageRequest):
 
     from sqlalchemy.orm import Session as SASession
     from src.storage.database import get_engine
-    from src.storage.central_sync import sync_brand_coverage_all
-    from src.storage.orm_models import ProductORM
+    from src.storage.central_sync import sync_all_coverage
 
     engine = get_engine()
     with SASession(engine) as session:
-        # Coleta todas as marcas únicas em products
-        slugs = [
-            row[0] for row in session.execute(
-                ProductORM.__table__.select().with_only_columns(ProductORM.brand_slug).distinct()
-            )
-        ]
-        results = sync_brand_coverage_all(session, slugs)
+        results = sync_all_coverage(session)
         session.commit()
         summary = {
             "brands_synced": len(results),
