@@ -5,6 +5,7 @@ import OpsLayout from './components/ops/OpsLayout'
 import OpsDashboard from './pages/ops/OpsDashboard'
 import OpsProducts from './pages/ops/OpsProducts'
 import OpsProductDetail from './pages/ops/OpsProductDetail'
+import OpsQuarantine from './pages/ops/OpsQuarantine'
 import OpsIngredients from './pages/ops/OpsIngredients'
 import OpsQuickFill from './pages/ops/OpsQuickFill'
 import OpsSeals from './pages/ops/OpsSeals'
@@ -43,6 +44,7 @@ function App() {
           <Route index element={<OpsDashboard />} />
           <Route path="products" element={<OpsProducts />} />
           <Route path="products/:id" element={<OpsProductDetail />} />
+          <Route path="quarantine" element={<OpsQuarantine />} />
           <Route path="seals" element={<OpsSeals />} />
           <Route path="quick-fill" element={<OpsQuickFill />} />
           <Route path="ingredients" element={<OpsIngredients />} />

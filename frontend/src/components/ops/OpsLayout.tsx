@@ -1,6 +1,6 @@
 import { NavLink, Outlet, Navigate } from "react-router-dom";
 import { useAuth } from "../../lib/auth";
-import { LayoutDashboard, Package, FlaskConical, Settings, LogOut, Tags, Award, Zap, ShieldCheck, Moon, MessageCircle, User, BookOpen } from "lucide-react";
+import { LayoutDashboard, Package, FlaskConical, Settings, LogOut, Tags, Award, Zap, ShieldCheck, Moon, MessageCircle, User, BookOpen, ShieldAlert } from "lucide-react";
 
 const NAV_ITEMS = [
   { to: "/ops", icon: LayoutDashboard, label: "Dashboard", end: true },
@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { to: "/ops/knowledge", icon: BookOpen, label: "Conteúdo Moon", admin: true },
   { to: "/ops/brands", icon: Tags, label: "Marcas" },
   { to: "/ops/products", icon: Package, label: "Produtos" },
+  { to: "/ops/quarantine", icon: ShieldAlert, label: "Quarentena" },
   { to: "/ops/quick-fill", icon: Zap, label: "Preencher" },
   { to: "/ops/dual-validation", icon: ShieldCheck, label: "Dupla Verificação" },
   { to: "/ops/seals", icon: Award, label: "Selos" },

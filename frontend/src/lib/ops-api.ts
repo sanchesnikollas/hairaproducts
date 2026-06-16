@@ -113,6 +113,45 @@ export async function opsListProducts(params?: { brand?: string; status_editoria
   return res.json();
 }
 
+export async function opsListQuarantine(params?: { brand?: string; rejection_code?: string; search?: string; page?: number; per_page?: number }): Promise<{
+  items: {
+    id: string;
+    product_name: string;
+    brand_slug: string;
+    product_url: string | null;
+    image_url_main: string | null;
+    rejection_reason: string | null;
+    rejection_code: string | null;
+    reviewer_notes: string | null;
+    reviewed_at: string | null;
+    updated_at: string | null;
+  }[];
+  total: number;
+  page: number;
+  per_page: number;
+  reason_counts: Record<string, number>;
+}> {
+  const qs = new URLSearchParams();
+  if (params?.brand) qs.set("brand", params.brand);
+  if (params?.rejection_code) qs.set("rejection_code", params.rejection_code);
+  if (params?.search) qs.set("search", params.search);
+  if (params?.page) qs.set("page", String(params.page));
+  if (params?.per_page) qs.set("per_page", String(params.per_page));
+  const res = await authFetch(`${BASE}/ops/quarantine?${qs}`);
+  return res.json();
+}
+
+export async function opsPromoteQuarantine(product_ids: string[], target_status: "catalog_only" | "verified_inci" = "catalog_only"): Promise<{
+  promoted: number;
+  requested: number;
+}> {
+  const res = await authFetch(`${BASE}/ops/quarantine/promote`, {
+    method: "POST",
+    body: JSON.stringify({ product_ids, target_status }),
+  });
+  return res.json();
+}
+
 export async function opsGetProduct(id: string): Promise<{
   id: string; product_name: string; brand_slug: string;
   description: string | null; usage_instructions: string | null;
