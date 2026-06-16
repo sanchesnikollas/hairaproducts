@@ -46,6 +46,13 @@ GARBAGE_PATTERNS = [
                r"Tratamentos|Finalizadores|Modeladores|Leave-?Ins|Tonicos|T[oô]nicos|"
                r"Produtos|Esmaltes|Kits)\s+",
                re.IGNORECASE),
+    # "LINHA X" / "COLEÇÃO X" — nome de categoria/linha
+    re.compile(r"^\s*(linha|cole[çc][aã]o|s[ée]rie)\s+", re.IGNORECASE),
+    # Brindes / pré-venda / amostras (não-vendáveis)
+    re.compile(r"^\s*(brinde|amostra|sample|teste|test\s)\b", re.IGNORECASE),
+    re.compile(r"venda\s+proibida", re.IGNORECASE),
+    re.compile(r"^\s*pr[ée]-?venda\s*$", re.IGNORECASE),
+    re.compile(r"^\s*(in)?dispon[íi]vel\s*$", re.IGNORECASE),
 ]
 
 
