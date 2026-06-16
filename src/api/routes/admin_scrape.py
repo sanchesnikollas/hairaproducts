@@ -278,8 +278,19 @@ def cleanup_junk_products(req: CleanupRequest):
     from sqlalchemy.orm import Session as SASession
     from src.storage.database import get_engine
 
-    where_clause = """
+    # Proteção: não quarentenar produtos que têm CLARAMENTE palavra-chave de
+    # cabelo + indicador de produto (volume, kit, combo com cabelo) — evita
+    # falso positivo em linhas masculinas (Malbec/Zaad/Arbo) que têm sub-produtos
+    # capilares legítimos junto com perfume/desodorante na mesma linha.
+    safe_clause = """
+      NOT (
+        product_name ~* '\\b(shampoo|xampu|condicionador|m[aá]scara\\s+(capilar|para\\s+cabelo|hidrat|nutri|reconstr)|leave-?in|creme\\s+(para|de)\\s+pentear|[óo]leo\\s+(capilar|para\\s+cabelo)|finalizador|defrizante|reconstrutor)\\b'
+        AND product_name ~* '\\d+\\s*(ml|g|kg|l)\\b'
+      )
+    """
+    where_clause = f"""
       verification_status <> 'quarantined'
+      AND {safe_clause}
       AND (
            product_name LIKE '#%'
         OR product_name ~* '\\m\\d+\\s+dicas?\\M'
