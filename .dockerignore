@@ -15,4 +15,8 @@ data/
 tests/
 docs/
 *.md
+# Exceção: iamoon/ contém o knowledge base canônico da Moon (markdown)
+# e precisa ir pra dentro do container
+!iamoon
+!iamoon/*.md
 scripts/migration_data.json

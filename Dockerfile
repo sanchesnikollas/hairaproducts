@@ -23,6 +23,8 @@ COPY alembic.ini ./
 COPY alembic_central.ini ./
 COPY scripts/ ./scripts/
 COPY entrypoint.sh ./
+# Knowledge base canônico da Moon
+COPY iamoon/ ./iamoon/
 
 # Install Python package
 RUN pip install --no-cache-dir -e .
