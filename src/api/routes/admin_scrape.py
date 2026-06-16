@@ -285,6 +285,7 @@ def cleanup_junk_products(req: CleanupRequest):
         OR product_name ~* '\\m\\d+\\s+dicas?\\M'
         OR product_name ~* '^\\s*como\\s+(tratar|fazer|cuidar|usar|hidratar|escolher|aplicar)'
         OR product_name ~* '^\\s*(vai|posso|devo|deve|pode|quem|qual)\\M.*\\?\\s*$'
+        OR product_name ~* '^\\s*(shampoos|condicionadores|m[aá]scaras|cremes|[óo]leos|tratamentos|finalizadores|modeladores|leave-?ins|tonicos|t[oô]nicos|produtos|esmaltes|kits)\\s+'
         OR LOWER(product_name) LIKE '%bad gateway%'
         OR LOWER(product_name) LIKE '%error code%'
         OR LOWER(product_name) LIKE '% 502%'
@@ -305,6 +306,13 @@ def cleanup_junk_products(req: CleanupRequest):
         OR LOWER(product_name) LIKE '%necessaire%'
         OR LOWER(product_name) LIKE '%bolsa%'
         OR LOWER(product_name) LIKE '%estojo%'
+        -- URLs com query string de filtro de categoria (não são produtos)
+        OR product_url LIKE '%?%nota-da-avaliacao=%'
+        OR product_url LIKE '%?%condicao-dos-fios=%'
+        OR product_url LIKE '%?%tipos-de-cabelo=%'
+        OR product_url LIKE '%?%propriedades=%'
+        OR product_url LIKE '%?%departamento-categoria=%'
+        OR product_url LIKE '%?%indexar=falso%'
       )
     """
     engine = get_engine()

@@ -32,7 +32,7 @@ GARBAGE_NAMES: list[str] = [
 ]
 
 
-# Padrões de NOMES que NÃO são produtos (artigos, perguntas, hashtags)
+# Padrões de NOMES que NÃO são produtos (artigos, perguntas, hashtags, categorias)
 # Aplicados em qa_gate como rejeição automática.
 GARBAGE_PATTERNS = [
     re.compile(r"^\s*#"),                                      # "#Antiqueda"
@@ -41,6 +41,11 @@ GARBAGE_PATTERNS = [
     re.compile(r"^\s*(vai|posso|devo|deve|pode|quem)\b.*\?", re.IGNORECASE),  # perguntas
     re.compile(r"^\s*qual\b.*\?", re.IGNORECASE),              # "Qual a importância..."
     re.compile(r"\berror\s*code\b", re.IGNORECASE),
+    # Nomes coletivos plurais (páginas de categoria/filtro)
+    re.compile(r"^\s*(Shampoos|Condicionadores|M[aá]scaras|Cremes|[ÓO]leos|"
+               r"Tratamentos|Finalizadores|Modeladores|Leave-?Ins|Tonicos|T[oô]nicos|"
+               r"Produtos|Esmaltes|Kits)\s+",
+               re.IGNORECASE),
 ]
 
 
