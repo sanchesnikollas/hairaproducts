@@ -215,7 +215,7 @@ export default function OpsQuarantine() {
                 Anterior
               </button>
               <span className="flex items-center px-2 tabular-nums">Página {page}</span>
-              <button onClick={() => setPage((p) => p + 1)} disabled={data.items.length < data.per_page} className="rounded-lg border border-cream-dark px-3 py-1 hover:bg-cream disabled:opacity-50">
+              <button onClick={() => setPage((p) => p + 1)} disabled={page * data.per_page >= data.total} className="rounded-lg border border-cream-dark px-3 py-1 hover:bg-cream disabled:opacity-50">
                 Próxima
               </button>
             </div>
