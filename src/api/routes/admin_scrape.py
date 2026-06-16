@@ -445,6 +445,7 @@ def cleanup_non_hair_products(req: NonHairCleanupRequest):
     if not MIGRATION_SECRET or req.secret != MIGRATION_SECRET:
         raise HTTPException(status_code=403, detail="Invalid secret")
 
+    from sqlalchemy import text
     from sqlalchemy.orm import Session as SASession
     from src.storage.database import get_engine
     from src.storage.orm_models import ProductORM, QuarantineDetailORM
