@@ -53,7 +53,7 @@ HAIR_KEYWORDS: list[str] = [
     "umectação", "umectacao", "umectante capilar",
     "co-wash", "cowash", "low-poo", "low poo", "no-poo", "no poo",
     "permanente", "transição capilar", "transicao capilar",
-    "matizador", "tonalizador",
+    "matizador", "tonalizador", "desamareladora", "desamarelador",
     # Nota: "bb cream" foi removido — colide com "BB Cream Make B." (maquiagem facial).
     # Casos hair-specific tipo "BB Cream Capilar" são raros e batem em "capilar".
 ]
@@ -87,7 +87,7 @@ EXCLUDE_KEYWORDS: list[str] = [
     "frasqueira", "mochila", "porta", "porta-escova",
     "perfume", "fragrance", "fragrância", "fragrancia",
     "deo colônia", "deo colonia", "deo-colonia",
-    "malbec",  # linha de perfume O Boticário
+    # "malbec" removido — colide com Condicionador Antiqueda Malbec (linha hair masculina O Boticário)
     "glam by camila", "by camila queiroz",
     "talco", "antitranspirante",
     # Maquiagem (linhas inteiras + componentes)
@@ -95,14 +95,16 @@ EXCLUDE_KEYWORDS: list[str] = [
     "quem disse, berenice", "quem disse berenice", "qdb ", "qdb,", "berenice?",
     "niina secrets", "niina-secrets",
     "base líquida", "base liquida",
-    "bb cream", "cc cream",  # makeup BB/CC creams
+    # "bb cream" e "cc cream" removidos — colidem com Leave-in BB Cream da Amazônico Care (hair)
     "primer",  # makeup primer
     "pó solto", "po solto", "pó compacto", "po compacto",
     "delineador", "lápis de olho", "lapis de olho",
     "instamatte", "matte cream",  # QDB lines
-    "blush", "iluminador", "contorno stick", "corretivo",
-    "gloss", "lipstick", "lip cream",
+    "blush", "contorno stick", "corretivo",
+    "gloss labial", "lip gloss", "lipstick", "lip cream",  # gloss ambíguo (Elseve Gloss Shampoo é hair)
     "paleta de sombras",
+    # "iluminador" removido — "Fluido Iluminador" é finalizador capilar comum
+    # "gloss" sozinho removido — Hidratei Gloss SHRP / Bond Gloss Repair são hair
     # Perfumaria
     "eau de toilette", "eau de parfum", "eau de cologne",
     "edt ", "edp ", " edt", " edp",
@@ -123,8 +125,8 @@ EXCLUDE_KEYWORDS: list[str] = [
     "dermopes", "dermo pés", "dermo pes",
     "renovilc",
     "pomada descongestionante", "descongestionante",
-    "arnica",
-    "anti-séptico", "antisseptico",
+    # "arnica" removido — Mustela Arnica Gel é body, mas Granado Arnica pode ser linha capilar
+    # "anti-séptico" removido — pode aparecer em URL de categoria do site sem ser ruim
     # Loja de acessórios (Belliz, Vertix, Ricca)
     "capa de corte", "capa para corte",
     "pincel ", "pinceis",  # makeup brushes
@@ -299,39 +301,46 @@ def is_hair_relevant_by_keywords(
 ) -> tuple[bool, str]:
     """Decide se um produto é capilar baseado em keywords.
 
-    Regra:
-    1. Se algum EXCLUDE_KEYWORD bate no nome+desc+url → NÃO é cabelo (False).
-       EXCLUDE_KEYWORDS são categorias fortes (maquiagem, perfume, facial,
-       unha, corpo, ambiente). Match usa word boundary para keywords curtos
-       (< 6 chars, palavra única) para evitar falsos positivos tipo "pente"
-       em "pentear" ou "corpo" em "corporal".
-    2. Se algum HAIR_KEYWORD bate (cabelo, capilar, shampoo, etc.) → É cabelo (True).
-    3. Se algum HAIR_PRODUCT_TYPES bate no nome → é cabelo.
-    4. Caso contrário → NÃO é cabelo, conservador.
+    Regra com 4 níveis de prioridade:
+    1. EXCLUDE_KEYWORD no NOME → não é cabelo (categoria forte tipo "Make B.",
+       "Quem Disse Berenice", "Eau de Toilette", "Pós Barba" vencem sobre
+       "kit"/"gel"/"mousse" que são ambíguos).
+    2. HAIR_KEYWORD ou HAIR_PRODUCT_TYPE no NOME → é cabelo.
+    3. EXCLUDE_KEYWORD no URL/desc → não é cabelo.
+    4. HAIR_KEYWORD no URL/desc → é cabelo (fallback).
+    5. Default → conservador (False).
 
-    Retorna (is_hair, reason) onde reason explica a decisão.
+    Retorna (is_hair, reason).
     """
     name_lower = (product_name or "").lower()
     desc_lower = (description or "").lower()
     url_lower = (url or "").lower()
-    combined = f"{name_lower} {desc_lower} {url_lower}"
+    extra = f"{desc_lower} {url_lower}"
 
-    # 1. EXCLUDE_KEYWORDS sempre tem precedência (categorias fortes)
+    # 1. EXCLUDE no NOME (categorias fortes)
     for ekw in EXCLUDE_KEYWORDS:
-        if _kw_matches(combined, ekw):
+        if _kw_matches(name_lower, ekw):
             return False, f"non_hair:{ekw}"
 
-    # 2. HAIR_KEYWORDS no combined
+    # 2. HAIR no NOME
     for hkw in HAIR_KEYWORDS:
-        if _kw_matches(combined, hkw):
+        if _kw_matches(name_lower, hkw):
             return True, f"hair_keyword:{hkw}"
-
-    # 3. HAIR_PRODUCT_TYPES no nome
     for ptype in HAIR_PRODUCT_TYPES:
         if _kw_matches(name_lower, ptype):
             return True, f"hair_type:{ptype}"
 
-    # 4. Nada bateu — conservador
+    # 3. EXCLUDE no URL/desc
+    for ekw in EXCLUDE_KEYWORDS:
+        if _kw_matches(extra, ekw):
+            return False, f"non_hair_url:{ekw}"
+
+    # 4. HAIR no URL/desc (fallback)
+    for hkw in HAIR_KEYWORDS:
+        if _kw_matches(extra, hkw):
+            return True, f"hair_keyword_url:{hkw}"
+
+    # 5. Default conservador
     return False, "no_hair_keyword"
 
 
