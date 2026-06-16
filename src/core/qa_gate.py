@@ -82,7 +82,13 @@ def run_product_qa(
     elif any(p.search(name_raw) for p in GARBAGE_PATTERNS):
         failed.append("name_editorial_or_invalid")
     else:
-        passed.append("name_valid")
+        # Régua positiva de qualidade de nome (validate_product_name_quality)
+        from src.core.field_validator import validate_product_name_quality
+        nq = validate_product_name_quality(name_raw)
+        if not nq.is_valid:
+            failed.append(f"name_low_quality:{','.join(nq.issues[:3])}")
+        else:
+            passed.append("name_valid")
 
     if _check_domain(product.product_url, allowed_domains):
         passed.append("domain_valid")

@@ -301,6 +301,15 @@ def cleanup_junk_products(req: CleanupRequest):
         OR product_name ~* '^\\s*(brinde|amostra|sample|teste)\\M'
         OR product_name ~* 'venda\\s+proibida'
         OR product_name ~* '^\\s*pr[ée]-?venda\\s*$'
+        -- Padrões novos: validate_product_name_quality em SQL
+        OR product_name ~ '[✨🌟💫⭐🎁💝🌸💚🔥🎉😍]'
+        OR product_name ~* '^\\s*(crie|descubra|conhe[çc]a|aproveite|garanta|adquira|compre)\\s+'
+        OR product_name ~ '^\\s*[a-z][a-zçãáéíóúâêôõà\\s]+$'  -- tudo lower (extração suja)
+        OR product_name ~* '^\\s*(cronograma|rotina|pr[ée]\\s*/\\s*p[oó]s|pr[ée]\\s+p[oó]s)\\b'
+        OR product_name ~* '\\bou\\s+(cacheamento|alisamento|loiro|liso|crespo|ondulado)\\b'
+        OR LOWER(product_name) = 'oral care'
+        OR (product_name ~ '\\?\\s*$' AND LENGTH(product_name) < 50)  -- pergunta curta
+        OR (product_name ~ '!\\s*$' AND LENGTH(product_name) < 35)    -- exclamação curta (CTA)
         -- Não-capilares (faciais, unhas, acessórios, perfumes)
         OR LOWER(product_name) LIKE '%lenço%' OR LOWER(product_name) LIKE '%lenco %'
         OR LOWER(product_name) LIKE '%tesoura%' OR LOWER(product_name) LIKE '%navalhete%'
@@ -397,6 +406,45 @@ def cleanup_junk_products(req: CleanupRequest):
             "sample_before": sample,
             "status_counts_after": status_counts,
         }
+
+
+class SyncCoverageRequest(BaseModel):
+    secret: str
+
+
+@router.post("/sync-brand-coverage")
+def sync_brand_coverage_endpoint(req: SyncCoverageRequest):
+    """Refresh os contadores cached da tabela brand_coverage.
+
+    A tabela brand_coverage é atualizada por sync_brand_coverage() depois
+    de cada scrape, mas cleanups manuais (POST /cleanup/junk-products) e
+    edits ops não disparam refresh. Esse endpoint força sync de todas as
+    marcas pra contagem ficar coerente com products real.
+    """
+    if not MIGRATION_SECRET or req.secret != MIGRATION_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+
+    from sqlalchemy.orm import Session as SASession
+    from src.storage.database import get_engine
+    from src.storage.central_sync import sync_brand_coverage_all
+    from src.storage.orm_models import ProductORM
+
+    engine = get_engine()
+    with SASession(engine) as session:
+        # Coleta todas as marcas únicas em products
+        slugs = [
+            row[0] for row in session.execute(
+                ProductORM.__table__.select().with_only_columns(ProductORM.brand_slug).distinct()
+            )
+        ]
+        results = sync_brand_coverage_all(session, slugs)
+        session.commit()
+        summary = {
+            "brands_synced": len(results),
+            "total_changed": sum(1 for r in results if getattr(r, "changed", False)),
+            "errors": [getattr(r, "error", None) for r in results if getattr(r, "error", None)],
+        }
+        return summary
 
 
 class MigrateRequest(BaseModel):
