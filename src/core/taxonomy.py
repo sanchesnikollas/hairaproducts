@@ -66,6 +66,9 @@ EXCLUDE_KEYWORDS: list[str] = [
     "pente", "escova", "secador", "babyliss", "chapinha",
     "prancha", "rolinho", "rolo", "bigudini", "bobby pin",
     "cetim",  # toalhas/toucas de cetim
+    # Embalagens / bolsas / kits-presente sem produto químico
+    "nécessaire", "necessaire", "necessaires", "bolsa",
+    "estojo", "pochete", "neceser",
 ]
 
 KIT_PATTERNS: list[str] = [
