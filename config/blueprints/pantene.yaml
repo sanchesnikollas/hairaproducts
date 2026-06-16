@@ -78,6 +78,14 @@ extraction:
       - resultados
       - principais benef\xEDcios
       - o que faz
+      - por que voc\xEA vai amar
+      - por que escolher
+      - vantagens
+      - diferenciais
+      - como age
+      - prepare-se para
+      - para que serve
+      - o que voc\xEA pode esperar
   wait_for_selector: h1
   use_llm_fallback: true
 notes:

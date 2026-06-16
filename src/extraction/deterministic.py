@@ -537,6 +537,26 @@ def extract_product_deterministic(
                     ))
                 if not result["description"] and product.get("productDescription"):
                     result["description"] = sanitize_text(product["productDescription"])
+                # Benefits do __NEXT_DATA__ (campos comuns no Contentful)
+                if not result["benefits"]:
+                    for bkey in ("productBenefits", "benefits", "keyBenefits",
+                                 "whyChooseUs", "features", "productFeatures",
+                                 "highlights", "results"):
+                        bval = product.get(bkey)
+                        if not bval:
+                            continue
+                        if isinstance(bval, list):
+                            bval = "; ".join(
+                                str(x) if not isinstance(x, dict) else (x.get("text") or x.get("label") or "")
+                                for x in bval if x
+                            )
+                        if isinstance(bval, str) and bval.strip():
+                            result["benefits"] = sanitize_text(bval)
+                            evidence_list.append(create_evidence(
+                                "benefits", url, f"__NEXT_DATA__ {bkey}",
+                                bval[:500], ExtractionMethod.JSONLD,
+                            ))
+                            break
                 if not result["image_url_main"] and product.get("packshot"):
                     img = product["packshot"]
                     if isinstance(img, dict):
@@ -544,7 +564,9 @@ def extract_product_deterministic(
                     if isinstance(img, str) and img:
                         if img.startswith("//"):
                             img = "https:" + img
-                        result["image_url_main"] = img
+                        # Rejeita asset genérico "thumbnail.png" do Contentful
+                        if "thumbnail" not in img.lower():
+                            result["image_url_main"] = img
             # Path 2: Direct product in pageProps
             product2 = page_props.get("content", {}).get("product", {})
             if product2:
@@ -553,6 +575,16 @@ def extract_product_deterministic(
                 if not result["inci_raw"] and product2.get("ingredients"):
                     result["inci_raw"] = product2["ingredients"]
                     result["inci_source"] = "section_classifier"
+                if not result["benefits"]:
+                    for bkey in ("benefits", "productBenefits", "features", "highlights"):
+                        bval = product2.get(bkey)
+                        if not bval:
+                            continue
+                        if isinstance(bval, list):
+                            bval = "; ".join(str(x) for x in bval if x)
+                        if isinstance(bval, str) and bval.strip():
+                            result["benefits"] = sanitize_text(bval)
+                            break
                 if not result["image_url_main"] and product2.get("image"):
                     img = product2["image"]
                     if isinstance(img, dict):
@@ -560,7 +592,8 @@ def extract_product_deterministic(
                     if isinstance(img, str) and img:
                         if img.startswith("//"):
                             img = "https:" + img
-                        result["image_url_main"] = img
+                        if "thumbnail" not in img.lower():
+                            result["image_url_main"] = img
         except (json.JSONDecodeError, KeyError, TypeError):
             pass
 
