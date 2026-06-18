@@ -1205,5 +1205,198 @@ def classify(brand: str | None, all_brands: bool, limit: int, dry_run: bool, min
             click.echo(f"\n(DRY RUN — nothing was saved)")
 
 
+@cli.command(name="backfill-usage")
+@click.option("--brand", default=None, help="Brand slug (omit + --all-brands for full backfill)")
+@click.option("--all-brands", "all_brands", is_flag=True, help="Run for all brands")
+@click.option("--dry-run", is_flag=True, help="Preview without saving")
+def backfill_usage(brand: str | None, all_brands: bool, dry_run: bool):
+    """Recover 'como usar' text from care_usage into usage_instructions.
+
+    The deterministic extractor stored how-to-use content in care_usage but never
+    copied it to the canonical usage_instructions field (read by the Ops UI, the
+    label engine and the Gold gate), leaving usage_instructions at 0%. This
+    recovers it for already-scraped products, gated by is_real_usage_instructions
+    so descriptions and tab-label noise never leak in. Zero network, zero LLM.
+    """
+    from sqlalchemy import or_
+    from sqlalchemy.orm import Session as SASession
+
+    from src.core.field_validator import is_real_usage_instructions
+    from src.storage.database import get_engine
+    from src.storage.orm_models import Base, ProductORM
+
+    if not brand and not all_brands:
+        click.echo("Error: provide --brand <slug> or --all-brands.", err=True)
+        sys.exit(2)
+
+    engine = get_engine()
+    Base.metadata.create_all(engine)
+
+    with SASession(engine) as session:
+        query = session.query(ProductORM).filter(
+            ProductORM.care_usage.isnot(None),
+            or_(
+                ProductORM.usage_instructions.is_(None),
+                ProductORM.usage_instructions == "",
+            ),
+        )
+        if brand:
+            query = query.filter(ProductORM.brand_slug == brand)
+        products = query.all()
+
+        click.echo(
+            f"Scanning {len(products)} products with care_usage but no usage_instructions..."
+        )
+        if dry_run:
+            click.echo("(DRY RUN — no changes will be saved)\n")
+
+        recovered = 0
+        skipped = 0
+        for p in products:
+            if is_real_usage_instructions(p.care_usage):
+                recovered += 1
+                if dry_run and recovered <= 15:
+                    click.echo(f"  {p.product_name[:55]}: {p.care_usage[:70]}")
+                elif not dry_run:
+                    p.usage_instructions = p.care_usage
+            else:
+                skipped += 1
+
+        if not dry_run:
+            session.commit()
+
+    click.echo(f"\n{'='*60}")
+    click.echo("Backfill usage_instructions" + (f" — {brand}" if brand else " — all brands"))
+    click.echo(f"{'='*60}")
+    click.echo(f"Candidates (care_usage, no usage):  {len(products)}")
+    click.echo(f"Recovered (passed usage gate):      {recovered}")
+    click.echo(f"Skipped (not real instructions):    {skipped}")
+    if not dry_run:
+        click.echo(f"\n{recovered} products updated.")
+    else:
+        click.echo("\n(DRY RUN — nothing was saved)")
+
+
+@cli.command(name="gold-report")
+@click.option("--brand", default=None, help="Brand slug (omit + --all-brands for full report)")
+@click.option("--all-brands", "all_brands", is_flag=True, help="Run for all brands")
+@click.option("--limit", type=int, default=0, help="Max products to evaluate (0 = all)")
+@click.option("--dry-run", is_flag=True, help="Evaluate and report without persisting gold_status")
+def gold_report(brand: str | None, all_brands: bool, limit: int, dry_run: bool):
+    """Evaluate products against the Gold gate, persist gold_status, and report the gap.
+
+    Doubles as the gold_status backfill: every product is run through
+    gold_gate.evaluate_gold and its gold_status / gold_blockers / gold_evaluated_at
+    are persisted (unless --dry-run). Prints the Gold rate and a per-field gap so the
+    operator knows exactly which fields block products from reaching the AI. A
+    human gold_rejected verdict is never overwritten.
+    """
+    from collections import Counter
+    from datetime import datetime, timezone
+
+    from sqlalchemy.orm import Session as SASession
+
+    from src.core.gold_gate import evaluate_gold
+    from src.core.models import GoldStatus
+    from src.storage.database import get_engine
+    from src.storage.orm_models import Base, BrandCoverageORM, ProductORM
+
+    if not brand and not all_brands:
+        click.echo("Error: provide --brand <slug> or --all-brands.", err=True)
+        sys.exit(2)
+
+    engine = get_engine()
+    Base.metadata.create_all(engine)
+
+    with SASession(engine) as session:
+        query = session.query(ProductORM)
+        if brand:
+            query = query.filter(ProductORM.brand_slug == brand)
+        if limit > 0:
+            query = query.limit(limit)
+        products = query.all()
+
+        if not products:
+            click.echo(f"No products found{f' for {brand}' if brand else ''}.")
+            return
+
+        click.echo(f"Evaluating {len(products)} products against the Gold gate...")
+        if dry_run:
+            click.echo("(DRY RUN — gold_status will not be persisted)\n")
+
+        now = datetime.now(timezone.utc)
+        status_counts: Counter = Counter()
+        gap_by_field: Counter = Counter()       # non-gold products missing each field
+        one_field_away = 0                       # catalog products blocked by exactly 1 field
+        per_brand: dict[str, Counter] = {}
+
+        for p in products:
+            ev = evaluate_gold(p, session=session)
+            # A human gold_rejected verdict is terminal — report it as such (not the
+            # recomputed value) and never overwrite it.
+            preserved = p.gold_status == GoldStatus.GOLD_REJECTED.value
+            effective = GoldStatus.GOLD_REJECTED if preserved else ev.gold_status
+            status_counts[effective.value] += 1
+            per_brand.setdefault(p.brand_slug, Counter())[effective.value] += 1
+
+            if effective not in (GoldStatus.GOLD, GoldStatus.GOLD_REJECTED):
+                error_fields = {b.field for b in ev.blockers if b.severity == "error"}
+                soft_fields = {b.field for b in ev.blockers if b.severity == "warning"}
+                for f in error_fields | soft_fields:
+                    gap_by_field[f] += 1
+                if effective == GoldStatus.CATALOG and len(error_fields) == 1:
+                    one_field_away += 1
+
+            if not dry_run and not preserved:
+                p.gold_status = ev.gold_status.value
+                p.gold_blockers = ev.blockers_as_dicts()
+                p.gold_evaluated_at = now
+
+        # Persist per-brand gold summary into coverage_report JSON (migration-free)
+        if not dry_run:
+            for b_slug, counts in per_brand.items():
+                cov = (
+                    session.query(BrandCoverageORM)
+                    .filter(BrandCoverageORM.brand_slug == b_slug)
+                    .first()
+                )
+                if cov:
+                    report_json = dict(cov.coverage_report or {})
+                    b_total = sum(counts.values())
+                    report_json["gold"] = {
+                        "gold": counts.get("gold", 0),
+                        "gold_candidate": counts.get("gold_candidate", 0),
+                        "catalog": counts.get("catalog", 0),
+                        "raw": counts.get("raw", 0),
+                        "gold_rejected": counts.get("gold_rejected", 0),
+                        "total": b_total,
+                        "gold_rate": (counts.get("gold", 0) / b_total) if b_total else 0.0,
+                        "evaluated_at": now.isoformat(),
+                    }
+                    cov.coverage_report = report_json
+            session.commit()
+
+        total = len(products)
+        gold = status_counts.get("gold", 0)
+        click.echo(f"\n{'='*60}")
+        click.echo("GOLD REPORT" + (f" — {brand}" if brand else " — all brands"))
+        click.echo(f"{'='*60}")
+        click.echo(f"Total products:     {total}")
+        click.echo(f"  GOLD:             {gold} ({gold/total:.1%})")
+        click.echo(f"  gold_candidate:   {status_counts.get('gold_candidate', 0)}")
+        click.echo(f"  catalog:          {status_counts.get('catalog', 0)}")
+        click.echo(f"  raw (disqualif.): {status_counts.get('raw', 0)}")
+        click.echo(f"  gold_rejected:    {status_counts.get('gold_rejected', 0)}")
+        click.echo(f"\nGap by field (non-Gold products missing/failing each):")
+        for fld, count in gap_by_field.most_common():
+            click.echo(f"  {fld:<24} {count:>6}")
+        click.echo(f"\nClosest to Gold (catalog, blocked by exactly 1 field): {one_field_away}")
+
+        if not dry_run:
+            click.echo(f"\ngold_status persisted for {total} products.")
+        else:
+            click.echo("\n(DRY RUN — nothing was saved)")
+
+
 if __name__ == "__main__":
     cli()

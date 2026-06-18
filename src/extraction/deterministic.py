@@ -460,11 +460,16 @@ def extract_product_deterministic(
         "currency": None,
         "evidence": evidence_list,
         "extraction_method": None,
+        # Set when the page is a WAF/Cloudflare challenge (no real content). The
+        # pipeline routes these to an explicit quarantine instead of dropping
+        # them silently, so Ops can see and re-scrape via a different fetch path.
+        "blocked_reason": None,
     }
 
     # Detect WAF/Cloudflare challenge pages early
     if _is_waf_challenge_page(html):
         logger.warning(f"WAF challenge page detected for {url}, skipping extraction")
+        result["blocked_reason"] = "waf_challenge"
         return result
 
     # Unpack Porto WooCommerce theme script templates (no-op on other sites)
@@ -708,5 +713,6 @@ def extract_product_deterministic(
             f"for {url} — likely a WAF challenge page, clearing extraction"
         )
         result["product_name"] = None
+        result["blocked_reason"] = "waf_challenge"
 
     return result

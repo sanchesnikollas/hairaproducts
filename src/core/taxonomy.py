@@ -141,6 +141,20 @@ EXCLUDE_KEYWORDS: list[str] = [
     "cuba flexivel", "cuba flexível", "cuba ",  # acessório de salão
     "esc ", "esc.",  # "Esc Belliz" abreviado de Escova
     "rede de cabelo",
+    # Feedback cliente 2026-06 — não-capilares vazando (Granado, Avatim):
+    # difusor/aromatizador de ambiente, óleo de unhas, utensílios e banho.
+    # Frases específicas pra vencer a prioridade 1 (EXCLUDE no nome) sobre
+    # "óleo"→oil_serum que classificava errado como capilar.
+    "difusor de ambiente", "difusor de ambientes", "aromatizador de ambiente",
+    "óleo de unha", "oleo de unha", "óleo de unhas", "oleo de unhas",
+    "óleo para unha", "oleo para unha", "óleo para unhas", "oleo para unhas",
+    "esmalte de unha", "fortalecedor de unha",
+    "sais de banho", "sal de banho", "bath salt", "espuma de banho",
+    "sabonete em barra", "sabonete líquido para as mãos",
+    "colher de madeira", "colher de bambu", "colher dosadora", "colher medidora",
+    "balde", "varetas", "vareta de difusor", "varetas para difusor",
+    "porta-sabonete", "saboneteira",
+    "vela aromática", "vela perfumada", "incenso",
 ]
 
 KIT_PATTERNS: list[str] = [

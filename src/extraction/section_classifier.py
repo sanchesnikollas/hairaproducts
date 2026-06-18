@@ -150,6 +150,29 @@ def validate_inci_content(text: str | None, has_section_context: bool = False) -
     return True
 
 
+def _classify_inci_or_composition(taxonomy_field: str, content: str) -> str:
+    """Decide whether labeled content is real INCI or just composition text.
+
+    - ingredients_inci label: trust as INCI when it validates OR carries >=3 INCI
+      anchor ingredients (a marketing prefix shouldn't lose a real list); else
+      demote to composition.
+    - composition label: promote to ingredients_inci ONLY on strong anchor
+      evidence (>=3 of Aqua, Sodium, Glycerin, Parfum, ...). The old code also
+      promoted whenever validate_inci_content passed, which wrongly turned
+      Portuguese composition copy ("Queratina hidrolisada, óleo de argan,
+      pantenol") into INCI. Real ingredient lists always carry these anchors;
+      marketing/composition prose does not — so this keeps recall while closing
+      the marketing-as-INCI leak.
+    """
+    words = {w.lower().strip(",.;:()") for w in content.split()}
+    has_anchors = len(words & INCI_ANCHOR_INGREDIENTS) >= 3
+    if taxonomy_field == "ingredients_inci":
+        return "ingredients_inci" if (validate_inci_content(content) or has_anchors) else "composition"
+    if taxonomy_field == "composition":
+        return "ingredients_inci" if has_anchors else "composition"
+    return taxonomy_field
+
+
 def _get_soup(html: str):
     if BeautifulSoup is None:
         raise ImportError("beautifulsoup4 is required: pip install beautifulsoup4 lxml")
@@ -290,31 +313,7 @@ def extract_sections_from_html(
             if _is_tab_nav_noise(content):
                 break
 
-            actual_field = taxonomy_field
-
-            # For ingredients_inci, validate the content
-            if taxonomy_field == "ingredients_inci":
-                if validate_inci_content(content):
-                    actual_field = "ingredients_inci"
-                else:
-                    # Reclassify to composition if INCI validation fails
-                    actual_field = "composition"
-
-            # Promote composition -> ingredients_inci when content looks like INCI
-            # This handles cases where "composição" label is shared between
-            # composition and ingredients_inci in the blueprint, and the
-            # composition entry wins the label_lookup sort order.
-            if taxonomy_field == "composition":
-                if validate_inci_content(content):
-                    actual_field = "ingredients_inci"
-                else:
-                    # Anchor ingredient fallback: if validate_inci_content fails,
-                    # check for anchor ingredients — enough of them signal real INCI
-                    # even when marketing verbs are present alongside the ingredient list.
-                    words = {w.lower().strip(",.;:") for w in content.split()}
-                    anchor_matches = words & INCI_ANCHOR_INGREDIENTS
-                    if len(anchor_matches) >= 3:
-                        actual_field = "ingredients_inci"
+            actual_field = _classify_inci_or_composition(taxonomy_field, content)
 
             section = PageSection(
                 label=norm_label,
@@ -359,22 +358,7 @@ def extract_sections_from_html(
             if not content:
                 break
 
-            actual_field = taxonomy_field
-
-            if taxonomy_field == "ingredients_inci":
-                if validate_inci_content(content):
-                    actual_field = "ingredients_inci"
-                else:
-                    actual_field = "composition"
-
-            if taxonomy_field == "composition":
-                if validate_inci_content(content):
-                    actual_field = "ingredients_inci"
-                else:
-                    words = {w.lower().strip(",.;:") for w in content.split()}
-                    anchor_matches = words & INCI_ANCHOR_INGREDIENTS
-                    if len(anchor_matches) >= 3:
-                        actual_field = "ingredients_inci"
+            actual_field = _classify_inci_or_composition(taxonomy_field, content)
 
             section = PageSection(
                 label=norm_label,
@@ -415,22 +399,7 @@ def extract_sections_from_html(
             if not content:
                 break
 
-            actual_field = taxonomy_field
-
-            if taxonomy_field == "ingredients_inci":
-                if validate_inci_content(content):
-                    actual_field = "ingredients_inci"
-                else:
-                    actual_field = "composition"
-
-            if taxonomy_field == "composition":
-                if validate_inci_content(content):
-                    actual_field = "ingredients_inci"
-                else:
-                    words = {w.lower().strip(",.;:") for w in content.split()}
-                    anchor_matches = words & INCI_ANCHOR_INGREDIENTS
-                    if len(anchor_matches) >= 3:
-                        actual_field = "ingredients_inci"
+            actual_field = _classify_inci_or_composition(taxonomy_field, content)
 
             section = PageSection(
                 label=norm_label,
@@ -493,22 +462,7 @@ def extract_sections_from_html(
                 if not content or len(content) < 30:
                     break
 
-                actual_field = taxonomy_field
-
-                if taxonomy_field == "ingredients_inci":
-                    if validate_inci_content(content):
-                        actual_field = "ingredients_inci"
-                    else:
-                        actual_field = "composition"
-
-                if taxonomy_field == "composition":
-                    if validate_inci_content(content):
-                        actual_field = "ingredients_inci"
-                    else:
-                        words = {w.lower().strip(",.;:") for w in content.split()}
-                        anchor_matches = words & INCI_ANCHOR_INGREDIENTS
-                        if len(anchor_matches) >= 3:
-                            actual_field = "ingredients_inci"
+                actual_field = _classify_inci_or_composition(taxonomy_field, content)
 
                 section = PageSection(
                     label=norm_label,
@@ -566,22 +520,7 @@ def extract_sections_from_html(
             if not content:
                 break
 
-            actual_field = taxonomy_field
-
-            if taxonomy_field == "ingredients_inci":
-                if validate_inci_content(content):
-                    actual_field = "ingredients_inci"
-                else:
-                    actual_field = "composition"
-
-            if taxonomy_field == "composition":
-                if validate_inci_content(content):
-                    actual_field = "ingredients_inci"
-                else:
-                    words = {w.lower().strip(",.;:") for w in content.split()}
-                    anchor_matches = words & INCI_ANCHOR_INGREDIENTS
-                    if len(anchor_matches) >= 3:
-                        actual_field = "ingredients_inci"
+            actual_field = _classify_inci_or_composition(taxonomy_field, content)
 
             section = PageSection(
                 label=norm_label,

@@ -89,6 +89,16 @@ _USAGE_PHRASES = [
     "seque com", "penteie", "secar", "desembarace",
 ]
 
+# Imperative action verbs that signal REAL how-to-use instructions (not a
+# description). Single source of truth, reused by _check_usage_quality, the
+# usage backfill (care_usage→usage_instructions) and the Gold gate (G3).
+_USAGE_ACTION_VERBS = [
+    "aplique", "aplicar", "massageie", "enxágue", "enxague",
+    "use", "apply", "spread", "rinse", "wash", "lavar",
+    "deixe", "aguarde", "espalhe", "distribua", "penteie",
+    "seque", "secar",
+]
+
 _INCI_ANCHOR_INGREDIENTS = {
     "aqua", "water", "aqua/water", "sodium laureth sulfate",
     "sodium lauryl sulfate", "cetearyl alcohol", "glycerin",
@@ -262,12 +272,7 @@ def _check_usage_quality(usage: str | None) -> list[FieldIssue]:
         return []
     text = usage.strip().lower()
     # Check if usage is actually a description (no action verbs)
-    has_action_verb = any(v in text for v in [
-        "aplique", "aplicar", "massageie", "enxágue", "enxague",
-        "use", "apply", "spread", "rinse", "wash", "lavar",
-        "deixe", "aguarde", "espalhe", "distribua", "penteie",
-        "seque", "secar",
-    ])
+    has_action_verb = any(v in text for v in _USAGE_ACTION_VERBS)
     if not has_action_verb and len(text) > 50:
         return [FieldIssue(
             field="usage_instructions",
@@ -277,6 +282,38 @@ def _check_usage_quality(usage: str | None) -> list[FieldIssue]:
             details=usage[:100],
         )]
     return []
+
+
+def has_usage_action_verb(text: str | None) -> bool:
+    """True when `text` contains an imperative how-to-use action verb."""
+    if not text:
+        return False
+    lowered = text.strip().lower()
+    return any(v in lowered for v in _USAGE_ACTION_VERBS)
+
+
+def is_real_usage_instructions(text: str | None, min_len: int = 20) -> bool:
+    """True when `text` reads like genuine how-to-use instructions.
+
+    Requires an imperative action verb, a minimum length, and that the value is
+    not merely a leaked tab label ("Como usar"/"Modo de uso"). This is the single
+    definition used both to populate `usage_instructions` from `care_usage`
+    (backfill + live extraction) and by the Gold gate's G3 criterion.
+    """
+    if not text:
+        return False
+    stripped = text.strip()
+    if len(stripped) < min_len:
+        return False
+    # Lazy import keeps section_classifier (bs4) off field_validator's import path.
+    try:
+        from src.extraction.section_classifier import _is_tab_nav_noise
+
+        if _is_tab_nav_noise(stripped):
+            return False
+    except Exception:
+        pass
+    return has_usage_action_verb(stripped)
 
 
 def _check_benefits_quality(benefits: list[str] | None) -> list[FieldIssue]:

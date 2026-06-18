@@ -80,6 +80,18 @@ def run_product_qa(
     passed: list[str] = []
     failed: list[str] = []
 
+    # Blocked page (WAF challenge etc.) — explicit, traceable quarantine so the
+    # product surfaces in Ops with a dedicated reason instead of vanishing.
+    if product.hair_relevance_reason and product.hair_relevance_reason.startswith("blocked:"):
+        reason = product.hair_relevance_reason.split("blocked:", 1)[1] or "blocked"
+        return QAResult(
+            status=QAStatus.QUARANTINED,
+            passed=False,
+            checks_passed=[],
+            checks_failed=[reason],
+            rejection_reason=reason,
+        )
+
     # Minimal checks (catalog_only)
     name_raw = product.product_name.strip()
     name_lower = name_raw.lower()

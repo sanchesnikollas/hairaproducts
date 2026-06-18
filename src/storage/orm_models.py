@@ -51,6 +51,15 @@ class ProductORM(Base):
     variants = Column(JSON, nullable=True)
     product_labels = Column(JSON, nullable=True, default=None)
     confidence = Column(Float, nullable=False, default=0.0)
+    # --- Gold gate (AI-facing trust tier; see src/core/gold_gate.py) ---
+    # The ONLY axis the Moon AI reads. Computed by evaluate_gold, never by a
+    # bare status flip. raw|catalog|gold_candidate|gold|gold_rejected.
+    gold_status = Column(String(20), nullable=False, default="raw", index=True)
+    gold_blockers = Column(JSON, nullable=True)            # cached unmet criteria for the Ops checklist
+    gold_evaluated_at = Column(DateTime, nullable=True)
+    gold_reviewed_by = Column(String(36), ForeignKey("users.user_id"), nullable=True)
+    gold_review_notes = Column(Text, nullable=True)        # mandatory on gold_rejected
+    field_provenance = Column(JSON, nullable=True)         # per-field {method, trust, source_url, at}
     # --- Hair classification fields (added 2026-04-28) ---
     ph = Column(Float, nullable=True, index=True)
     hair_type = Column(JSON, nullable=True)

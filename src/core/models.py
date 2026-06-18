@@ -61,6 +61,27 @@ class QAStatus(str, enum.Enum):
     QUARANTINED = "quarantined"
 
 
+class GoldStatus(str, enum.Enum):
+    """AI-facing trust tier — the ONLY axis the Moon AI reads.
+
+    Separate from verification_status (extraction-time INCI signal). A product
+    reaches GOLD only by passing every Gold criterion in gold_gate.evaluate_gold,
+    never by a bare status flip.
+
+    raw            -> not evaluated, OR disqualified (non-hair / quarantined / bad name)
+    catalog        -> real hair product, but missing/untruthful on a required field
+    gold_candidate -> all required fields present & truthful, but a soft trust signal
+                      (low known-ingredient ratio, LLM-only INCI, mixed marketing) needs human eyes
+    gold           -> every criterion passed; safe for the AI
+    gold_rejected  -> a human reviewed a candidate and judged the data untrustworthy
+    """
+    RAW = "raw"
+    CATALOG = "catalog"
+    GOLD_CANDIDATE = "gold_candidate"
+    GOLD = "gold"
+    GOLD_REJECTED = "gold_rejected"
+
+
 class Brand(BaseModel):
     brand_name: str
     brand_slug: str
@@ -132,6 +153,28 @@ class QAResult(BaseModel):
     checks_passed: list[str] = Field(default_factory=list)
     checks_failed: list[str] = Field(default_factory=list)
     rejection_reason: Optional[str] = None
+
+
+class GoldBlocker(BaseModel):
+    """One unmet Gold criterion. severity 'error' = hard (blocks Gold entirely);
+    'warning' = soft (routes to gold_candidate for human review)."""
+    code: str
+    field: str
+    message: str
+    severity: str = "error"
+
+
+class GoldEvaluation(BaseModel):
+    gold_status: GoldStatus
+    blockers: list[GoldBlocker] = Field(default_factory=list)
+    field_report: dict = Field(default_factory=dict)
+
+    @property
+    def is_gold(self) -> bool:
+        return self.gold_status == GoldStatus.GOLD
+
+    def blockers_as_dicts(self) -> list[dict]:
+        return [b.model_dump() for b in self.blockers]
 
 
 class ValidationStatusLevel(str, enum.Enum):

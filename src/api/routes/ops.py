@@ -200,6 +200,12 @@ def ops_list_products(
         q = q.filter(ProductORM.hair_type.is_(None))
     elif gap == "sem_ph":
         q = q.filter(ProductORM.ph.is_(None))
+    elif gap == "nao_gold":
+        # Everything the AI cannot consume yet (anything but gold)
+        q = q.filter(ProductORM.gold_status != "gold")
+    elif gap == "gold_candidate":
+        # Complete + truthful but a trust signal needs human review
+        q = q.filter(ProductORM.gold_status == "gold_candidate")
     total = q.count()
     items = q.order_by(ProductORM.confidence.asc()).offset((page - 1) * per_page).limit(per_page).all()
 
@@ -238,6 +244,8 @@ def ops_list_products(
             "status_operacional": p.status_operacional, "status_editorial": p.status_editorial,
             "status_publicacao": p.status_publicacao, "confidence": p.confidence,
             "assigned_to": p.assigned_to,
+            "gold_status": p.gold_status,
+            "gold_blockers": p.gold_blockers,
             "data_quality": dq,
             "name_quality": nq,
         })
@@ -365,6 +373,11 @@ def ops_get_product(
         "function_objective": product.function_objective,
         "image_url_front": product.image_url_front,
         "image_url_back": product.image_url_back,
+        "gold_status": product.gold_status,
+        "gold_blockers": product.gold_blockers,
+        "gold_evaluated_at": product.gold_evaluated_at.isoformat() if product.gold_evaluated_at else None,
+        "gold_review_notes": product.gold_review_notes,
+        "field_provenance": product.field_provenance,
         "data_quality": {"fields": fields_quality, "filled": filled, "total": len(fields_quality), "pct": round(filled / len(fields_quality) * 100)},
     }
 

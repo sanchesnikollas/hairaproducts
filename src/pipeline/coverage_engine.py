@@ -7,6 +7,8 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from src.core.models import ProductExtraction, GenderTarget, ExtractionMethod, QAResult, QAStatus
+from src.core.field_validator import is_real_usage_instructions
+from src.core.gold_gate import evaluate_gold
 from src.core.qa_gate import run_product_qa
 from src.core.taxonomy import normalize_product_type, normalize_category, detect_gender_target, is_hair_relevant_by_keywords
 from src.discovery.url_classifier import classify_url, URLType
@@ -102,6 +104,16 @@ class CoverageEngine:
                         self._normalized_writer.write_all(saved_product)
                     except Exception as e:
                         logger.warning(f"Normalized write failed for {url}: {e}")
+                    # Compute the AI-facing Gold tier on every scrape (never
+                    # overwrite a human gold_rejected verdict).
+                    try:
+                        ev = evaluate_gold(saved_product, session=self._session)
+                        if saved_product.gold_status != "gold_rejected":
+                            saved_product.gold_status = ev.gold_status.value
+                            saved_product.gold_blockers = ev.blockers_as_dicts()
+                            saved_product.gold_evaluated_at = datetime.now(timezone.utc)
+                    except Exception as e:
+                        logger.warning(f"Gold eval failed for {url}: {e}")
 
                 if qa_result.status == QAStatus.VERIFIED_INCI:
                     report.verified_inci_total += 1
@@ -211,6 +223,35 @@ Product: {product_name}
             description_selectors=description_selectors or None,
         )
 
+        # Blocked page (WAF/Cloudflare challenge): don't drop it silently — route
+        # to an explicit quarantine so it surfaces in Ops for a re-scrape via a
+        # different fetch path (client feedback: brands that "extraíram nada").
+        if det_result.get("blocked_reason"):
+            slug = url.rstrip("/").rsplit("/", 1)[-1] or url
+            return ProductExtraction(
+                brand_slug=brand_slug,
+                product_name=f"[bloqueado] {slug}"[:200],
+                product_url=url,
+                hair_relevance_reason=f"blocked:{det_result['blocked_reason']}",
+                confidence=0.0,
+            )
+
+        # Fallback for pages that dump all copy into one description blob with
+        # inline "Modo de uso:" / "Composição:" markers and no separate DOM
+        # sections (client feedback 2026-06: Bio-instinto, Avatim, alphahall...).
+        # Split those out so usage/composition stop landing in description.
+        # Only acts when care_usage is empty AND a real "como usar" marker exists.
+        if det_result.get("description") and not det_result.get("care_usage"):
+            from src.extraction.description_splitter import split_description_blob
+
+            _split = split_description_blob(det_result["description"])
+            if _split.get("care_usage"):
+                det_result["care_usage"] = _split["care_usage"]
+                if _split.get("description"):
+                    det_result["description"] = _split["description"]
+                if not det_result.get("composition") and _split.get("composition"):
+                    det_result["composition"] = _split["composition"]
+
         product_name = det_result.get("product_name") or ""
         if not product_name:
             return None
@@ -265,6 +306,13 @@ Product: {product_name}
         # Category
         product_category = normalize_category(product_type, product_name)
 
+        # How-to-use: the deterministic extractor lands "modo de uso / como usar"
+        # in care_usage. Promote it to the canonical usage_instructions field
+        # (read by Ops UI, label engine and the Gold gate) only when it reads
+        # like real instructions — not a leaked tab label or a description.
+        care_usage_val = det_result.get("care_usage")
+        usage_instructions = care_usage_val if is_real_usage_instructions(care_usage_val) else None
+
         return ProductExtraction(
             brand_slug=brand_slug,
             product_name=product_name,
@@ -277,8 +325,9 @@ Product: {product_name}
             product_category=product_category,
             inci_ingredients=inci_list,
             description=description,
+            usage_instructions=usage_instructions,
             composition=det_result.get("composition"),
-            care_usage=det_result.get("care_usage"),
+            care_usage=care_usage_val,
             benefits_claims=_benefits_to_list(det_result.get("benefits")),
             price=det_result.get("price"),
             currency=det_result.get("currency"),

@@ -113,7 +113,7 @@ class TestSectionContext:
         """Product with 3 INCI ingredients should pass QA when has_section_context=True."""
         product = ProductExtraction(
             brand_slug="test",
-            product_name="Test Shampoo",
+            product_name="Shampoo Hidratante Test 300ml",
             product_url="https://www.amend.com.br/test",
             image_url_main="https://www.amend.com.br/img/test.jpg",
             hair_relevance_reason="shampoo in name",
@@ -132,7 +132,7 @@ class TestSectionContext:
         """Product with 3 INCI ingredients should fail QA without section context."""
         product = ProductExtraction(
             brand_slug="test",
-            product_name="Test Shampoo",
+            product_name="Shampoo Hidratante Test 300ml",
             product_url="https://www.amend.com.br/test",
             image_url_main="https://www.amend.com.br/img/test.jpg",
             hair_relevance_reason="shampoo in name",
