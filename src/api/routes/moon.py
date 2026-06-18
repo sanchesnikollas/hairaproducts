@@ -316,6 +316,71 @@ def identify(
     return result
 
 
+@router.get("/gold/{product_id}")
+def gold_product(
+    product_id: str,
+    user: dict = Depends(get_current_user),
+    session: Session = Depends(_get_session),
+):
+    """Full Gold consumption contract for one product. 409 if not Gold (with the
+    blockers, so the caller knows why it isn't consumable yet)."""
+    from src.storage.orm_models import ProductORM
+
+    p = session.query(ProductORM).filter(ProductORM.id == product_id).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Product not found")
+    if p.gold_status != "gold":
+        raise HTTPException(status_code=409, detail={
+            "code": "NOT_GOLD",
+            "gold_status": p.gold_status,
+            "gold_blockers": p.gold_blockers,
+        })
+    return _gold_product_payload(session, p)
+
+
+@router.get("/gold")
+def gold_list(
+    hair_type: str | None = None,
+    function_objective: str | None = None,
+    product_category: str | None = None,
+    limit: int = 50,
+    user: dict = Depends(get_current_user),
+    session: Session = Depends(_get_session),
+):
+    """Browse the Gold pool (the only tier the AI consumes), filtered by hair_type
+    / function_objective / category. Brief rows; fetch /gold/{id} for the full
+    contract."""
+    from src.storage.orm_models import ProductORM
+
+    limit = max(1, min(int(limit), 200))
+    q = session.query(ProductORM).filter(ProductORM.gold_status == "gold")
+    if function_objective:
+        q = q.filter(ProductORM.function_objective == function_objective)
+    if product_category:
+        q = q.filter(ProductORM.product_category == product_category)
+    # hair_type is a JSON list → fetch a wider window and post-filter in Python.
+    rows = q.limit(limit * 4 if hair_type else limit).all()
+
+    items: list[dict] = []
+    for p in rows:
+        if hair_type:
+            hts = p.hair_type if isinstance(p.hair_type, list) else []
+            if hair_type not in hts:
+                continue
+        items.append({
+            "product_id": p.id,
+            "product_name": p.product_name,
+            "brand_slug": p.brand_slug,
+            "product_category": p.product_category,
+            "function_objective": p.function_objective,
+            "hair_type": p.hair_type,
+            "image_url_front": p.image_url_front or p.image_url_main,
+        })
+        if len(items) >= limit:
+            break
+    return {"total": len(items), "items": items}
+
+
 def _interpret(score: float) -> str:
     if score >= 0.6:
         return "Altamente compatível com o perfil"
