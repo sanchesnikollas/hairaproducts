@@ -61,6 +61,56 @@ def reset_password(email: str, new_password: str):
         click.echo(f"Password reset for {user.name} ({email}).")
 
 
+@cli.command(name="create-user")
+@click.option("--email", required=True, help="User email")
+@click.option("--name", default=None, help="Display name (defaults to email prefix)")
+@click.option("--role", type=click.Choice(["admin", "reviewer"]), default="reviewer", help="User role")
+@click.option("--password", prompt=True, hide_input=True, confirmation_prompt=True, help="Password")
+@click.option("--promote", is_flag=True, help="If the user exists, update role + password instead of failing")
+def create_user(email: str, name: str | None, role: str, password: str, promote: bool):
+    """Create a user (or promote an existing one with --promote).
+
+    Closes the bootstrap gap: POST /api/auth/users requires an existing admin and
+    the CLI previously could only reset existing users, so a fresh DB had no way
+    to create the first admin. Run with --role admin to seed it.
+    """
+    import bcrypt as _bcrypt
+    from sqlalchemy.orm import Session as SASession
+
+    from src.storage.database import get_engine
+    from src.storage.orm_models import Base
+    from src.storage.ops_models import UserORM
+
+    engine = get_engine()
+    Base.metadata.create_all(engine)
+    pw_hash = _bcrypt.hashpw(password.encode(), _bcrypt.gensalt()).decode()
+
+    with SASession(engine) as session:
+        existing = session.query(UserORM).filter(UserORM.email == email).first()
+        if existing:
+            if not promote:
+                click.echo(
+                    f"User {email} já existe (role={existing.role}). Use --promote para atualizar.",
+                    err=True,
+                )
+                sys.exit(1)
+            existing.role = role
+            existing.password_hash = pw_hash
+            existing.is_active = True
+            session.commit()
+            click.echo(f"Atualizado {email} → role={role}, senha redefinida.")
+        else:
+            user = UserORM(
+                email=email,
+                name=name or email.split("@")[0],
+                password_hash=pw_hash,
+                role=role,
+            )
+            session.add(user)
+            session.commit()
+            click.echo(f"Criado {email} (role={role}).")
+
+
 @cli.command()
 @click.option("--input", "input_path", required=True, help="Path to Excel file")
 @click.option("--output", "output_path", default="config/brands.json", help="Output JSON path")

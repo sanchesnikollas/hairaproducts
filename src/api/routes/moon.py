@@ -457,48 +457,57 @@ def _fetch_alternatives(session: Session, hair_types: list[str],
         return []
     cat_index, rules = _ensure_indexes(session)
 
-    # 3-layer non-hair guard (the catalog still mixes body/face/lip/perfume
-    # products from multi-category brands; Moon must never recommend those):
-    #   1) explicit pipeline flag: product_category='non_hair'
-    #   2) name-based pipeline flag: hair_relevance_reason starts with non_hair
-    #   3) name-keyword blacklist as a safety net for the gray tail
-    sql = """
-        SELECT id, product_name, brand_slug, product_type_normalized, inci_ingredients
-        FROM products
-        WHERE verification_status = 'verified_inci'
-          AND inci_ingredients IS NOT NULL
-          AND length(CAST(inci_ingredients AS TEXT)) > 20
-          AND product_type_normalized IS NOT NULL
-          AND (product_category IS NULL OR product_category != 'non_hair')
-          AND (hair_relevance_reason IS NULL OR hair_relevance_reason NOT LIKE 'non_hair%')
-          AND LOWER(product_name) NOT LIKE '%labial%'
-          AND LOWER(product_name) NOT LIKE '%facial%'
-          AND LOWER(product_name) NOT LIKE '%corporal%'
-          AND LOWER(product_name) NOT LIKE '%perfume%'
-          AND LOWER(product_name) NOT LIKE '%fps%'
-          AND LOWER(product_name) NOT LIKE '%rímel%'
-          AND LOWER(product_name) NOT LIKE '%rimel%'
-          AND LOWER(product_name) NOT LIKE '%demaquilante%'
-          AND LOWER(product_name) NOT LIKE '%sabonete em barra%'
-          AND LOWER(product_name) NOT LIKE '%secativo%'
-          AND LOWER(product_name) NOT LIKE '%desodorante%'
-    """
-    params: dict = {}
+    # Shared tail: product-type scope + exclude + richer-INCI-first ordering.
+    params: dict = {"pool": pool}
+    tail = ""
     if product_type:
-        sql += " AND product_type_normalized = :pt"
+        tail += " AND product_type_normalized = :pt"
         params["pt"] = product_type
     else:
         # Free chat (no product in context): don't recommend coloring inputs
         # (developer, bleach, dye) as care products — they score high on INCI
         # but aren't standalone recommendations.
-        sql += " AND product_type_normalized NOT IN ('oxidante', 'descolorante', 'coloracao')"
+        tail += " AND product_type_normalized NOT IN ('oxidante', 'descolorante', 'coloracao')"
     if exclude_id:
-        sql += " AND id != :xid"
+        tail += " AND id != :xid"
         params["xid"] = exclude_id
     # Richer INCI first → better-grounded scores, avoids near-empty lists scoring 0
-    sql += " ORDER BY length(CAST(inci_ingredients AS TEXT)) DESC LIMIT :pool"
-    params["pool"] = pool
-    rows = session.execute(text(sql), params).fetchall()
+    tail += " ORDER BY length(CAST(inci_ingredients AS TEXT)) DESC LIMIT :pool"
+
+    cols = ("SELECT id, product_name, brand_slug, product_type_normalized, inci_ingredients "
+            "FROM products")
+
+    # Tier 1 — GOLD: the only tier the AI should consume. The Gold gate already
+    # guarantees verified INCI and excludes non-hair / quarantined / kits, so no
+    # name blacklist is needed here.
+    gold_sql = (cols + " WHERE gold_status = 'gold' AND product_type_normalized IS NOT NULL" + tail)
+    rows = session.execute(text(gold_sql), params).fetchall()
+
+    # Fallback — until `gold-report` is run in production every row is still
+    # 'raw', which would leave Moon with nothing. Degrade gracefully to the
+    # legacy verified_inci pool + the old non-hair guards so recommendations keep
+    # working; this branch goes dormant once Gold is populated.
+    if not rows:
+        legacy_sql = (cols + """
+            WHERE verification_status = 'verified_inci'
+              AND inci_ingredients IS NOT NULL
+              AND length(CAST(inci_ingredients AS TEXT)) > 20
+              AND product_type_normalized IS NOT NULL
+              AND (product_category IS NULL OR product_category != 'non_hair')
+              AND (hair_relevance_reason IS NULL OR hair_relevance_reason NOT LIKE 'non_hair%')
+              AND LOWER(product_name) NOT LIKE '%labial%'
+              AND LOWER(product_name) NOT LIKE '%facial%'
+              AND LOWER(product_name) NOT LIKE '%corporal%'
+              AND LOWER(product_name) NOT LIKE '%perfume%'
+              AND LOWER(product_name) NOT LIKE '%fps%'
+              AND LOWER(product_name) NOT LIKE '%rímel%'
+              AND LOWER(product_name) NOT LIKE '%rimel%'
+              AND LOWER(product_name) NOT LIKE '%demaquilante%'
+              AND LOWER(product_name) NOT LIKE '%sabonete em barra%'
+              AND LOWER(product_name) NOT LIKE '%secativo%'
+              AND LOWER(product_name) NOT LIKE '%desodorante%'
+        """ + tail)
+        rows = session.execute(text(legacy_sql), params).fetchall()
 
     scored = []
     for r in rows:
