@@ -15,6 +15,7 @@ function ReasonBadge({ code }: { code: string | null }) {
     "name_editorial_or_invalid": "bg-amber-100 text-amber-700 border-amber-200",
     "domain_unofficial": "bg-purple-100 text-purple-700 border-purple-200",
     "no_image": "bg-blue-100 text-blue-700 border-blue-200",
+    "waf_challenge": "bg-orange-100 text-orange-700 border-orange-200",
   };
   const cls = colorMap[code] || "bg-gray-100 text-gray-700 border-gray-200";
   return (

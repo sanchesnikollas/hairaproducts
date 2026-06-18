@@ -45,6 +45,22 @@ function getEditSnapshot(product: ProductData): Record<string, string> {
   return snap;
 }
 
+interface GoldBlocker {
+  code: string;
+  field: string;
+  message: string;
+  severity: string;
+}
+
+function goldBadgeClass(status: string): string {
+  switch (status) {
+    case "gold": return "bg-amber-100 text-amber-800";
+    case "gold_candidate": return "bg-blue-100 text-blue-700";
+    case "gold_rejected": return "bg-red-100 text-red-700";
+    default: return "bg-cream text-ink-muted"; // catalog / raw
+  }
+}
+
 export default function OpsProductDetail() {
   const { id } = useParams<{ id: string }>();
   const [form, setForm] = useState<Record<string, string>>({});
@@ -147,6 +163,8 @@ export default function OpsProductDetail() {
 
   const p = product as ProductData;
   const dataQuality = p.data_quality as { fields: Record<string, boolean>; filled: number; total: number; pct: number } | undefined;
+  const goldStatus = String(p.gold_status ?? "raw");
+  const goldBlockers = (p.gold_blockers as GoldBlocker[] | null) ?? [];
   const productLabels = p.product_labels as { detected?: string[]; inferred?: string[] } | null;
   const inputCls = "w-full rounded-lg border border-cream-dark bg-cream px-3 py-2 text-sm text-ink outline-none focus:border-ink focus:bg-white transition-colors";
   const readonlyCls = "w-full rounded-lg border border-cream-dark/50 bg-cream/50 px-3 py-2 text-sm text-ink-muted";
@@ -413,6 +431,33 @@ export default function OpsProductDetail() {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Gold status — what the AI consumes; checklist of what's missing */}
+          <div className={cardCls}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-ink">Gold (consumo da IA)</h3>
+              <span className={`text-xs font-medium rounded-full px-2.5 py-0.5 ${goldBadgeClass(goldStatus)}`}>
+                {goldStatus}
+              </span>
+            </div>
+            {goldBlockers.length === 0 ? (
+              <p className="text-xs text-emerald-600">✓ Atende a todos os critérios Gold.</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {goldBlockers.map((b, i) => (
+                  <li key={i} className="flex items-start gap-2 text-xs">
+                    <span className={b.severity === "error" ? "text-red-500" : "text-amber-500"}>
+                      {b.severity === "error" ? "✕" : "!"}
+                    </span>
+                    <span className="text-ink-muted">{b.message}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {goldStatus === "gold_candidate" && (
+              <p className="mt-2 text-[10px] text-amber-600">Completo, mas precisa de revisão humana antes do Gold.</p>
+            )}
           </div>
 
           {/* Image + Photo Upload */}
