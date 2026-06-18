@@ -106,17 +106,53 @@ def approve_quarantined(
     detail = session.query(QuarantineDetailORM).filter(QuarantineDetailORM.id == quarantine_id).first()
     if not detail:
         raise HTTPException(status_code=404, detail="Quarantine record not found")
+    product = detail.product
+    if not product:
+        raise HTTPException(status_code=404, detail="Product for quarantine record not found")
+
+    from src.core.gold_gate import evaluate_gold
+    from src.core.inci_validator import validate_inci_list
+    from src.core.models import GoldStatus
+
+    # Honest verification_status from the ACTUAL data — no more blind flip to
+    # verified_inci. verified_inci only when the INCI really passes strict
+    # validation; otherwise catalog_only.
+    inci = product.inci_ingredients if isinstance(product.inci_ingredients, list) else None
+    has_valid_inci = bool(inci) and validate_inci_list(inci).valid
+    product.verification_status = "verified_inci" if has_valid_inci else "catalog_only"
+
+    # Evaluate the real Gold tier now that it is no longer quarantined.
+    ev = evaluate_gold(product, session=session)
+    if ev.gold_status == GoldStatus.RAW:
+        # Still disqualified (non-hair / invalid name / WAF placeholder): this is
+        # not a valid product to re-admit. Refuse and surface why — the reviewer
+        # must fix the data (or reject), not rubber-stamp it.
+        session.rollback()
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "NOT_APPROVABLE",
+                "message": "Produto não passa nos critérios básicos — corrija os dados ou rejeite.",
+                "blockers": ev.blockers_as_dicts(),
+            },
+        )
+
+    if product.gold_status != GoldStatus.GOLD_REJECTED.value:
+        product.gold_status = ev.gold_status.value
+        product.gold_blockers = ev.blockers_as_dicts()
+        product.gold_evaluated_at = datetime.now(timezone.utc)
 
     detail.review_status = "approved"
     detail.reviewer_notes = notes
     detail.reviewed_at = datetime.now(timezone.utc)
-
-    # Update the product status to verified_inci
-    if detail.product:
-        detail.product.verification_status = "verified_inci"
-
     session.commit()
-    return {"status": "approved", "quarantine_id": quarantine_id}
+    return {
+        "status": "approved",
+        "quarantine_id": quarantine_id,
+        "verification_status": product.verification_status,
+        "gold_status": product.gold_status,
+        "gold_blockers": product.gold_blockers,
+    }
 
 
 @router.get("/review-queue")

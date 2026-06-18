@@ -451,11 +451,16 @@ def ops_patch_product(
     old_values = {f: getattr(product, f) for f in updates}
     for field, value in updates.items():
         setattr(product, field, value)
-    # Auto-upgrade verification_status when INCI is manually entered
+    # Auto-upgrade verification_status when INCI is manually entered — but only
+    # when it actually validates (no blind flip; manual entry of 2 junk terms
+    # must not buy verified_inci).
     if "inci_ingredients" in updates and updates["inci_ingredients"] and product.verification_status != "verified_inci":
-        old_values["verification_status"] = product.verification_status
-        updates["verification_status"] = "verified_inci"
-        product.verification_status = "verified_inci"
+        from src.core.inci_validator import validate_inci_list
+        _inci = product.inci_ingredients if isinstance(product.inci_ingredients, list) else []
+        if _inci and validate_inci_list(_inci).valid:
+            old_values["verification_status"] = product.verification_status
+            updates["verification_status"] = "verified_inci"
+            product.verification_status = "verified_inci"
     create_revisions(session, "product", product_id, old_values, updates, user["sub"], "human")
 
     # --- Evidence tracking for key fields ---
@@ -486,12 +491,23 @@ def ops_patch_product(
         price=product.price,
     )
 
+    # --- Gold gate: recompute the AI tier after the edit (preserve gold_rejected) ---
+    from src.core.gold_gate import evaluate_gold
+    from src.core.models import GoldStatus
+    gold = evaluate_gold(product, session=session)
+    if product.gold_status != GoldStatus.GOLD_REJECTED.value:
+        product.gold_status = gold.gold_status.value
+        product.gold_blockers = gold.blockers_as_dicts()
+        product.gold_evaluated_at = datetime.now(timezone.utc)
+
     _recalculate_confidence(session, product)
     session.commit()
     return {
         "status": "ok",
         "product_id": product_id,
         "confidence": product.confidence,
+        "gold_status": product.gold_status,
+        "gold_blockers": product.gold_blockers,
         "validation": {
             "score": validation.score,
             "issues": [
@@ -585,18 +601,37 @@ def ops_quarantine_promote(
     if body.target_status not in ("catalog_only", "verified_inci"):
         raise HTTPException(status_code=400, detail="invalid target_status")
 
+    from src.core.gold_gate import evaluate_gold
+    from src.core.inci_validator import validate_inci_list
+    from src.core.models import GoldStatus
+    from datetime import datetime, timezone
+
     products = session.query(ProductORM).filter(ProductORM.id.in_(body.product_ids)).all()
     updated = 0
+    downgraded = 0  # asked for verified_inci but INCI didn't validate -> catalog_only
     for p in products:
-        if p.verification_status == "quarantined":
-            p.verification_status = body.target_status
-            existing = session.query(QuarantineDetailORM).filter_by(product_id=p.id).first()
-            if existing:
-                existing.review_status = "promoted"
-                existing.reviewer_notes = f"Promoted to {body.target_status} by {user.get('email','ops')}"
-            updated += 1
+        if p.verification_status != "quarantined":
+            continue
+        target = body.target_status
+        if target == "verified_inci":
+            inci = p.inci_ingredients if isinstance(p.inci_ingredients, list) else []
+            if not (inci and validate_inci_list(inci).valid):
+                target = "catalog_only"  # no blind verified_inci promotion
+                downgraded += 1
+        p.verification_status = target
+        existing = session.query(QuarantineDetailORM).filter_by(product_id=p.id).first()
+        if existing:
+            existing.review_status = "promoted"
+            existing.reviewer_notes = f"Promoted to {target} by {user.get('email','ops')}"
+        # Recompute the AI tier (preserve a human gold_rejected verdict)
+        ev = evaluate_gold(p, session=session)
+        if p.gold_status != GoldStatus.GOLD_REJECTED.value:
+            p.gold_status = ev.gold_status.value
+            p.gold_blockers = ev.blockers_as_dicts()
+            p.gold_evaluated_at = datetime.now(timezone.utc)
+        updated += 1
     session.commit()
-    return {"promoted": updated, "requested": len(body.product_ids)}
+    return {"promoted": updated, "requested": len(body.product_ids), "downgraded_to_catalog": downgraded}
 
 
 @router.get("/inci-summary")
