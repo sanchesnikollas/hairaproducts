@@ -232,11 +232,13 @@ def _resolve_brand_slug(session: Session, brand_text: str | None) -> str | None:
 def _gold_product_payload(session: Session, product) -> dict:
     """The fields the OCR/AI layer consumes for a matched Gold product."""
     from src.core.allergen_detector import allergen_summary
+    from src.core.cronograma import derive_routine_role
 
     inci = _resolve_product_inci(session, product.id)
     if not inci and isinstance(product.inci_ingredients, list):
         inci = product.inci_ingredients
     return {
+        "cronograma_role": derive_routine_role(inci, product.function_objective),
         "product_id": product.id,
         "product_name": product.product_name,
         "brand_slug": product.brand_slug,

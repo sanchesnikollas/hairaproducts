@@ -20,8 +20,8 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 KNOWN_HAIR_TYPE_SLUGS = {
-    "liso", "cacheado", "crespo", "oleoso", "seco", "normal",
-    "com_quimica", "tingido", "danificado", "sensibilizado", "fino",
+    "liso", "ondulado", "cacheado", "crespo", "oleoso", "seco", "normal",
+    "com_quimica", "tingido", "danificado", "sensibilizado", "fino", "grosso",
 }
 
 
@@ -59,9 +59,10 @@ def derive_hair_types(p: HairProfileInput) -> list[str]:
     sub = (p.curl_subtype or "").upper()
     if sub and sub != "NAO_SEI":
         fam = sub[0]
-        add({"1": "liso", "3": "cacheado", "4": "crespo"}.get(fam, ""))  # "2" (ondulado) → gap
+        add({"1": "liso", "2": "ondulado", "3": "cacheado", "4": "crespo"}.get(fam, ""))
     else:
-        add({"liso": "liso", "cacheado": "cacheado", "crespo": "crespo"}.get(p.curl_type or "", ""))
+        add({"liso": "liso", "ondulado": "ondulado", "cacheado": "cacheado",
+             "crespo": "crespo"}.get(p.curl_type or "", ""))
 
     # Scalp oiliness
     if p.scalp_oiliness == "alta":
@@ -92,9 +93,11 @@ def derive_hair_types(p: HairProfileInput) -> list[str]:
         add("com_quimica")
         add("sensibilizado")
 
-    # Thickness (only "fino" exists in the engine)
+    # Thickness
     if p.thickness == "finos":
         add("fino")
+    elif p.thickness == "grossos":
+        add("grosso")
 
     # Aggressors that push toward damage
     if p.heat_usage in {"diariamente", "3_4_semana"}:
