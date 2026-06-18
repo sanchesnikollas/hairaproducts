@@ -984,6 +984,7 @@ def enrich_external(brand: str | None, dry_run: bool, threshold: float):
                     "inci_ingredients": c.inci_ingredients,
                     "source": c.source,
                     "source_url": c.source_url,
+                    "ean": c.ean,
                 }
                 for c in cands
             ]
@@ -1000,6 +1001,7 @@ def enrich_external(brand: str | None, dry_run: bool, threshold: float):
                 product_brand=product.brand_slug,
                 candidates=cand_dicts,
                 auto_threshold=threshold,
+                product_ean=product.ean,
             )
 
             if not matches:

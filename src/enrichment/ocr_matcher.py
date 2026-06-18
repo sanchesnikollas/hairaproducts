@@ -11,23 +11,14 @@ Reuses normalize_name from src/enrichment/matcher.py.
 """
 from __future__ import annotations
 
-import re
 from difflib import SequenceMatcher
 
-from src.enrichment.matcher import normalize_name
+from src.enrichment.matcher import normalize_ean, normalize_name, volume_units
 
 AUTO_THRESHOLD = 0.90
 REVIEW_THRESHOLD = 0.75
 INCI_CONFIRM = 0.60      # Jaccard >= -> confirmed
 INCI_MISMATCH = 0.30     # Jaccard <  -> mismatch (possible reformulation in between)
-
-_VOL_RE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(ml|l|lt|g|kg|oz)\b", re.IGNORECASE)
-_VOL_FACTOR = {"ml": 1.0, "l": 1000.0, "lt": 1000.0, "g": 1.0, "kg": 1000.0, "oz": 30.0}
-
-
-def _norm_ean(ean: str | None) -> str:
-    return re.sub(r"\D", "", ean or "")
-
 
 def _name_ratio(a: str, b: str) -> float:
     if not a or not b:
@@ -35,16 +26,6 @@ def _name_ratio(a: str, b: str) -> float:
     seq = SequenceMatcher(None, a, b).ratio()
     tok = SequenceMatcher(None, " ".join(sorted(a.split())), " ".join(sorted(b.split()))).ratio()
     return max(seq, tok)
-
-
-def _volume_units(text: str | None) -> float | None:
-    if not text:
-        return None
-    m = _VOL_RE.search(text.lower())
-    if not m:
-        return None
-    value = float(m.group(1).replace(",", "."))
-    return value * _VOL_FACTOR.get(m.group(2).lower(), 1.0)
 
 
 def _inci_jaccard(a: list[str] | None, b: list[str] | None) -> float | None:
@@ -104,10 +85,10 @@ def match_ocr(
     gold_status, brand_slug. Returns {match, candidates, not_in_base, is_gold}.
     """
     # Tier 0 — EAN exact
-    qean = _norm_ean(ean)
+    qean = normalize_ean(ean)
     if qean:
         for c in candidates:
-            if _norm_ean(c.get("ean")) == qean:
+            if normalize_ean(c.get("ean")) == qean:
                 m = _match(c, "ean", 1.0, back_label_inci)
                 return {"match": m, "candidates": [], "not_in_base": False, "is_gold": m["is_gold"]}
 
@@ -115,7 +96,7 @@ def match_ocr(
     if product_name_text:
         qn = normalize_name(product_name_text)
         qn_s = normalize_name(product_name_text, strip_brand=brand_text) if brand_text else qn
-        qvol = _volume_units(volume_text) or _volume_units(product_name_text)
+        qvol = volume_units(volume_text) or volume_units(product_name_text)
 
         scored: list[tuple[float, dict]] = []
         for c in candidates:
@@ -125,7 +106,7 @@ def match_ocr(
             ratio = max(_name_ratio(qn, cn), _name_ratio(qn_s, cn_s),
                         _name_ratio(qn, cn_s), _name_ratio(qn_s, cn))
             # Volume conflict caps the score below auto -> forces review/candidate.
-            cvol = _volume_units(c.get("size_volume")) or _volume_units(cname)
+            cvol = volume_units(c.get("size_volume")) or volume_units(cname)
             if qvol and cvol and abs(qvol - cvol) > 1e-6:
                 ratio = min(ratio, AUTO_THRESHOLD - 0.01)
             scored.append((ratio, c))

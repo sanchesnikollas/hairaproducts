@@ -93,3 +93,30 @@ class TestMatchProducts:
             ],
         )
         assert len(results) == 0
+
+    def test_ean_exact_match_overrides_name(self):
+        results = match_products(
+            product_name="Nome Totalmente Diferente Zzz",
+            product_brand="bio-extratus",
+            product_ean="789-1234-567890",
+            candidates=[
+                {"product_name": "Outro Nome Qualquer", "brand_slug": "bio-extratus", "ean": "7891234567890",
+                 "inci_ingredients": ["Aqua", "Sodium"], "id": "ext-1", "source": "belezanaweb", "source_url": "x"},
+            ],
+        )
+        assert len(results) == 1
+        assert results[0]["action"] == "auto_apply"
+        assert results[0]["score"] == 1.0
+
+    def test_volume_conflict_forces_review(self):
+        # identical name (both normalize away the volume) but 300ml vs 1L -> review
+        results = match_products(
+            product_name="Shampoo Hidratante 300ml",
+            product_brand="bio-extratus",
+            candidates=[
+                {"product_name": "Shampoo Hidratante 1L", "brand_slug": "bio-extratus",
+                 "inci_ingredients": ["Aqua"], "id": "ext-1", "source": "belezanaweb", "source_url": "x"},
+            ],
+        )
+        assert len(results) == 1
+        assert results[0]["action"] == "review"  # not auto_apply despite name match
