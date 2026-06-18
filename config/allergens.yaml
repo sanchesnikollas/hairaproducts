@@ -1,0 +1,115 @@
+# Ingredient-level allergen / sensitizer dataset for HAIRA.
+#
+# Used by src/core/allergen_detector.py to flag allergens directly on a product's
+# INCI list (the "alérgicos" use case). Matching is by EXACT normalized INCI
+# entry (lowercased, accent-stripped) — so "alcohol" flags a drying alcohol but
+# "cetyl alcohol" (a fatty alcohol) does not.
+#
+# severity: info | caution | high
+#   info    -> declared allergen, relevant mainly for already-sensitized users
+#   caution -> commonly irritating / drying for some scalp types
+#   high    -> frequent strong sensitizer (isothiazolinones, formaldehyde releasers)
+#
+# fragrance_allergen seeded from the EU Cosmetics Regulation Annex III list of 26
+# declarable fragrance allergens (EN + PT-BR spellings), mirroring the regex in
+# scripts/categorize_ingredients.py.
+
+fragrance_allergen:
+  severity: info
+  note_pt: "Alérgeno de fragrância de declaração obrigatória (UE Anexo III)"
+  names:
+    - linalool
+    - limonene
+    - geraniol
+    - citronellol
+    - citral
+    - citronellal
+    - coumarin
+    - eugenol
+    - isoeugenol
+    - farnesol
+    - cinnamal
+    - amyl cinnamal
+    - hexyl cinnamal
+    - amylcinnamyl alcohol
+    - cinnamyl alcohol
+    - anise alcohol
+    - benzyl alcohol
+    - benzyl salicylate
+    - benzyl benzoate
+    - benzyl cinnamate
+    - hydroxycitronellal
+    - alpha-isomethyl ionone
+    - butylphenyl methylpropional
+    - methyl 2-octynoate
+    # PT-BR spellings
+    - linalol
+    - limoneno
+    - citronelol
+    - citronelal
+    - cumarina
+    - cinamaldeido
+    - hexil cinamal
+    - salicilato de benzila
+    - benzoato de benzila
+    - cinamato de benzila
+    - alcool benzilico
+    - alcool cinamico
+    - alfa-isometil ionona
+    - hidroxicitronelal
+    - butilfenil metilpropional
+
+sulfate_harsh:
+  severity: caution
+  note_pt: "Tensoativo sulfatado de limpeza intensa — pode ressecar fios sensibilizados"
+  names:
+    - sodium lauryl sulfate
+    - sodium laureth sulfate
+    - ammonium lauryl sulfate
+    - ammonium laureth sulfate
+    - sodium coco-sulfate
+    - sodium myreth sulfate
+    - tea-lauryl sulfate
+    - lauril sulfato de sodio
+    - laureth sulfato de sodio
+
+mci_mit_preservative:
+  severity: high
+  note_pt: "Conservante isotiazolinona — sensibilizante frequente do couro cabeludo"
+  names:
+    - methylisothiazolinone
+    - methylchloroisothiazolinone
+    - benzisothiazolinone
+    - metilisotiazolinona
+    - metilcloroisotiazolinona
+
+formaldehyde_releaser:
+  severity: high
+  note_pt: "Liberador de formaldeído — sensibilizante; evitar em couro cabeludo sensível"
+  names:
+    - dmdm hydantoin
+    - imidazolidinyl urea
+    - diazolidinyl urea
+    - quaternium-15
+    - sodium hydroxymethylglycinate
+    - dmdm hidantoina
+    - imidazolidinil ureia
+    - diazolidinil ureia
+
+drying_alcohol:
+  severity: caution
+  note_pt: "Álcool volátil/ressecante — pode ressecar cabelos secos e cacheados"
+  names:
+    - alcohol
+    - alcohol denat
+    - alcohol denat.
+    - sd alcohol
+    - sd alcohol 40
+    - denatured alcohol
+    - isopropyl alcohol
+    - ethanol
+    - alcool
+    - alcool denat
+    - alcool etilico
+    - alcool isopropilico
+    - etanol

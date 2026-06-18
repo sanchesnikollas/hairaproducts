@@ -171,6 +171,8 @@ def score_inci(session: Session, ingredient_names: list[str], hair_types: list[s
     inci_known = sum(1 for n, _, _ in matched_categories
                      if any(c is not None for nn, c, _ in matched_categories if nn == n))
 
+    from src.core.allergen_detector import allergen_summary
+
     return {
         "overall_score": round(overall, 2),
         "interpretation": _interpret(overall),
@@ -180,6 +182,7 @@ def score_inci(session: Session, ingredient_names: list[str], hair_types: list[s
         "coverage_pct": round(100 * matched / max(len(ingredient_names), 1), 1),
         "alerts": alerts[:10],
         "benefits": benefits[:10],
+        "allergens": allergen_summary(ingredient_names),
         "breakdown": breakdown,
     }
 
