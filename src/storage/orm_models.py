@@ -67,6 +67,8 @@ class ProductORM(Base):
     function_objective = Column(String(100), nullable=True, index=True)
     image_url_front = Column(String(2000), nullable=True)
     image_url_back = Column(String(2000), nullable=True)
+    # EAN/barcode — strongest exact key for OCR /moon/identify (added 2026-06-18)
+    ean = Column(String(50), nullable=True, index=True)
     # --- Ops Panel v1 columns ---
     status_operacional = Column(String(50), nullable=True)   # bruto|extraido|normalizado|parseado|validado
     status_editorial = Column(String(50), nullable=True)     # pendente|em_revisao|aprovado|corrigido|rejeitado

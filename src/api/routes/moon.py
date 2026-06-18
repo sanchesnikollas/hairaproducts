@@ -202,6 +202,118 @@ def analyze(body: AnalyzeRequest, session: Session = Depends(_get_session)):
     return score_inci(session, ingredient_names, body.hair_types)
 
 
+class IdentifyRequest(BaseModel):
+    ean: str | None = None
+    brand_text: str | None = None
+    product_name_text: str | None = None
+    volume_text: str | None = None
+    back_label_inci: list[str] | None = None
+    hair_types: list[str] | None = None
+
+
+def _resolve_brand_slug(session: Session, brand_text: str | None) -> str | None:
+    """Map raw OCR'd brand text to a brand_slug (exact, then containment)."""
+    if not brand_text:
+        return None
+    from src.storage.orm_models import BrandRegistryORM
+
+    target = normalize(brand_text)
+    brands = session.query(BrandRegistryORM.brand_slug, BrandRegistryORM.brand_name).all()
+    for slug, name in brands:
+        if normalize(slug) == target or normalize(name or "") == target:
+            return slug
+    for slug, name in brands:
+        nname = normalize(name or "")
+        if nname and (target in nname or nname in target):
+            return slug
+    return None
+
+
+def _gold_product_payload(session: Session, product) -> dict:
+    """The fields the OCR/AI layer consumes for a matched Gold product."""
+    from src.core.allergen_detector import allergen_summary
+
+    inci = _resolve_product_inci(session, product.id)
+    if not inci and isinstance(product.inci_ingredients, list):
+        inci = product.inci_ingredients
+    return {
+        "product_id": product.id,
+        "product_name": product.product_name,
+        "brand_slug": product.brand_slug,
+        "product_category": product.product_category,
+        "function_objective": product.function_objective,
+        "hair_type": product.hair_type,
+        "inci_ingredients": inci,
+        "usage_instructions": product.usage_instructions,
+        "description": product.description,
+        "image_url_front": product.image_url_front or product.image_url_main,
+        "image_url_back": product.image_url_back,
+        "ph": product.ph,
+        "size_volume": product.size_volume,
+        "allergens": allergen_summary(inci),
+    }
+
+
+@router.post("/identify")
+def identify(
+    body: IdentifyRequest,
+    user: dict = Depends(get_current_user),
+    session: Session = Depends(_get_session),
+):
+    """Match a physical product (read by OCR) to the catalog.
+
+    Cascade: EAN -> brand+name fuzzy -> INCI verification. Returns the match
+    (with the Gold consumption payload when the product is Gold), plus candidates
+    when ambiguous. A found-but-not-Gold product returns is_gold=false so the
+    client knows we have it but can't fully advise yet.
+    """
+    from src.enrichment.ocr_matcher import match_ocr
+    from src.storage.orm_models import ProductORM
+
+    if not body.ean and not body.product_name_text:
+        raise HTTPException(status_code=400, detail="Provide ean or product_name_text")
+
+    brand_slug = _resolve_brand_slug(session, body.brand_text)
+    q = session.query(ProductORM).filter(ProductORM.is_hidden.is_(False))
+    if brand_slug:
+        q = q.filter(ProductORM.brand_slug == brand_slug)
+    elif body.ean:
+        q = q.filter(ProductORM.ean.isnot(None))
+    elif body.product_name_text:
+        token = next((t for t in normalize(body.product_name_text).split() if len(t) > 3), None)
+        if token:
+            q = q.filter(ProductORM.product_name.ilike(f"%{token}%"))
+
+    candidates = [
+        {
+            "id": p.id,
+            "product_name": p.product_name,
+            "ean": p.ean,
+            "size_volume": p.size_volume,
+            "inci_ingredients": p.inci_ingredients if isinstance(p.inci_ingredients, list) else None,
+            "gold_status": p.gold_status,
+            "brand_slug": p.brand_slug,
+        }
+        for p in q.limit(2000).all()
+    ]
+
+    result = match_ocr(
+        candidates=candidates,
+        ean=body.ean,
+        brand_text=body.brand_text,
+        product_name_text=body.product_name_text,
+        volume_text=body.volume_text,
+        back_label_inci=body.back_label_inci,
+    )
+
+    if result.get("match") and result["match"].get("is_gold"):
+        product = session.query(ProductORM).filter(ProductORM.id == result["match"]["product_id"]).first()
+        if product:
+            result["gold_product"] = _gold_product_payload(session, product)
+
+    return result
+
+
 def _interpret(score: float) -> str:
     if score >= 0.6:
         return "Altamente compatível com o perfil"
