@@ -266,6 +266,23 @@ function CreateProductModal({
   );
 }
 
+function GoldBadge({ status }: { status?: string | null }) {
+  if (!status) return <span className="text-xs text-ink-muted">—</span>;
+  const colors: Record<string, string> = {
+    gold: "bg-amber-100 text-amber-800",
+    gold_candidate: "bg-blue-100 text-blue-700",
+    gold_rejected: "bg-red-100 text-red-700",
+  };
+  const label: Record<string, string> = {
+    gold: "gold", gold_candidate: "candidato", catalog: "catálogo", raw: "raw", gold_rejected: "rejeitado",
+  };
+  return (
+    <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${colors[status] || "bg-gray-100 text-gray-600"}`}>
+      {label[status] || status}
+    </span>
+  );
+}
+
 function StatusBadge({ status }: { status: string | null }) {
   const colors: Record<string, string> = {
     pendente: "bg-amber-100 text-amber-700",
@@ -423,6 +440,8 @@ export default function OpsProducts() {
           className={pillCls(!!gapFilter)}
         >
           <option value="">Gaps ▾</option>
+          <option value="nao_gold">Não-Gold (trabalhar)</option>
+          <option value="gold_candidate">Candidato a Gold (revisar)</option>
           <option value="sem_inci">Sem INCI</option>
           <option value="sem_descricao">Sem Descrição</option>
           <option value="sem_categoria">Sem Categoria</option>
@@ -482,6 +501,7 @@ export default function OpsProducts() {
                   <th className="px-3 py-3">Produto</th>
                   <th className="px-3 py-3 w-24">Marca</th>
                   <th className="px-3 py-3 w-20">Status</th>
+                  <th className="px-3 py-3 w-20" title="Tier que a IA consome. gold = INCI verídico + foto + como usar + descrição + categoria.">Gold</th>
                   <th className="px-3 py-3 w-20">INCI</th>
                   <th className="px-3 py-3 w-20">Confiança</th>
                   <th className="px-3 py-3 w-16" title="Score do nome (regra positiva: tipo+volume, kit+descrição etc). Vermelho = nome incoerente (emoji, lowercase, CTA, categoria).">Nome</th>
@@ -495,7 +515,7 @@ export default function OpsProducts() {
                   confidence: number; data_quality?: DataQuality;
                   name_quality?: NameQuality;
                   image_url_main?: string; product_category?: string;
-                  inci_count?: number;
+                  inci_count?: number; gold_status?: string | null;
                 }) => (
                   <tr key={p.id} className="border-b border-cream-dark/50 hover:bg-cream/50 transition-colors group">
                     {isAdmin && (
@@ -520,6 +540,7 @@ export default function OpsProducts() {
                     </td>
                     <td className="px-3 py-2.5 text-xs text-ink-muted">{p.brand_slug}</td>
                     <td className="px-3 py-2.5"><StatusBadge status={p.status_editorial} /></td>
+                    <td className="px-3 py-2.5"><GoldBadge status={p.gold_status} /></td>
                     <td className="px-3 py-2.5">
                       {p.verification_status === "verified_inci" ? (
                         <span className="text-xs text-emerald-600 font-medium">✓</span>
