@@ -257,6 +257,84 @@ def scrape_status(req: JobStatus):
     return {"jobs": {k: v for k, v in _jobs.items()}}
 
 
+class EnrichRequest(BaseModel):
+    secret: str
+    brand: str
+    limit: int = 0           # 0 = all candidates
+    max_llm_calls: int = 30  # hard budget cap (per-brand LLM call ceiling)
+
+
+def _run_enrich(job_id: str, brand: str, limit: int, max_llm_calls: int) -> None:
+    """Gold enrichment (INCI + 'como usar') in a background thread — SSH-independent."""
+    try:
+        _jobs[job_id]["status"] = "enriching"
+        logger.info("Starting enrich %s (job %s, cap=%d, limit=%d)", brand, job_id, max_llm_calls, limit)
+
+        from sqlalchemy.orm import Session as SASession
+
+        from src.core.browser import BrowserClient
+        from src.core.llm import LLMClient
+        from src.discovery.blueprint_engine import load_blueprint
+        from src.enrichment.enricher import enrich_brand
+        from src.storage.database import get_engine as get_db_engine
+        from src.storage.orm_models import Base
+
+        llm = LLMClient(max_calls_per_brand=max_llm_calls)
+        if not llm._client:
+            raise RuntimeError("ANTHROPIC_API_KEY not set")
+
+        # Browser per blueprint (same selection logic as _run_scrape)
+        bp = load_blueprint(brand) or {}
+        extr = bp.get("extraction", {})
+        ssl_verify = extr.get("ssl_verify", True)
+        if extr.get("http_client") == "curl_cffi":
+            browser = BrowserClient(use_curl_cffi=True, ssl_verify=ssl_verify)
+        elif not extr.get("requires_js", True):
+            browser = BrowserClient(use_httpx=True, ssl_verify=ssl_verify)
+        else:
+            browser = BrowserClient(headless=extr.get("headless", True), ssl_verify=ssl_verify)
+
+        db_engine = get_db_engine()
+        Base.metadata.create_all(db_engine)
+        with SASession(db_engine) as session:
+            stats = enrich_brand(session, brand, llm=llm, browser=browser, limit=limit)
+
+        try:
+            browser.close()
+        except Exception:
+            pass
+
+        _jobs[job_id]["result"] = stats
+        _jobs[job_id]["status"] = "done"
+        logger.info("Enrich job %s done for %s: %s", job_id, brand, stats)
+    except Exception as e:
+        _jobs[job_id]["status"] = "error"
+        _jobs[job_id]["error"] = str(e)
+        logger.error("Enrich job %s failed for %s: %s", job_id, brand, e, exc_info=True)
+
+
+@router.post("/enrich")
+def trigger_enrich(req: EnrichRequest):
+    """Trigger Gold enrichment for a brand. Runs in background; poll /scrape/status."""
+    if not MIGRATION_SECRET or req.secret != MIGRATION_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+
+    if any(j.get("brand") == req.brand and j.get("status") in ("enriching", "queued")
+           for j in _jobs.values()):
+        raise HTTPException(status_code=409, detail=f"Enrich already running for {req.brand}")
+
+    job_id = f"enrich-{req.brand}-{int(time.time())}"
+    _jobs[job_id] = {
+        "brand": req.brand, "status": "queued",
+        "started_at": time.time(), "kind": "enrich",
+    }
+    thread = threading.Thread(
+        target=_run_enrich, args=(job_id, req.brand, req.limit, req.max_llm_calls), daemon=True
+    )
+    thread.start()
+    return {"job_id": job_id, "status": "queued", "brand": req.brand, "cap": req.max_llm_calls}
+
+
 class CleanupRequest(BaseModel):
     secret: str
     dry_run: bool = False  # when True, retorna preview sem aplicar UPDATE

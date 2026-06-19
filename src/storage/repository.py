@@ -265,6 +265,30 @@ class ProductRepository:
             .all()
         )
 
+    def get_catalog_products_missing_gold_fields(self, brand_slug: str) -> list[ProductORM]:
+        """Catalog (real-hair, not-yet-Gold) products missing INCI OR 'como usar'.
+
+        The Gold-oriented enrichment target: gold_status='catalog' means the QA
+        gate already accepted it as a real hair product, so the only thing between
+        it and Gold is a missing required field. Re-fetching these to fill INCI
+        and/or usage is where Gold conversions come from.
+        """
+        return (
+            self._session.query(ProductORM)
+            .filter(
+                ProductORM.brand_slug == brand_slug,
+                ProductORM.gold_status == "catalog",
+                or_(
+                    ProductORM.inci_ingredients.is_(None),
+                    ProductORM.inci_ingredients == "[]",
+                    ProductORM.inci_ingredients == "null",
+                    ProductORM.usage_instructions.is_(None),
+                    ProductORM.usage_instructions == "",
+                ),
+            )
+            .all()
+        )
+
     def get_product_by_id(self, product_id: str) -> ProductORM | None:
         return self._session.query(ProductORM).filter(ProductORM.id == product_id).first()
 
