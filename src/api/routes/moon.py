@@ -868,6 +868,20 @@ def chat(
             f"Alertas: {[a['name'] + ': ' + a['reason'] for a in analysis['alerts'][:4]] or 'nenhum'}. "
             f"Benefícios: {[b['name'] + ': ' + b['reason'] for b in analysis['benefits'][:4]] or 'nenhum'}."
         )
+        # Surface detected allergens so Moon can warn about them in conversation
+        # (closes the loop: allergen_detector → chat). Otherwise the data exists
+        # but the assistant never mentions it.
+        algs = analysis.get("allergens") or {}
+        if algs.get("count"):
+            names = ", ".join(
+                f"{a['ingredient']} ({a['allergen_class']}, {a['severity']})"
+                for a in algs["items"][:8]
+            )
+            ctx.append(
+                f"ALÉRGENOS PRESENTES (gravidade máx: {algs['worst_severity']}): {names}. "
+                "Mencione os relevantes ao perfil — sobretudo se a pessoa for sensibilizada "
+                "ou tiver couro cabeludo sensível."
+            )
     if alternatives:
         ctx.append("ALTERNATIVAS NO CATÁLOGO (mais compatíveis): " + "; ".join(
             f"{a['name']} ({a['brand']}, score {a['score']:+.2f})" for a in alternatives))
