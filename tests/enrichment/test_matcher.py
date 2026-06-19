@@ -16,6 +16,20 @@ class TestNormalizeName:
     def test_collapse_whitespace(self):
         assert normalize_name("Shampoo   Extra   Liso") == "shampoo extra liso"
 
+    def test_strip_space_separated_brand(self):
+        # Brand slug is hyphenated ("bio-extratus") but marketplace names spell it
+        # space-separated ("BIO EXTRATUS ..."). Both forms (and the flattened one)
+        # must be stripped so surviving brand tokens don't dilute the match score.
+        assert normalize_name(
+            "BIO EXTRATUS Condicionador Cachos 250ml", strip_brand="bio-extratus"
+        ) == "condicionador cachos"
+        assert normalize_name(
+            "Bio-Extratus Shampoo Neutro 250ml", strip_brand="bio-extratus"
+        ) == "shampoo neutro"
+        assert normalize_name(
+            "BioExtratus Mascara Tutano 1kg", strip_brand="bio-extratus"
+        ) == "mascara tutano"
+
 
 class TestDetectProductType:
     def test_shampoo(self):
@@ -47,6 +61,22 @@ class TestMatchProducts:
         assert len(results) == 1
         assert results[0]["action"] == "auto_apply"
         assert results[0]["score"] > 0.90
+
+    def test_brand_prefixed_same_volume_auto_applies(self):
+        # Real case from bio-extratus: the marketplace prefixes the brand and our
+        # catalog does not, but it is the same product at the same volume. The brand
+        # prefix must not block the high-confidence auto_apply.
+        results = match_products(
+            product_name="Condicionador Cachos 250ml",
+            product_brand="bio-extratus",
+            candidates=[
+                {"product_name": "BIO EXTRATUS CONDICIONADOR CACHOS 250ML", "brand_slug": "bio-extratus",
+                 "inci_ingredients": ["Aqua"], "id": "ext-1", "source": "belezanaweb", "source_url": "x"},
+            ],
+        )
+        assert len(results) == 1
+        assert results[0]["score"] > 0.90
+        assert results[0]["action"] == "auto_apply"
 
     def test_similar_match_review(self):
         results = match_products(

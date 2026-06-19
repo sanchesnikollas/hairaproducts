@@ -35,11 +35,14 @@ def normalize_name(name: str, strip_brand: str | None = None) -> str:
             c for c in unicodedata.normalize("NFD", strip_brand.lower())
             if unicodedata.category(c) != "Mn"
         )
-        # Remove brand as standalone word, possibly hyphenated; also handles "X-Brand"
-        name = re.sub(rf"\b{re.escape(brand_norm)}\b", "", name)
-        # Common variations: bio extratus, bioextratus, bio-extratus
-        flat = brand_norm.replace("-", "").replace(" ", "")
-        if flat != brand_norm:
+        # The brand slug ("bio-extratus") and the brand as written in marketplace
+        # names ("BIO EXTRATUS", "BioExtratus") differ only in word separators.
+        # Match the brand tokens however they are joined: hyphen, space or nothing.
+        brand_tokens = [t for t in re.split(r"[-\s]+", brand_norm) if t]
+        if brand_tokens:
+            spaced = r"[-\s]+".join(re.escape(t) for t in brand_tokens)
+            name = re.sub(rf"\b{spaced}\b", "", name)
+            flat = "".join(brand_tokens)
             name = re.sub(rf"\b{re.escape(flat)}\b", "", name)
 
     name = re.sub(r"\s+", " ", name).strip()
