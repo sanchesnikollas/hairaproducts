@@ -91,7 +91,37 @@ class BrowserClient:
         resp.raise_for_status()
         return resp.text
 
+    _FIRECRAWL_MIN_BYTES = 200
+
     def fetch_page(self, url: str, wait_for: str | None = None, expand_accordions: bool = False) -> str:
+        """Fetch a page via the configured native client, falling back to Firecrawl.
+
+        The native fetch is unchanged. Only when it raises or returns an empty/short
+        page — and only when FIRECRAWL_API_KEY is set — do we retry via Firecrawl
+        (renders JS, bypasses WAFs). Dormant + zero-cost without the key.
+        """
+        try:
+            html = self._fetch_page_native(url, wait_for=wait_for, expand_accordions=expand_accordions)
+        except Exception as e:
+            fc = self._firecrawl_fallback(url)
+            if fc:
+                logger.info(f"Firecrawl fallback recovered {url} after native error")
+                return fc
+            raise
+        if not html or len(html) < self._FIRECRAWL_MIN_BYTES:
+            fc = self._firecrawl_fallback(url)
+            if fc:
+                logger.info(f"Firecrawl fallback recovered {url} (native returned empty/short)")
+                return fc
+        return html
+
+    def _firecrawl_fallback(self, url: str) -> str | None:
+        from src.core.firecrawl_client import firecrawl_available, firecrawl_fetch_html
+        if not firecrawl_available():
+            return None
+        return firecrawl_fetch_html(url)
+
+    def _fetch_page_native(self, url: str, wait_for: str | None = None, expand_accordions: bool = False) -> str:
         if self._use_curl_cffi:
             return self._fetch_page_curl_cffi(url)
         if self._use_httpx:
