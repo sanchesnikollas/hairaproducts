@@ -335,6 +335,85 @@ def trigger_enrich(req: EnrichRequest):
     return {"job_id": job_id, "status": "queued", "brand": req.brand, "cap": req.max_llm_calls}
 
 
+class RolloutRequest(BaseModel):
+    secret: str
+    per_brand_limit: int = 0      # 0 = all candidates per brand
+    per_brand_cap: int = 300      # LLM-call ceiling per brand
+    total_call_budget: int | None = None  # global LLM-call budget (e.g. 10000 ~ US$150)
+    brands: list[str] | None = None       # None = all brands with catalog products
+
+
+def _build_brand_browser(brand: str):
+    from src.core.browser import BrowserClient
+    from src.discovery.blueprint_engine import load_blueprint
+    extr = (load_blueprint(brand) or {}).get("extraction", {})
+    ssl_verify = extr.get("ssl_verify", True)
+    if extr.get("http_client") == "curl_cffi":
+        return BrowserClient(use_curl_cffi=True, ssl_verify=ssl_verify)
+    if not extr.get("requires_js", True):
+        return BrowserClient(use_httpx=True, ssl_verify=ssl_verify)
+    return BrowserClient(headless=extr.get("headless", True), ssl_verify=ssl_verify)
+
+
+def _run_rollout(job_id: str, per_brand_limit: int, per_brand_cap: int,
+                 total_call_budget: int | None, brands: list[str] | None) -> None:
+    """Gold rollout across brands (enrich → regate) within a global budget."""
+    def _log(m: str) -> None:
+        lg = _jobs[job_id].setdefault("log", [])
+        lg.append(m)
+        if len(lg) > 500:
+            del lg[: len(lg) - 500]
+
+    try:
+        _jobs[job_id]["status"] = "rolling"
+        from sqlalchemy.orm import Session as SASession
+
+        from src.core.llm import LLMClient
+        from src.enrichment.orchestrator import run_gold_rollout
+        from src.storage.database import get_engine as get_db_engine
+        from src.storage.orm_models import Base
+
+        db_engine = get_db_engine()
+        Base.metadata.create_all(db_engine)
+
+        report = run_gold_rollout(
+            lambda: SASession(db_engine),
+            llm_factory=lambda cap: LLMClient(max_calls_per_brand=cap),
+            browser_factory=_build_brand_browser,
+            brands=brands,
+            per_brand_limit=per_brand_limit,
+            per_brand_cap=per_brand_cap,
+            total_call_budget=total_call_budget,
+            log=_log,
+        )
+        _jobs[job_id]["result"] = report
+        _jobs[job_id]["status"] = "done"
+        logger.info("Rollout %s done: %s", job_id, report.get("totals"))
+    except Exception as e:
+        _jobs[job_id]["status"] = "error"
+        _jobs[job_id]["error"] = str(e)
+        logger.error("Rollout %s failed: %s", job_id, e, exc_info=True)
+
+
+@router.post("/gold-rollout")
+def trigger_rollout(req: RolloutRequest):
+    """Run the Gold enrich rollout across brands. Background; poll /scrape/status."""
+    if not MIGRATION_SECRET or req.secret != MIGRATION_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+    if any(j.get("kind") == "rollout" and j.get("status") in ("rolling", "queued")
+           for j in _jobs.values()):
+        raise HTTPException(status_code=409, detail="A rollout is already running")
+
+    job_id = f"rollout-{int(time.time())}"
+    _jobs[job_id] = {"status": "queued", "started_at": time.time(), "kind": "rollout"}
+    threading.Thread(
+        target=_run_rollout,
+        args=(job_id, req.per_brand_limit, req.per_brand_cap, req.total_call_budget, req.brands),
+        daemon=True,
+    ).start()
+    return {"job_id": job_id, "status": "queued", "budget": req.total_call_budget}
+
+
 class CleanupRequest(BaseModel):
     secret: str
     dry_run: bool = False  # when True, retorna preview sem aplicar UPDATE
