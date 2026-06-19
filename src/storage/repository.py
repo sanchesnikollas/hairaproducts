@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 logger = logging.getLogger("haira.repository")
 
-from sqlalchemy import func, or_
+from sqlalchemy import String, cast, func, or_
 from sqlalchemy.orm import Session
 
 from src.core.models import ProductExtraction, QAResult, QAStatus
@@ -258,8 +258,9 @@ class ProductRepository:
                 ProductORM.verification_status == "catalog_only",
                 or_(
                     ProductORM.inci_ingredients.is_(None),
-                    ProductORM.inci_ingredients == "[]",
-                    ProductORM.inci_ingredients == "null",
+                    # inci_ingredients is a JSON column — Postgres has no `json = text`
+                    # operator, so cast to text before comparing to the empty markers.
+                    cast(ProductORM.inci_ingredients, String).in_(["[]", "null"]),
                 ),
             )
             .all()
@@ -280,8 +281,9 @@ class ProductRepository:
                 ProductORM.gold_status == "catalog",
                 or_(
                     ProductORM.inci_ingredients.is_(None),
-                    ProductORM.inci_ingredients == "[]",
-                    ProductORM.inci_ingredients == "null",
+                    # JSON column → cast to text before comparing to empty markers
+                    # (Postgres has no `json = text` operator).
+                    cast(ProductORM.inci_ingredients, String).in_(["[]", "null"]),
                     ProductORM.usage_instructions.is_(None),
                     ProductORM.usage_instructions == "",
                 ),
