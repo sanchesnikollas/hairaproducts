@@ -76,10 +76,9 @@ def _run_scrape(job_id: str, brand: str, run_labels: bool) -> None:
         else:
             # requires_js: true → usar Playwright (sem use_httpx) para
             # marcas com SPA/Next.js (Pantene, Granado deco.cx).
-            browser = BrowserClient(
-                headless=extraction_config.get("headless", True),
-                ssl_verify=ssl_verify,
-            )
+            # Server is always headless — a blueprint's headless:false is a local-dev
+            # setting and crashes Chromium in the container (no display).
+            browser = BrowserClient(headless=True, ssl_verify=ssl_verify)
 
         # Discover URLs
         discoverer = ProductDiscoverer(browser=browser)
@@ -292,7 +291,7 @@ def _run_enrich(job_id: str, brand: str, limit: int, max_llm_calls: int) -> None
         elif not extr.get("requires_js", True):
             browser = BrowserClient(use_httpx=True, ssl_verify=ssl_verify)
         else:
-            browser = BrowserClient(headless=extr.get("headless", True), ssl_verify=ssl_verify)
+            browser = BrowserClient(headless=True, ssl_verify=ssl_verify)  # always headless on server
 
         db_engine = get_db_engine()
         Base.metadata.create_all(db_engine)
@@ -352,7 +351,9 @@ def _build_brand_browser(brand: str):
         return BrowserClient(use_curl_cffi=True, ssl_verify=ssl_verify)
     if not extr.get("requires_js", True):
         return BrowserClient(use_httpx=True, ssl_verify=ssl_verify)
-    return BrowserClient(headless=extr.get("headless", True), ssl_verify=ssl_verify)
+    # Server is always headless; a blueprint's headless:false (local-dev) crashes
+    # Chromium in the container — every fetch then fails. Force headless=True.
+    return BrowserClient(headless=True, ssl_verify=ssl_verify)
 
 
 def _run_rollout(job_id: str, per_brand_limit: int, per_brand_cap: int,
