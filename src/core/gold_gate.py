@@ -38,6 +38,10 @@ from src.core.taxonomy import VALID_CATEGORIES
 # rejected — it routes to human review (gold_candidate). Degrades gracefully as
 # the ingredients table is backfilled.
 MIN_KNOWN_INGREDIENT_RATIO = 0.6
+# Below this, the "INCI" is almost certainly not an ingredient list (e.g. checkout
+# text scraped into the field) — a HARD error so it drops to catalog for clean
+# re-extraction, never a candidate. Between HARD and MIN it is a soft review signal.
+HARD_MIN_KNOWN_INGREDIENT_RATIO = 0.3
 MIN_DESCRIPTION_LEN = 40
 
 # INCI provenance that, on its own, is not enough for Gold (needs grounding /
@@ -194,7 +198,14 @@ def evaluate_gold(product, session=None) -> GoldEvaluation:
                 if kr is not None:
                     ratio, n_known, n_total = kr
                     report["known_ingredient_ratio"] = round(ratio, 3)
-                    if ratio < MIN_KNOWN_INGREDIENT_RATIO:
+                    if ratio < HARD_MIN_KNOWN_INGREDIENT_RATIO:
+                        blockers.append(GoldBlocker(
+                            code="inci_garbage", field="inci_ingredients",
+                            message=(f"Só {n_known}/{n_total} ingredientes reconhecidos "
+                                     f"(<{int(HARD_MIN_KNOWN_INGREDIENT_RATIO*100)}%) — INCI não confiável"),
+                            severity="error"))
+                        missing_or_invalid = True
+                    elif ratio < MIN_KNOWN_INGREDIENT_RATIO:
                         blockers.append(GoldBlocker(
                             code="inci_low_known_ratio", field="inci_ingredients",
                             message=(f"Só {n_known}/{n_total} ingredientes reconhecidos "

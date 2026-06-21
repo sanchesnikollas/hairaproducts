@@ -210,6 +210,34 @@ def _check_inci_has_sentences(inci: list[str] | None) -> list[FieldIssue]:
     return []
 
 
+_INCI_PRICING_RE = re.compile(
+    r"R\$|\bPix\b|\bboleto\b|parcela|sem\s*juros|de\s*desconto|cart(õ|o)es\s*de\s*cr|\b\d+\s*x\s*de\b",
+    re.IGNORECASE,
+)
+
+
+def _check_inci_is_pricing(inci: list[str] | None) -> list[FieldIssue]:
+    """Detect checkout/pricing text scraped into the INCI list (wrong-block extraction).
+
+    e.g. '902xdeR$29', '90sem jurosTotalR$43', 'Pix5% de desconto'. This is garbage,
+    not ingredients — a HARD error so the product drops to catalog for clean
+    re-extraction instead of polluting Gold/candidate. Threshold of 3 hits avoids
+    false positives on a stray price-like token inside a real INCI list.
+    """
+    if not inci:
+        return []
+    hits = [item.strip() for item in inci if item and _INCI_PRICING_RE.search(item)]
+    if len(hits) >= 3:
+        return [FieldIssue(
+            field="inci_ingredients",
+            code="inci_pricing_garbage",
+            severity=IssueSeverity.ERROR,
+            message=f"{len(hits)} itens de INCI são texto de checkout/preço (bloco errado)",
+            details=hits[0][:80],
+        )]
+    return []
+
+
 def _check_inci_marketing_complex(inci: list[str] | None) -> list[FieldIssue]:
     """Detect INCI items with marketing complex names appended (e.g. '*Pro-Reparage Complex: Biotin')."""
     if not inci:
@@ -565,6 +593,7 @@ def validate_product_fields(
     all_issues.extend(_check_inci_is_usage(inci_ingredients))
     all_issues.extend(_check_inci_has_sentences(inci_ingredients))
     all_issues.extend(_check_inci_marketing_complex(inci_ingredients))
+    all_issues.extend(_check_inci_is_pricing(inci_ingredients))
     all_issues.extend(_check_description_quality(description))
     all_issues.extend(_check_usage_quality(usage_instructions))
     all_issues.extend(_check_benefits_quality(benefits_claims))
