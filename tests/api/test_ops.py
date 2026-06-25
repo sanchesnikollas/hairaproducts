@@ -45,8 +45,9 @@ class TestDashboard:
         def override():
             with Session(self.engine) as s:
                 yield s
-        from src.api.dependencies import get_ops_session
+        from src.api.dependencies import get_ops_session, get_core_session
         app.dependency_overrides[get_ops_session] = override
+        app.dependency_overrides[get_core_session] = override  # auth.get_current_user lê users do CORE
         self.client = TestClient(app)
 
     def teardown_method(self):
@@ -73,8 +74,9 @@ class TestOpsProducts:
         def override():
             with Session(self.engine) as s:
                 yield s
-        from src.api.dependencies import get_ops_session
+        from src.api.dependencies import get_ops_session, get_core_session
         app.dependency_overrides[get_ops_session] = override
+        app.dependency_overrides[get_core_session] = override  # auth.get_current_user lê users do CORE
         self.client = TestClient(app)
 
     def teardown_method(self):
@@ -120,8 +122,9 @@ class TestReviewQueue:
         def override():
             with Session(self.engine) as s:
                 yield s
-        from src.api.dependencies import get_ops_session
+        from src.api.dependencies import get_ops_session, get_core_session
         app.dependency_overrides[get_ops_session] = override
+        app.dependency_overrides[get_core_session] = override  # auth.get_current_user lê users do CORE
         self.client = TestClient(app)
 
     def teardown_method(self):
@@ -175,8 +178,9 @@ class TestOpsIngredients:
         def override():
             with Session(self.engine) as s:
                 yield s
-        from src.api.dependencies import get_ops_session
+        from src.api.dependencies import get_ops_session, get_core_session
         app.dependency_overrides[get_ops_session] = override
+        app.dependency_overrides[get_core_session] = override  # auth.get_current_user lê users do CORE
         self.client = TestClient(app)
 
     def teardown_method(self):

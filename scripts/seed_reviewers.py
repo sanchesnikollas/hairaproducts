@@ -15,7 +15,7 @@ import os
 import bcrypt
 from sqlalchemy.orm import Session
 
-from src.storage.database import get_engine
+from src.storage.database import get_core_engine
 from src.storage.ops_models import UserORM
 
 PASSWORD = os.environ.get("REVIEWER_PASSWORD", "haira2026")
@@ -31,7 +31,8 @@ REVIEWERS = [
 
 
 def main() -> None:
-    engine = get_engine()
+    # users vivem no banco CORE em prod split — não no DATABASE_URL (catalog).
+    engine = get_core_engine()
     with Session(engine) as s:
         for email, name, role in REVIEWERS:
             pw_hash = bcrypt.hashpw(PASSWORD.encode(), bcrypt.gensalt()).decode()
