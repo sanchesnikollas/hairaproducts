@@ -54,8 +54,9 @@ class TestAuthEndpoints:
             with Session(self.engine) as s:
                 yield s
 
-        from src.api.dependencies import get_ops_session
+        from src.api.dependencies import get_ops_session, get_core_session
         app.dependency_overrides[get_ops_session] = override_session
+        app.dependency_overrides[get_core_session] = override_session  # login + get_current_user leem users do CORE
         self.client = TestClient(app)
 
     def teardown_method(self):

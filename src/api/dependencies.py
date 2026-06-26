@@ -20,12 +20,15 @@ logger = logging.getLogger("haira.api.dependencies")
 # caem em fallback chain pro DATABASE_URL/CENTRAL_DATABASE_URL atuais.
 #
 # Fallback order (cada session.get_X dependency tenta na ordem):
-#   get_core_session()    : CORE_DATABASE_URL  → CENTRAL_DATABASE_URL → DATABASE_URL
-#   get_catalog_session() : CATALOG_DATABASE_URL → DATABASE_URL → CENTRAL_DATABASE_URL
-#   get_audit_session()   : AUDIT_DATABASE_URL → CORE_DATABASE_URL → DATABASE_URL
+#   get_core_session()    : CORE_DATABASE_URL    → CENTRAL_DATABASE_URL → DATABASE_URL
+#   get_catalog_session() : CATALOG_DATABASE_URL → CENTRAL_DATABASE_URL → DATABASE_URL
+#   get_audit_session()   : AUDIT_DATABASE_URL   → CENTRAL_DATABASE_URL → DATABASE_URL
 #
-# Essa cadeia garante que em prod single-DB hoje, todas as 3 deps caiam no
-# mesmo engine e tudo continue funcionando. Cutover acontece quando as envs
+# As 3 compartilham o MESMO tail (`_resolve_default_engine`): se a env própria
+# da classe não estiver setada, caem no engine central (CENTRAL_DATABASE_URL) e,
+# sem ele, no DATABASE_URL. Não há fallback cruzado entre classes — audit NÃO
+# cai em CORE, catalog NÃO cai em CORE. Isso garante que em prod single-DB hoje
+# as 3 deps caiam no mesmo engine. Cutover acontece quando as envs
 # *_DATABASE_URL são setadas individualmente.
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -174,7 +177,8 @@ def get_core_session() -> Generator[Session, None, None]:
     brand_databases.
 
     Sensibilidade ALTA — KB encriptada + PII.
-    Fallback: CORE_DATABASE_URL → central → DATABASE_URL.
+    Fallback: CORE_DATABASE_URL → central (CENTRAL_DATABASE_URL) → DATABASE_URL.
+    Seeds/CLI devem espelhar esta cadeia via database.resolve_core_url().
     """
     engine = _core_engine if _core_engine is not None else _resolve_default_engine()
     with Session(engine) as session:
@@ -187,7 +191,7 @@ def get_catalog_session() -> Generator[Session, None, None]:
 
     Sensibilidade MÉDIA — dado público em sua maioria. Pool maior porque
     /api/brands lê muito.
-    Fallback: CATALOG_DATABASE_URL → DATABASE_URL → central.
+    Fallback: CATALOG_DATABASE_URL → central (CENTRAL_DATABASE_URL) → DATABASE_URL.
     """
     engine = _catalog_engine if _catalog_engine is not None else _resolve_default_engine()
     with Session(engine) as session:
@@ -200,7 +204,8 @@ def get_audit_session() -> Generator[Session, None, None]:
 
     Append-only. Sempre persistente. Falha aqui NÃO deve derrubar a request
     principal (callers usam try/except).
-    Fallback: AUDIT_DATABASE_URL → CORE_DATABASE_URL → DATABASE_URL.
+    Fallback: AUDIT_DATABASE_URL → central (CENTRAL_DATABASE_URL) → DATABASE_URL.
+    (NÃO cai em CORE_DATABASE_URL — sem AUDIT/CENTRAL, audit log vai pro DATABASE_URL.)
     """
     engine = _audit_engine if _audit_engine is not None else _resolve_default_engine()
     with Session(engine) as session:

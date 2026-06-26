@@ -46,11 +46,12 @@ def cli(log_level: str):
 def reset_password(email: str, new_password: str):
     """Reset a user's password (admin or reviewer)."""
     import bcrypt as _bcrypt
-    from src.storage.database import get_engine
+    from src.storage.database import get_core_engine
     from sqlalchemy.orm import Session as SASession
     from src.storage.ops_models import UserORM
 
-    engine = get_engine()
+    # users vivem no banco CORE em prod split — não no DATABASE_URL (catalog).
+    engine = get_core_engine()
     with SASession(engine) as session:
         user = session.query(UserORM).filter(UserORM.email == email).first()
         if not user:
@@ -77,11 +78,12 @@ def create_user(email: str, name: str | None, role: str, password: str, promote:
     import bcrypt as _bcrypt
     from sqlalchemy.orm import Session as SASession
 
-    from src.storage.database import get_engine
+    from src.storage.database import get_core_engine
     from src.storage.orm_models import Base
     from src.storage.ops_models import UserORM
 
-    engine = get_engine()
+    # users vivem no banco CORE em prod split — não no DATABASE_URL (catalog).
+    engine = get_core_engine()
     Base.metadata.create_all(engine)
     pw_hash = _bcrypt.hashpw(password.encode(), _bcrypt.gensalt()).decode()
 

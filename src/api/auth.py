@@ -5,7 +5,7 @@ from typing import Any
 import jwt
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from src.api.dependencies import get_ops_session
+from src.api.dependencies import get_core_session
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "haira-ops-dev-secret-change-in-prod")
 ALGORITHM = "HS256"
@@ -39,9 +39,14 @@ def _extract_token_payload(request: Request) -> dict[str, Any]:
 
 def get_current_user(
     request: Request,
-    session: Session = Depends(get_ops_session),
+    session: Session = Depends(get_core_session),
 ) -> dict[str, Any]:
-    """FastAPI dependency: extracts JWT and verifies user is still active in DB."""
+    """FastAPI dependency: extracts JWT and verifies user is still active in DB.
+
+    Lê a tabela `users` do banco CORE — o MESMO que /auth/login usa. Antes lia do
+    get_ops_session (→ catalog), então em prod split o login funcionava mas a
+    request autenticada seguinte tomava 401 (user não encontrado no catalog).
+    """
     payload = _extract_token_payload(request)
     from src.storage.ops_models import UserORM
     user = session.query(UserORM).filter(UserORM.user_id == payload["sub"]).first()

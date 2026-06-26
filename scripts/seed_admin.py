@@ -2,10 +2,11 @@
 from __future__ import annotations
 import bcrypt
 from sqlalchemy.orm import Session
-from src.storage.database import get_engine
+from src.storage.database import get_core_engine
 from src.storage.ops_models import UserORM
 
-engine = get_engine()
+# users vivem no banco CORE em prod split — não no DATABASE_URL (catalog).
+engine = get_core_engine()
 pw = bcrypt.hashpw(b"admin123", bcrypt.gensalt()).decode()
 
 with Session(engine) as s:
